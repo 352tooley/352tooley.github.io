@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Enable Notifications</title>
+  <style>
+    :root {
+      --magenta:#d6006e; --ink:#111; --muted:#666; --bg:#fafafa; --card:#fff; --border:#e5e7eb;
+    }
+    html,body { height:100%; }
+    body {
+      margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg); color:var(--ink);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .card {
+      background:var(--card); border:1px solid var(--border); border-radius:14px;
+      padding:28px 26px; max-width:520px; width:92%; box-shadow:0 8px 20px rgba(0,0,0,.06);
+    }
+    h1 { margin:0 0 8px; font-size:26px; color:var(--magenta); text-align:center; }
+    p  { margin:8px 0 18px; color:var(--muted); text-align:center; }
+    .row { display:flex; flex-direction:column; gap:10px; align-items:center; }
+    button {
+      background:var(--magenta); color:#fff; border:none; border-radius:12px;
+      font-weight:800; letter-spacing:.3px; font-size:18px; padding:14px 18px; cursor:pointer; width:100%;
+    }
+    button:disabled { background:#ddd; color:#888; cursor:not-allowed; }
+    .status { font-size:14px; color:#333; text-align:center; word-break:break-all; }
+    .ok { color:#0a7a0a; font-weight:700; }
+    .warn { color:#b85d00; font-weight:700; }
+  </style>
+
+  <!-- OneSignal v16 Page SDK -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+</head>
+<body>
+  <main class="card">
+    <h1>Enable Daily Notifications</h1>
+    <p>Tap the button below and allow notifications to receive the daily reminder.</p>
+    <div class="row">
+      <button id="btnEnable">🔔 Enable notifications</button>
+      <div id="status" class="status">Checking subscription...</div>
+      <div id="pid" class="status" style="display:none"></div>
+
+      <!-- Optional: link back to your main app (replace href if you want) -->
+      <!-- <a href="YOUR_APPS_SCRIPT_WEB_APP_URL" style="margin-top:6px; font-size:14px;">Back to app</a> -->
+    </div>
+  </main>
+
+  <script>
+    // Boots OneSignal and wires the button
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      try {
+        await OneSignal.init({
+          appId: "5ecaba08-de2f-44b8-a4f0-369508265505"
+          // No subdomainName needed: service workers are hosted at this origin (GitHub Pages)
+        });
+
+        const $ = (id) => document.getElementById(id);
+        const btn = $('btnEnable');
+        const status = $('status');
+        const pidBox = $('pid');
+
+        async function refreshStatus() {
+          try {
+            const optedIn = await OneSignal.User.PushSubscription.optedIn;
+            if (optedIn) {
+              const playerId = await OneSignal.User.PushSubscription.id;
+              status.innerHTML = '<span class="ok">Subscribed</span> — you will receive notifications.';
+              if (playerId) {
+                pidBox.style.display = 'block';
+                pidBox.textContent = 'Player ID: ' + playerId;
+              }
+              btn.disabled = true;
+              btn.textContent = 'Notifications Enabled';
+            } else {
+              status.innerHTML = '<span class="warn">Not subscribed</span> — click the button above.';
+              pidBox.style.display = 'none';
+              pidBox.textContent = '';
+              btn.disabled = false;
+              btn.textContent = '🔔 Enable notifications';
+            }
+          } catch (e) {
+            status.textContent = 'Status check error: ' + (e && e.message ? e.message : e);
+          }
+        }
+
+        btn.addEventListener('click', async () => {
+          try {
+            // Show OneSignal’s slide-down permission prompt (user gesture friendly)
+            await OneSignal.Slidedown.promptPush();
+            await refreshStatus();
+          } catch (e) {
+            status.textContent = 'Prompt error: ' + (e && e.message ? e.message : e);
+          }
+        });
+
+        await refreshStatus();
+      } catch (e) {
+        const status = document.getElementById('status');
+        status.textContent = 'Init error: ' + (e && e.message ? e.message : e);
+      }
+    });
+  </script>
+</body>
+</html>
