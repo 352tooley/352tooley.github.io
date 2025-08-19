@@ -69,15 +69,24 @@
 
     <script>
       /* ---------------- Config ---------------- */
-      const SHIM_URL = 'https://352tooley.github.io/'; // root (notifications shim)
+      const SHIM_URL = 'https://352tooley.github.io/'; // root notifications shim
 
       const byId = id => document.getElementById(id);
       const setScreen = html => { byId('app').innerHTML = html; };
       const num = v => parseFloat(v||0) || 0;
       const int = v => parseInt(v||0) || 0;
       const todayStr = () => new Date().toLocaleDateString();
+      const money = v => '$' + (num(v).toFixed(2));
+      const pctRound = v => Math.round(num(v));
 
-      /* --- handle ?sub=1 redirect from shim --- */
+      const bandPct   = p => (num(p)>=90?'ok':(num(p)>=60?'warn':'bad'));
+      const bandGap   = g => (num(g)<=0?'ok':'bad');
+      const bandScore = s => (num(s)>=9.5?'ok':(num(s)>=9.0?'warn':'bad'));
+      const bandNeeded= n => (num(n)===0?'ok':'bad');
+      const bandMrc   = (m,t) => (num(m)>=num(t)?'ok':((num(t)-num(m))<=1?'warn':'bad'));
+      const fmtGap = v => v>0?`+${v}`:`${v}`;
+
+      // Handle redirect flag from shim (?sub=1) & persist
       (function handleSub(){
         const params = new URLSearchParams(window.location.search);
         if (params.get('sub')==='1'){
@@ -121,10 +130,10 @@
         `;
         setScreen(html);
 
+        // Reset daily but keep reminder flag
         const todayKey=new Date().toISOString().slice(0,10);
         if(localStorage.getItem('lastDay')!==todayKey){
-          const keep=localStorage.getItem('remindersEnabled');
-          localStorage.clear();
+          const keep=localStorage.getItem('remindersEnabled'); localStorage.clear();
           if(keep)localStorage.setItem('remindersEnabled',keep);
           localStorage.setItem('lastDay',todayKey);
         }
@@ -143,7 +152,7 @@
         if(btn){
           btn.addEventListener('click',()=>{
             window.open(SHIM_URL,'_blank');
-            localStorage.setItem('remindersEnabled','1');
+            localStorage.setItem('remindersEnabled','1'); // hide next time
             btn.textContent='Notifications Enabled';
             btn.disabled=true;
           });
@@ -222,18 +231,23 @@
       }
 
       function showSummary(){
+        const dateStr = todayStr();
+
+        // (Simple example summary; replace with your detailed math version if desired)
+        const sec = (label,a,g)=>`<div class="sec tile">${label}: ${localStorage.getItem(a)||0}/${localStorage.getItem(g)||0}</div>`;
+
         setScreen(`
           <h2>Summary</h2>
           <div class="sum-head">
             <div class="sum-store">${localStorage.getItem('storeSel')||''}</div>
-            <div class="sum-date">${todayStr()}</div>
+            <div class="sum-date">${dateStr}</div>
           </div>
           <div class="sum-grid">
-            <div class="sec tile">Voice: ${localStorage.getItem('g_v_att')||0}/${localStorage.getItem('g_v_goal')||0}</div>
-            <div class="sec tile">BTS: ${localStorage.getItem('g_b_att')||0}/${localStorage.getItem('g_b_goal')||0}</div>
-            <div class="sec tile">HSI: ${localStorage.getItem('g_h_att')||0}/${localStorage.getItem('g_h_goal')||0}</div>
-            <div class="sec tile">HSI+BTS: ${localStorage.getItem('g_hb_att')||0}/${localStorage.getItem('g_hb_goal')||0}</div>
-            <div class="sec tile">Accessories: ${localStorage.getItem('g_a_att')||0}/${localStorage.getItem('g_a_goal')||0}</div>
+            ${sec('Voice','g_v_att','g_v_goal')}
+            ${sec('BTS','g_b_att','g_b_goal')}
+            ${sec('HSI','g_h_att','g_h_goal')}
+            ${sec('HSI+BTS','g_hb_att','g_hb_goal')}
+            ${sec('Accessories','g_a_att','g_a_goal')}
           </div>
           <div class="buttons">
             <button class="back" onclick="showDaily()">← Daily Goals</button>
@@ -241,8 +255,17 @@
           </div>`);
       }
 
-      /* ---- Launch ---- */
+      // Launch
       showLocation();
+    </script>
+
+    <!-- Register service worker from /app/ too (scope is root) -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js")
+          .then(reg => console.log("SW registered from /app:", reg.scope))
+          .catch(err => console.error("SW registration failed from /app:", err));
+      }
     </script>
   </body>
 </html>
