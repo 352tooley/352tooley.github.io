@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Enable Notifications</title>
   <style>
-    :root {
-      --magenta:#d6006e; --ink:#111; --muted:#666; --bg:#fafafa; --card:#fff; --border:#e5e7eb;
-    }
+    :root { --magenta:#d6006e; --ink:#111; --muted:#666; --bg:#fafafa; --card:#fff; --border:#e5e7eb; }
     html,body { height:100%; }
     body {
       margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
@@ -42,20 +40,18 @@
       <button id="btnEnable">🔔 Enable notifications</button>
       <div id="status" class="status">Checking subscription...</div>
       <div id="pid" class="status" style="display:none"></div>
-
-      <!-- Optional: link back to your main app (replace href if you want) -->
-      <!-- <a href="YOUR_APPS_SCRIPT_WEB_APP_URL" style="margin-top:6px; font-size:14px;">Back to app</a> -->
     </div>
   </main>
 
   <script>
-    // Boots OneSignal and wires the button
+    // After subscribing, redirect back to your app:
+    const APP_URL = "https://352tooley.github.io/app/?sub=1";
+
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       try {
         await OneSignal.init({
           appId: "5ecaba08-de2f-44b8-a4f0-369508265505"
-          // No subdomainName needed: service workers are hosted at this origin (GitHub Pages)
         });
 
         const $ = (id) => document.getElementById(id);
@@ -75,10 +71,11 @@
               }
               btn.disabled = true;
               btn.textContent = 'Notifications Enabled';
+              // Redirect back to the app after 2 seconds
+              setTimeout(() => { window.location.href = APP_URL; }, 2000);
             } else {
               status.innerHTML = '<span class="warn">Not subscribed</span> — click the button above.';
               pidBox.style.display = 'none';
-              pidBox.textContent = '';
               btn.disabled = false;
               btn.textContent = '🔔 Enable notifications';
             }
@@ -89,7 +86,6 @@
 
         btn.addEventListener('click', async () => {
           try {
-            // Show OneSignal’s slide-down permission prompt (user gesture friendly)
             await OneSignal.Slidedown.promptPush();
             await refreshStatus();
           } catch (e) {
