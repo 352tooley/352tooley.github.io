@@ -39,6 +39,7 @@
       .warn{background:rgba(255,200,0,.16); color:#a60; border:1px solid rgba(255,200,0,.32)}
       .bad{background:rgba(255,80,80,.16); color:#a00; border:1px solid rgba(255,80,80,.32)}
 
+      /* Summary layout */
       .sum-head{margin:2px 0 10px; text-align:center;}
       .sum-date,.sum-store{font-size:20px; font-weight:800;}
       .sum-grid{display:grid; grid-template-columns:1fr; gap:12px;}
@@ -70,6 +71,7 @@
     <script>
       /* ---------------- Config ---------------- */
       const SHIM_URL = 'https://352tooley.github.io/'; // root notifications shim
+      const state = { store:null, cfg:{ p360:60, tlife:70, vaf:19 } };
 
       const byId = id => document.getElementById(id);
       const setScreen = html => { byId('app').innerHTML = html; };
@@ -86,7 +88,7 @@
       const bandMrc   = (m,t) => (num(m)>=num(t)?'ok':((num(t)-num(m))<=1?'warn':'bad'));
       const fmtGap = v => v>0?`+${v}`:`${v}`;
 
-      // Handle redirect flag from shim (?sub=1) & persist
+      // Handle redirect from shim (?sub=1)
       (function handleSub(){
         const params = new URLSearchParams(window.location.search);
         if (params.get('sub')==='1'){
@@ -96,6 +98,7 @@
         }
       })();
 
+      /* --------- Inputs --------- */
       const metric = (label,id1,id2,p1='Attainment',p2='Goal') => `
         <div class="metric">
           <label>${label}</label>
@@ -103,6 +106,12 @@
             <input id="${id1}" type="number" placeholder="${p1}" value="${localStorage.getItem(id1)||''}" oninput="localStorage.setItem('${id1}',this.value)">
             <input id="${id2}" type="number" placeholder="${p2}" value="${localStorage.getItem(id2)||''}" oninput="localStorage.setItem('${id2}',this.value)">
           </div>
+        </div>`;
+
+      const single = (label,id,ph) => `
+        <div class="metric">
+          <label>${label}</label>
+          <input id="${id}" type="number" placeholder="${ph}" value="${localStorage.getItem(id)||''}" oninput="localStorage.setItem('${id}',this.value)">
         </div>`;
 
       /* ---------------- Screens ---------------- */
@@ -130,7 +139,7 @@
         `;
         setScreen(html);
 
-        // Reset daily but keep reminder flag
+        // Reset daily but keep reminders flag
         const todayKey=new Date().toISOString().slice(0,10);
         if(localStorage.getItem('lastDay')!==todayKey){
           const keep=localStorage.getItem('remindersEnabled'); localStorage.clear();
@@ -152,7 +161,7 @@
         if(btn){
           btn.addEventListener('click',()=>{
             window.open(SHIM_URL,'_blank');
-            localStorage.setItem('remindersEnabled','1'); // hide next time
+            localStorage.setItem('remindersEnabled','1');
             btn.textContent='Notifications Enabled';
             btn.disabled=true;
           });
@@ -199,7 +208,8 @@
       function showCSAT(){
         setScreen(`
           <h2>CSAT — ${localStorage.getItem('storeSel')||''}</h2>
-          ${metric('CSAT','c_score','c_surveys','Current Score (0–10)','Surveys Taken')}
+          ${single('Current Score (0–10)','c_score','Score')}
+          ${single('Surveys Taken','c_surveys','# Surveys')}
           <div class="buttons">
             <button class="back" onclick="showRevenue()">← Revenue</button>
             <button class="next" onclick="showTL()">T-Life →</button>
@@ -209,7 +219,8 @@
       function showTL(){
         setScreen(`
           <h2>T-Life — ${localStorage.getItem('storeSel')||''}</h2>
-          ${metric('T-Life','t2_att','t2_opp','Attainment %','Opportunities')}
+          ${single('Attainment %','t2_att','%')}
+          ${single('Opportunities','t2_opp','#')}
           <div class="buttons">
             <button class="back" onclick="showCSAT()">← CSAT</button>
             <button class="next" onclick="showDaily()">Daily Goals →</button>
@@ -219,11 +230,10 @@
       function showDaily(){
         setScreen(`
           <h2>Daily Goals — ${localStorage.getItem('storeSel')||''}</h2>
-          ${metric('Voice','g_v_att','g_v_goal')}
-          ${metric('BTS','g_b_att','g_b_goal')}
-          ${metric('HSI','g_h_att','g_h_goal')}
-          ${metric('HSI+BTS','g_hb_att','g_hb_goal')}
-          ${metric('Accessories','g_a_att','g_a_goal')}
+          ${single('Voice','g_voice','Goal')}
+          ${single('BTS','g_bts','Goal')}
+          ${single('Accessories','g_acc','Goal')}
+          ${single('TFB','g_tfb','Goal')}
           <div class="buttons">
             <button class="back" onclick="showTL()">← T-Life</button>
             <button class="next" onclick="showSummary()">Summary →</button>
@@ -233,33 +243,134 @@
       function showSummary(){
         const dateStr = todayStr();
 
-        // (Simple example summary; replace with your detailed math version if desired)
-        const sec = (label,a,g)=>`<div class="sec tile">${label}: ${localStorage.getItem(a)||0}/${localStorage.getItem(g)||0}</div>`;
+        // Combine DORT + SORT for each metric
+        const comb = (aD,gD,aS,gS) => {
+          const att = int(localStorage.getItem(aD)) + int(localStorage.getItem(aS));
+          const goal= int(localStorage.getItem(gD)) + int(localStorage.getItem(gS));
+          const pct = goal>0 ? Math.round((att/goal)*100) : 0;
+          const gap = goal - att;
+          return {att,goal,pct,gap};
+        };
+        const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
+        const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
+        const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
+        const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
 
-        setScreen(`
-          <h2>Summary</h2>
+        // P360 — % to goal (input) and needed tx to reach 60% going forward
+        const pOpp=int(localStorage.getItem('p_opp'));
+        const pPctIn=Math.max(0, Math.min(100, num(localStorage.getItem('p_pct'))));
+        const pAtt=Math.round(pOpp*(pPctIn/100));
+        const tP=(state.cfg.p360)/100;
+        const pNeed=Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
+        const pPctRounded = pctRound(pPctIn);
+
+        // CSAT — perfect 10s needed to reach 9.5 going forward
+        const cAvg=num(localStorage.getItem('c_score'));
+        const cN =int(localStorage.getItem('c_surveys'));
+        const cNeed=cAvg>=9.5?0:Math.max(0, Math.ceil(2 * cN * (9.5 - cAvg)));
+
+        // T-Life — opportunities needed to hit 70% going forward
+        const tlPct=Math.max(0, Math.min(100, num(localStorage.getItem('t2_att'))));
+        const tlOpp=int(localStorage.getItem('t2_opp'));
+        const tlSuc=Math.round(tlOpp*(tlPct/100));
+        const tT=(state.cfg.tlife)/100;
+        const tlNeed=Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
+
+        // VAF — gap to average $19/op and current MRC
+        const vOpp=int(localStorage.getItem('v_opp'));
+        const vTot=num(localStorage.getItem('v_total'));
+        const vTarget=state.cfg.vaf;
+        const needTotal=vTarget*vOpp;
+        const vGap=Math.max(0, needTotal - vTot);
+        const mrc=vOpp>0 ? (vTot/vOpp) : 0;
+
+        // Daily Goals (single-field goals)
+        const gVoice = localStorage.getItem('g_voice') || '—';
+        const gBts   = localStorage.getItem('g_bts')   || '—';
+        const gAcc   = localStorage.getItem('g_acc')   || '—';
+        const gTfb   = localStorage.getItem('g_tfb')   || '—';
+
+        const head = `
           <div class="sum-head">
-            <div class="sum-store">${localStorage.getItem('storeSel')||''}</div>
-            <div class="sum-date">${dateStr}</div>
+            <div class="sum-date">📅 ${dateStr}</div>
+            <div class="sum-store">📍 ${localStorage.getItem('storeSel') || '—'}</div>
+          </div>`;
+
+        const cardDortSort = `<div class="sec tile tall">
+          <div style="font-weight:800; margin-bottom:8px;">DORT + SORT</div>
+          <div class="kv"><span>Voice</span>
+            <span><span class="status ${bandGap(voice.gap)}">Gap: ${fmtGap(voice.gap)}</span> <span class="status ${bandPct(voice.pct)}">${voice.pct}%</span></span>
           </div>
+          <div class="kv"><span>BTS</span>
+            <span><span class="status ${bandGap(bts.gap)}">Gap: ${fmtGap(bts.gap)}</span> <span class="status ${bandPct(bts.pct)}">${bts.pct}%</span></span>
+          </div>
+          <div class="kv"><span>TFB</span>
+            <span><span class="status ${bandGap(tfb.gap)}">Gap: ${fmtGap(tfb.gap)}</span> <span class="status ${bandPct(tfb.pct)}">${tfb.pct}%</span></span>
+          </div>
+          <div class="kv"><span>Accessories</span>
+            <span><span class="status ${bandGap(acc.gap)}">Gap: ${fmtGap(acc.gap)}</span> <span class="status ${bandPct(acc.pct)}">${acc.pct}%</span></span>
+          </div>
+        </div>`;
+
+        const cardGoals = `<div class="sec tile tall">
+          <div style="font-weight:800; margin-bottom:8px;">🎯 Daily Goals</div>
+          <div class="kv"><span>Voice</span><span><b>${gVoice}</b></span></div>
+          <div class="kv"><span>BTS</span><span><b>${gBts}</b></span></div>
+          <div class="kv"><span>TFB</span><span><b>${gTfb}</b></span></div>
+          <div class="kv"><span>Accessories</span><span><b>${gAcc}</b></span></div>
+        </div>`;
+
+        const cardP360 = `<div class="sec tile short">
+          <div style="font-weight:800; margin-bottom:8px;">💡 P360</div>
+          <div class="kv"><span>% to Goal</span><span class="status ${bandPct(pPctRounded)}">${pPctRounded}%</span></div>
+          <div class="kv"><span>Target</span><span>${state.cfg.p360}%</span></div>
+          <div class="kv"><span>Needed</span><span class="status ${bandNeeded(pNeed)}">${pNeed} tx</span></div>
+        </div>`;
+
+        const cardCSAT = `<div class="sec tile short">
+          <div style="font-weight:800; margin-bottom:8px;">⭐ CSAT</div>
+          <div class="kv"><span>Score</span><span class="status ${bandScore(cAvg)}">${isNaN(cAvg)?'—':cAvg}</span></div>
+          <div class="kv"><span>Target</span><span>9.5</span></div>
+          <div class="kv"><span>Needed</span><span class="status ${bandNeeded(cNeed)}">${cNeed} perfect 10s</span></div>
+        </div>`;
+
+        const cardTLife = `<div class="sec tile short">
+          <div style="font-weight:800; margin-bottom:8px;">📱 T-Life</div>
+          <div class="kv"><span>Attainment</span><span class="status ${bandPct(tlPct)}">${pctRound(tlPct)}%</span></div>
+          <div class="kv"><span>Target</span><span>${state.cfg.tlife}%</span></div>
+          <div class="kv"><span>Needed</span><span class="status ${bandNeeded(tlNeed)}">${tlNeed} opportunities</span></div>
+        </div>`;
+
+        const cardVAF = `<div class="sec tile short">
+          <div style="font-weight:800; margin-bottom:8px;">💵 VAF</div>
+          <div class="kv"><span>MRC</span><span class="status ${bandMrc(mrc,vTarget)}">${money(mrc)}</span></div>
+          <div class="kv"><span>Target</span><span>${money(vTarget)}/op</span></div>
+          <div class="kv"><span>Gap</span><span class="status ${bandGap(vGap)}">${money(vGap)}</span></div>
+        </div>`;
+
+        const grid = `
+          ${head}
           <div class="sum-grid">
-            ${sec('Voice','g_v_att','g_v_goal')}
-            ${sec('BTS','g_b_att','g_b_goal')}
-            ${sec('HSI','g_h_att','g_h_goal')}
-            ${sec('HSI+BTS','g_hb_att','g_hb_goal')}
-            ${sec('Accessories','g_a_att','g_a_goal')}
+            ${cardDortSort}
+            ${cardGoals}
+            ${cardP360}
+            ${cardCSAT}
+            ${cardTLife}
+            ${cardVAF}
           </div>
           <div class="buttons">
             <button class="back" onclick="showDaily()">← Daily Goals</button>
             <button class="next" onclick="window.print()">🖨 Print</button>
-          </div>`);
+          </div>`;
+
+        setScreen(grid);
       }
 
       // Launch
       showLocation();
     </script>
 
-    <!-- Register service worker from /app/ too (scope is root) -->
+    <!-- Register service worker (root scope) -->
     <script>
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("/sw.js")
