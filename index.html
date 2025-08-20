@@ -3,106 +3,145 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Enable Notifications</title>
+  <title>Sales Tracker</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#d6006e" />
-  <!-- iOS A2HS -->
+  <!-- Manifest for PWA -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- iOS splash / PWA colors -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
 
   <style>
-    :root { --magenta:#d6006e; --ink:#111; --muted:#666; --bg:#fafafa; --card:#fff; --border:#e5e7eb; }
-    html,body { height:100%; }
-    body {
-      margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      background:var(--bg); color:var(--ink);
-      display:flex; align-items:center; justify-content:center;
+    :root {
+      --magenta:#d6006e; --ink:#111; --muted:#666; --bg:#fafafa; --card:#fff; --border:#e5e7eb;
     }
+    html,body { height:100%; margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:var(--bg); }
+    body { display:flex; align-items:center; justify-content:center; }
+
+    /* Splash screen */
+    #splash {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:#fff; display:flex; align-items:center; justify-content:center;
+      z-index:9999;
+    }
+    #splash img { max-width:60%; height:auto; }
+
+    /* Card layout */
     .card {
       background:var(--card); border:1px solid var(--border); border-radius:14px;
       padding:28px 26px; max-width:520px; width:92%; box-shadow:0 8px 20px rgba(0,0,0,.06);
     }
-    h1 { margin:0 0 8px; font-size:26px; color:var(--magenta); text-align:center; }
-    p  { margin:8px 0 18px; color:var(--muted); text-align:center; }
-    .row { display:flex; flex-direction:column; gap:10px; align-items:center; }
-    button {
-      background:var(--magenta); color:#fff; border:none; border-radius:12px;
-      font-weight:800; letter-spacing:.3px; font-size:18px; padding:14px 18px; cursor:pointer; width:100%;
+    h1 { margin:0 0 8px; font-size:22px; color:var(--magenta); text-align:center; }
+    .row { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+    select,button {
+      font-size:16px; padding:12px; border-radius:10px; border:1px solid var(--border);
     }
-    button:disabled { background:#ddd; color:#888; cursor:not-allowed; }
-    .status { font-size:14px; color:#333; text-align:center; word-break:break-all; }
-    .ok { color:#0a7a0a; font-weight:700; }
-    .warn { color:#b85d00; font-weight:700; }
+    button {
+      background:var(--magenta); color:#fff; border:none; cursor:pointer; font-weight:600;
+    }
+    .logo-small {
+      position:fixed; top:6px; left:50%; transform:translateX(-50%);
+      width:90px; height:auto; z-index:50;
+    }
   </style>
 
-  <!-- OneSignal v16 SDK (Page) -->
+  <!-- OneSignal v16 SDK -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
 <body>
-  <main class="card">
-    <h1>Enable Daily Notifications</h1>
-    <p>Tap below and allow notifications to get your daily reminder.</p>
+  <!-- Splash -->
+  <div id="splash">
+    <img src="logo-512.png" alt="Company Logo">
+  </div>
+
+  <!-- Small sticky logo -->
+  <img class="logo-small" src="logo-192.png" alt="Company Logo">
+
+  <main class="card" id="mainApp" style="display:none">
+    <h1>Select Your Store</h1>
     <div class="row">
-      <button id="btnEnable">🔔 Enable notifications</button>
-      <div id="status" class="status">Checking subscription...</div>
-      <div id="pid" class="status" style="display:none"></div>
+      <select id="regionSelect" disabled>
+        <option value="">Select Region</option>
+      </select>
+      <select id="districtSelect" disabled>
+        <option value="">Select District</option>
+      </select>
+      <select id="storeSelect" disabled>
+        <option value="">Select Store</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <button id="btnEnable">🔔 Enable Notifications</button>
+      <button id="btnSkip">No thanks</button>
+      <div id="status" style="font-size:14px;color:#666;text-align:center;margin-top:6px;">Checking subscription...</div>
     </div>
   </main>
 
   <script>
-    // After subscribing, redirect back to your app:
-    const APP_URL = "/app/?sub=1";
+    // --- Splash screen timer ---
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('splash').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+      }, 2000);
+    });
 
+    // --- Persist dropdown selections ---
+    const regionSelect = document.getElementById('regionSelect');
+    const districtSelect = document.getElementById('districtSelect');
+    const storeSelect = document.getElementById('storeSelect');
+
+    function saveSelection() {
+      localStorage.setItem('region', regionSelect.value);
+      localStorage.setItem('district', districtSelect.value);
+      localStorage.setItem('store', storeSelect.value);
+    }
+    function loadSelection() {
+      if (localStorage.getItem('region')) regionSelect.value = localStorage.getItem('region');
+      if (localStorage.getItem('district')) districtSelect.value = localStorage.getItem('district');
+      if (localStorage.getItem('store')) storeSelect.value = localStorage.getItem('store');
+    }
+    [regionSelect, districtSelect, storeSelect].forEach(el => el.addEventListener('change', saveSelection));
+    loadSelection();
+
+    // --- OneSignal setup ---
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       try {
         await OneSignal.init({ appId: "5ecaba08-de2f-44b8-a4f0-369508265505" });
 
-        const $ = (id) => document.getElementById(id);
-        const btn = $('btnEnable');
-        const status = $('status');
-        const pidBox = $('pid');
+        const btn = document.getElementById('btnEnable');
+        const btnSkip = document.getElementById('btnSkip');
+        const status = document.getElementById('status');
 
         async function refreshStatus() {
           const optedIn = await OneSignal.User.PushSubscription.optedIn;
           if (optedIn) {
-            const playerId = await OneSignal.User.PushSubscription.id;
-            status.innerHTML = '<span class="ok">Subscribed</span>';
-            if (playerId) { pidBox.style.display='block'; pidBox.textContent='Player ID: '+playerId; }
-            btn.disabled = true; btn.textContent = 'Notifications Enabled';
-            // redirect into the app
-            window.location.href = APP_URL;
+            status.textContent = "✅ Notifications Enabled";
+            btn.disabled = true; btn.textContent = "Enabled";
           } else {
-            status.innerHTML = '<span class="warn">Not subscribed</span>';
-            pidBox.style.display='none'; pidBox.textContent='';
-            btn.disabled = false; btn.textContent = '🔔 Enable notifications';
+            status.textContent = "Not Subscribed";
+            btn.disabled = false; btn.textContent = "🔔 Enable Notifications";
           }
         }
 
         btn.addEventListener('click', async () => {
           await OneSignal.Slidedown.promptPush();
-          await refreshStatus();
+          refreshStatus();
+        });
+        btnSkip.addEventListener('click', () => {
+          status.textContent = "Notifications skipped";
+          btn.disabled = true; btnSkip.disabled = true;
         });
 
-        await refreshStatus();
+        refreshStatus();
       } catch (e) {
-        document.getElementById('status').textContent = 'Init error: ' + (e && e.message ? e.message : e);
+        document.getElementById('status').textContent = "Init error: " + e;
       }
     });
   </script>
-
-  <!-- Register service worker (root scope) -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js")
-        .then(reg => console.log("SW registered:", reg.scope))
-        .catch(err => console.error("SW registration failed:", err));
-    }
-  </script>
 </body>
 </html>
-
-
