@@ -8,53 +8,98 @@
   <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
+
+  <!-- iOS PWA basics -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="white" />
   <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
 
-  <!-- App icons -->
-  <link rel="apple-touch-icon" href="logo-512.png" />
-  <link rel="icon" sizes="512x512" href="logo-512.png" />
-  <link rel="icon" sizes="64x64" href="logo-64.png" />
+  <!-- Icons (make sure logo-64.png, logo-192.png, logo-512.png exist in repo root) -->
+  <link rel="apple-touch-icon" href="logo-192.png" />
+  <link rel="icon" href="logo-64.png" sizes="64x64" />
+  <link rel="icon" href="logo-512.png" sizes="512x512" />
 
-  <!-- iOS/iPadOS splash screens -->
+  <!-- iOS/iPadOS startup images (upload these PNGs to repo root with exact names) -->
+  <!-- iPad Pro 12.9" -->
   <link rel="apple-touch-startup-image" href="splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-2732x2048.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <!-- iPad Pro 11" -->
   <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-2388x1668.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <!-- iPad Pro 10.5" -->
   <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-2224x1668.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <!-- iPad 9.7" -->
   <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-2048x1536.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <!-- iPhone 15 Pro Max / newer tall 3x -->
+  <link rel="apple-touch-startup-image" href="splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash-2796x1290.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+
+  <!-- iPhone 12/13/14 Pro Max / 14 Plus -->
+  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash-2778x1284.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+
+  <!-- iPhone 12/13/14 -->
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash-2532x1170.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+
+  <!-- iPhone XS Max / 11 Pro Max -->
   <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-2688x1242.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2436x1125.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+
+  <!-- iPhone XR / 11 -->
   <link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-1792x828.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <!-- iPhone 6/7/8 Plus -->
   <link rel="apple-touch-startup-image" href="splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-2208x1242.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+
+  <!-- iPhone X / XS / 11 Pro -->
+  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="splash-2436x1125.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+
+  <!-- iPhone 6/7/8 -->
   <link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-1334x750.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <!-- iPhone SE / 5 / 5S -->
   <link rel="apple-touch-startup-image" href="splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
   <link rel="apple-touch-startup-image" href="splash-1136x640.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+
+  <style>
+    html,body { margin:0; height:100%; background:#ffffff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    /* Simple in-app splash */
+    #splash {
+      position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:9999;
+    }
+    #splash img { width:160px; height:160px; }
+    /* App container */
+    #app { display:none; padding:20px; max-width:720px; margin:0 auto; }
+  </style>
 </head>
 
 <body>
-  <!-- Splash screen container -->
-  <div id="splash" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9999;">
-    <img src="logo-512.png" alt="Logo" style="width:160px;height:160px;" />
+  <!-- In-app splash (2s) -->
+  <div id="splash">
+    <img src="logo-512.png" alt="Company Logo" />
   </div>
 
-  <!-- Main app container -->
-  <div id="app" style="display:none;">
-    <!-- Your existing app structure here -->
-    <h1>Sales Tracker App</h1>
-    <p>Store selection, daily goals, reports, etc. go here…</p>
+  <!-- Your app -->
+  <div id="app">
+    <!-- ↓↓↓ Replace this with your existing app UI ↓↓↓ -->
+    <h1>Sales Tracker</h1>
+    <p>App content loads here after the splash.</p>
+    <!-- ↑↑↑ Replace this with your existing app UI ↑↑↑ -->
   </div>
 
   <script>
-    // Hide splash after 2s and show app
+    // Hide in-app splash after ~2s
     window.addEventListener('load', () => {
       setTimeout(() => {
         document.getElementById('splash').style.display = 'none';
