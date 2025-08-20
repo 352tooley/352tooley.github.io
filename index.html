@@ -1,14 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Sales Tracker</title>
 
-  <!-- Manifest -->
   <link rel="manifest" href="manifest.json" />
-
-  <!-- PWA Meta -->
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="white" />
@@ -16,84 +13,29 @@
   <link rel="apple-touch-icon" href="logo-192.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="logo-512.png" />
 
-  <!-- Styles -->
+  <!-- iOS startup images (ensure these files exist in repo root) -->
+  <link rel="apple-touch-startup-image" href="splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden; /* Prevent side scrolling */
-    }
-    header {
-      text-align: center;
-      margin-top: 10px;
-    }
-    header img {
-      width: 90%;
-      max-width: 300px;
-      height: auto;
-    }
-    .container {
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
-      margin: 20px auto;
-      text-align: center;
-    }
-    h2 {
-      color: #e20074;
-      margin-bottom: 20px;
-    }
-    select, button {
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-    button {
-      background: #e20074;
-      color: #fff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:disabled {
-      background: #ccc;
-    }
-    #skipBtn {
-      background: #aaa;
-    }
+    html,body{height:100%;margin:0;background:#fff;}
+    #splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;}
+    #splash img{width:min(320px,70vw);height:auto;}
   </style>
 </head>
 <body>
-  <header>
-    <img src="logo-192.png" alt="Company Logo" />
-  </header>
-  <div class="container">
-    <h2>Select Your Store</h2>
-    <select id="areaSelect">
-      <option disabled selected>Select Area</option>
-    </select>
-    <select id="regionSelect" disabled>
-      <option disabled selected>Select Region</option>
-    </select>
-    <select id="districtSelect" disabled>
-      <option disabled selected>Select District</option>
-    </select>
-    <select id="storeSelect" disabled>
-      <option disabled selected>Select Store</option>
-    </select>
-    <button id="enableBtn">Enable Notifications</button>
-    <button id="skipBtn">No thanks</button>
-    <p id="notifStatus"></p>
-  </div>
-
-  <script src="app.js"></script>
+  <div id="splash"><img src="logo-512.png" alt="Company Logo" /></div>
+  <script>
+    setTimeout(function(){ location.replace('./app/index.html'); }, 2000);
+  </script>
 </body>
 </html>
