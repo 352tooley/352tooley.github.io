@@ -2,268 +2,129 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sales Tracker — App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Sales Tracker</title>
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- PWA Meta -->
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="white" />
+  <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
+  <link rel="apple-touch-icon" href="logo-192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="logo-512.png" />
+
+  <!-- Splash Screens -->
+  <link rel="apple-touch-startup-image" href="splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" />
+
+  <!-- Styles -->
   <style>
-    :root{--magenta:#d6006e;--ink:#111;--muted:#666;--bg:#fafafa;--card:#fff;--border:#e5e7eb;--radius:12px;}
-    html,body{margin:0;height:100%;background:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden;}
-    header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:center;padding:10px;z-index:5;}
-    header img{width:min(360px,92vw);height:auto;}
-    .wrap{max-width:760px;margin:0 auto;padding:12px 16px 24px;}
-    h2{margin:10px 0 14px;color:var(--magenta);text-align:center}
-    .sec{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:16px;margin:12px 0;}
-    .row{display:grid;grid-template-columns:1fr;gap:10px}
-    .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    @media(max-width:420px){.pair{grid-template-columns:1fr}}
-    select,input,button{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);font-size:16px}
-    button{background:var(--magenta);color:#fff;border:none;font-weight:800;cursor:pointer}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .btns{display:flex;gap:10px;margin-top:12px}
-    .back{background:#ddd;color:#333}
-    .muted{font-size:13px;color:var(--muted);text-align:center}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media(max-width:760px){.grid2{grid-template-columns:1fr}}
-    .status{padding:4px 10px;border-radius:999px;font-size:14px;font-weight:800;display:inline-block}
-    .ok{background:rgba(0,200,0,.14);color:#0a0;border:1px solid rgba(0,200,0,.28)}
-    .warn{background:rgba(255,200,0,.16);color:#a60;border:1px solid rgba(255,200,0,.32)}
-    .bad{background:rgba(255,80,80,.16);color:#a00;border:1px solid rgba(255,80,80,.32)}
-    @media print{ @page{size:Letter;margin:.5in} body{color:#000} .btns, .muted{display:none!important} .sec{box-shadow:none} .grid2{grid-template-columns:1fr 1fr} }
-  </style>
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-</head>
-<body>
-  <header><img src="../logo-192.png" alt="Logo"></header>
-  <div class="wrap" id="app"></div>
-
-  <script>
-    const S={store:null,cfg:{p360:60,tlife:70,vaf:19}};
-    const $=id=>document.getElementById(id);
-    const set=html=>{$('app').innerHTML=html};
-    const num=v=>parseFloat(v||0)||0, int=v=>parseInt(v||0)||0, money=v=>'$'+num(v).toFixed(2), pct=v=>Math.round(num(v));
-    const bandPct=p=>num(p)>=90?'ok':(num(p)>=60?'warn':'bad');
-    const bandGap=g=>num(g)<=0?'ok':'bad';
-    const bandScore=s=>num(s)>=9.5?'ok':(num(s)>=9.0?'warn':'bad');
-    const bandNeed=n=>num(n)===0?'ok':'bad';
-    const bandMrc=(m,t)=>num(m)>=num(t)?'ok':((num(t)-num(m))<=1?'warn':'bad');
-
-    function home(){
-      set(`<h2>Select Your Store</h2>
-        <div class="sec">
-          <div class="row">
-            <select id="areaSelect"><option disabled selected>Select Area</option></select>
-            <select id="regionSelect" disabled><option disabled selected>Select Region</option></select>
-            <select id="districtSelect" disabled><option disabled selected>Select District</option></select>
-            <select id="storeSelect" disabled><option disabled selected>Select Store</option></select>
-            <button id="goDort" disabled>DORT →</button>
-            <hr style="border:none;border-top:1px solid #eee">
-            <button id="enableBtn">🔔 Enable notifications</button>
-            <button id="skipBtn" class="back">No thanks</button>
-            <div id="notifStatus" class="muted"></div>
-          </div>
-        </div>`);
-      initCascades();
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden; /* disable horizontal scroll */
     }
-
-    const metric=(label,id1,id2,p1='Attainment',p2='Goal')=>`
-      <div class="row">
-        <div class="sec"><b>${label}</b>
-          <div class="pair">
-            <input id="${id1}" type="number" placeholder="${p1}" oninput="localStorage.setItem('${id1}',this.value)">
-            <input id="${id2}" type="number" placeholder="${p2}" oninput="localStorage.setItem('${id2}',this.value)">
-          </div>
-        </div>
-      </div>`;
-
-    function dort(){
-      S.store = localStorage.getItem('sel_store') || '';
-      set(`<h2>DORT — ${S.store||''}</h2>
-        ${metric('Voice','d_v_att','d_v_goal')}
-        ${metric('BTS','d_b_att','d_b_goal')}
-        ${metric('TFB','d_t_att','d_t_goal')}
-        ${metric('Accessories','d_a_att','d_a_goal')}
-        <div class="btns">
-          <button class="back" onclick="home()">← Store</button>
-          <button onclick="sort()">SORT →</button>
-        </div>`);
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
     }
-    function sort(){
-      set(`<h2>SORT — ${S.store||''}</h2>
-        ${metric('Voice','s_v_att','s_v_goal')}
-        ${metric('BTS','s_b_att','s_b_goal')}
-        ${metric('TFB','s_t_att','s_t_goal')}
-        ${metric('Accessories','s_a_att','s_a_goal')}
-        <div class="btns">
-          <button class="back" onclick="dort()">← DORT</button>
-          <button onclick="revenue()">Revenue →</button>
-        </div>`);
+    header img {
+      max-width: 90%;
+      height: auto;
+      margin: 10px auto;
+      display: block;
     }
-    function revenue(){
-      set(`<h2>Revenue — ${S.store||''}</h2>
-        <div class="row">
-          <div class="sec"><b>P360</b>
-            <div class="pair">
-              <input id="p_opp" type="number" placeholder="Opportunities" oninput="localStorage.setItem('p_opp',this.value)">
-              <input id="p_pct" type="number" placeholder="Attach %" oninput="localStorage.setItem('p_pct',this.value)">
-            </div>
-          </div>
-          <div class="sec"><b>VAF</b>
-            <div class="pair">
-              <input id="v_opp" type="number" placeholder="Opportunities" oninput="localStorage.setItem('v_opp',this.value)">
-              <input id="v_total" type="number" placeholder="Total Revenue" oninput="localStorage.setItem('v_total',this.value)">
-            </div>
-          </div>
-        </div>
-        <div class="btns">
-          <button class="back" onclick="sort()">← SORT</button>
-          <button onclick="csat()">CSAT →</button>
-        </div>`);
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
     }
-    function csat(){
-      set(`<h2>CSAT — ${S.store||''}</h2>
-        <div class="row">
-          <div class="sec"><b>CSAT</b>
-            <div class="pair">
-              <input id="c_score" type="number" step="0.01" placeholder="Current Score (0–10)" oninput="localStorage.setItem('c_score',this.value)">
-              <input id="c_surveys" type="number" placeholder="Surveys Taken" oninput="localStorage.setItem('c_surveys',this.value)">
-            </div>
-          </div>
-        </div>
-        <div class="btns">
-          <button class="back" onclick="revenue()">← Revenue</button>
-          <button onclick="tlife()">T-Life →</button>
-        </div>`);
+    h2 {
+      color: #e20074;
+      margin-bottom: 20px;
     }
-    function tlife(){
-      set(`<h2>T-Life — ${S.store||''}</h2>
-        <div class="row">
-          <div class="sec"><b>T-Life</b>
-            <div class="pair">
-              <input id="t2_att" type="number" placeholder="Attainment %" oninput="localStorage.setItem('t2_att',this.value)">
-              <input id="t2_opp" type="number" placeholder="Opportunities" oninput="localStorage.setItem('t2_opp',this.value)">
-            </div>
-          </div>
-        </div>
-        <div class="btns">
-          <button class="back" onclick="csat()">← CSAT</button>
-          <button onclick="goals()">Daily Goals →</button>
-        </div>`);
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
     }
-    function goals(){
-      set(`<h2>Daily Goals — ${S.store||''}</h2>
-        <div class="row">
-          <div class="sec"><label>Voice</label><input id="g_voice" type="number" placeholder="Voice Goal" value="${localStorage.getItem('g_voice')||''}" oninput="localStorage.setItem('g_voice',this.value)"></div>
-          <div class="sec"><label>BTS</label><input id="g_bts" type="number" placeholder="BTS Goal" value="${localStorage.getItem('g_bts')||''}" oninput="localStorage.setItem('g_bts',this.value)"></div>
-          <div class="sec"><label>Accessories</label><input id="g_acc" type="number" placeholder="Accessories Goal" value="${localStorage.getItem('g_acc')||''}" oninput="localStorage.setItem('g_acc',this.value)"></div>
-          <div class="sec"><label>TFB</label><input id="g_tfb" type="number" placeholder="TFB Goal" value="${localStorage.getItem('g_tfb')||''}" oninput="localStorage.setItem('g_tfb',this.value)"></div>
-        </div>
-        <div class="btns">
-          <button class="back" onclick="tlife()">← T-Life</button>
-          <button onclick="summary()">Summary →</button>
-        </div>`);
+    button {
+      background: #e20074;
+      color: #fff;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
     }
-
-    function summary(){
-      const intv=v=>parseInt(v||0)||0, numv=v=>parseFloat(v||0)||0;
-      const comb=(aD,gD,aS,gS)=>{const att=intv(localStorage.getItem(aD))+intv(localStorage.getItem(aS));const goal=intv(localStorage.getItem(gD))+intv(localStorage.getItem(gS));const pc=goal>0?Math.round(att/goal*100):0;const gap=goal-att;return{att:att,goal:goal,pct:pc,gap:gap}};
-      const voice=comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
-      const bts  =comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
-      const tfb  =comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
-      const acc  =comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
-
-      const pOpp=intv(localStorage.getItem('p_opp'));
-      const pPct=Math.max(0,Math.min(100,numv(localStorage.getItem('p_pct'))));
-      const pAtt=Math.round(pOpp*(pPct/100));
-      const tP=(S.cfg.p360)/100;
-      const pNeed=Math.max(0,Math.ceil((tP*pOpp-pAtt)/(1-tP)));
-
-      const cAvg=numv(localStorage.getItem('c_score'));
-      const cN=intv(localStorage.getItem('c_surveys'));
-      const cNeed=cAvg>=9.5?0:Math.max(0,Math.ceil(2*cN*(9.5-cAvg)));
-
-      const tlPct=Math.max(0,Math.min(100,numv(localStorage.getItem('t2_att'))));
-      const tlOpp=intv(localStorage.getItem('t2_opp'));
-      const tlSuc=Math.round(tlOpp*(tlPct/100));
-      const tT=(S.cfg.tlife)/100;
-      const tlNeed=Math.max(0,Math.ceil((tT*tlOpp-tlSuc)/(1-tT)));
-
-      const vOpp=intv(localStorage.getItem('v_opp'));
-      const vTot=numv(localStorage.getItem('v_total'));
-      const vTarget=S.cfg.vaf;
-      const needTotal=vTarget*vOpp;
-      const vGap=Math.max(0,needTotal-vTot);
-      const mrc=vOpp>0?(vTot/vOpp):0;
-
-      const gV=localStorage.getItem('g_voice')||'—';
-      const gB=localStorage.getItem('g_bts')||'—';
-      const gA=localStorage.getItem('g_acc')||'—';
-      const gT=localStorage.getItem('g_tfb')||'—';
-
-      function bandPct(p){p=Number(p)||0;return p>=90?'ok':(p>=60?'warn':'bad')}
-      function bandGap(g){g=Number(g)||0;return g<=0?'ok':'bad'}
-      function bandScore(s){s=Number(s)||0;return s>=9.5?'ok':(s>=9?'warn':'bad')}
-      function bandNeed(n){n=Number(n)||0;return n===0?'ok':'bad'}
-      function bandMrc(m,t){m=Number(m)||0; t=Number(t)||0; return m>=t?'ok':((t-m)<=1?'warn':'bad')}
-      function money(v){return '$'+(Number(v)||0).toFixed(2)}
-
-      set(`<h2>Summary — ${S.store||''}</h2>
-        <div class="grid2">
-          <div class="sec">
-            <b>DORT + SORT</b>
-            <div>Voice <span class="status ${bandGap(voice.gap)}">Gap: ${voice.gap>=0? '+'+voice.gap: voice.gap}</span> <span class="status ${bandPct(voice.pct)}">${voice.pct}%</span></div>
-            <div>BTS <span class="status ${bandGap(bts.gap)}">Gap: ${bts.gap>=0? '+'+bts.gap: bts.gap}</span> <span class="status ${bandPct(bts.pct)}">${bts.pct}%</span></div>
-            <div>TFB <span class="status ${bandGap(tfb.gap)}">Gap: ${tfb.gap>=0? '+'+tfb.gap: tfb.gap}</span> <span class="status ${bandPct(tfb.pct)}">${tfb.pct}%</span></div>
-            <div>Accessories <span class="status ${bandGap(acc.gap)}">Gap: ${acc.gap>=0? '+'+acc.gap: acc.gap}</span> <span class="status ${bandPct(acc.pct)}">${acc.pct}%</span></div>
-          </div>
-          <div class="sec">
-            <b>🎯 Daily Goals</b>
-            <div>Voice: <b>${gV}</b></div>
-            <div>BTS: <b>${gB}</b></div>
-            <div>TFB: <b>${gT}</b></div>
-            <div>Accessories: <b>${gA}</b></div>
-          </div>
-          <div class="sec">
-            <b>💡 P360</b>
-            <div>% to Goal <span class="status ${bandPct(Math.round(pPct))}">${Math.round(pPct)}%</span></div>
-            <div>Target: ${S.cfg.p360}%</div>
-            <div>Needed: <span class="status ${bandNeed(pNeed)}">${pNeed} tx</span></div>
-          </div>
-          <div class="sec">
-            <b>⭐ CSAT</b>
-            <div>Score <span class="status ${bandScore(cAvg)}">${isNaN(cAvg)?'—':cAvg}</span></div>
-            <div>Target: 9.5</div>
-            <div>Needed: <span class="status ${bandNeed(cNeed)}">${cNeed} perfect 10s</span></div>
-          </div>
-          <div class="sec">
-            <b>📱 T-Life</b>
-            <div>Attainment <span class="status ${bandPct(Math.round(tlPct))}">${Math.round(tlPct)}%</span></div>
-            <div>Target: ${S.cfg.tlife}%</div>
-            <div>Needed: <span class="status ${bandNeed(tlNeed)}">${tlNeed} opportunities</span></div>
-          </div>
-          <div class="sec">
-            <b>💵 VAF</b>
-            <div>MRC <span class="status ${bandMrc(mrc,S.cfg.vaf)}">${money(mrc)}</span></div>
-            <div>Target: ${money(S.cfg.vaf)}/op</div>
-            <div>Gap <span class="status ${bandGap(vGap)}">${money(vGap)}</span></div>
-          </div>
-        </div>
-        <div class="btns" style="margin-top:12px">
-          <button class="back" onclick="goals()">← Daily Goals</button>
-          <button class="" onclick="window.print()">🖨 Print</button>
-        </div>`);
+    #dortBtn {
+      background: #e20074;
+      color: #fff;
     }
-
-    function initCascades(){
-      const btn = document.getElementById('goDort');
-      if(btn){
-        btn.addEventListener('click', ()=>{ S.store = localStorage.getItem('sel_store') || ''; dort(); });
-        if (localStorage.getItem('sel_store')) { btn.disabled = false; }
+    #notifBtn {
+      background: #ff69b4;
+      color: #fff;
+    }
+    button:disabled {
+      background: #ccc;
+    }
+    @media print {
+      body {
+        zoom: 90%; /* scale down for print */
+      }
+      .container {
+        box-shadow: none;
       }
     }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo-192.png" alt="Company Logo" />
+  </header>
+  <div class="container">
+    <h2>Select Your Store</h2>
+    <select id="areaSelect">
+      <option disabled selected>Select Area</option>
+    </select>
+    <select id="regionSelect" disabled>
+      <option disabled selected>Select Region</option>
+    </select>
+    <select id="districtSelect" disabled>
+      <option disabled selected>Select District</option>
+    </select>
+    <select id="storeSelect" disabled>
+      <option disabled selected>Select Store</option>
+    </select>
+    <button id="dortBtn">DORT →</button>
+    <button id="notifBtn">Notifications Off</button>
+    <button id="skipBtn">No thanks</button>
+    <p id="notifStatus"></p>
+  </div>
 
-    home();
-  </script>
-
-  <!-- Include dropdown + notifications logic -->
-  <script src="app.js"></script>
+  <script src="app/app.js"></script>
 </body>
 </html>
