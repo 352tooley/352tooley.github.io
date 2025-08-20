@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Sales Tracker</title>
 
   <!-- Manifest / PWA -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="white" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
   <link rel="apple-touch-icon" href="logo-192.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="logo-512.png" />
@@ -17,14 +20,17 @@
   <link rel="icon" href="logo-192.png" sizes="192x192" />
   <link rel="icon" href="logo-512.png" sizes="512x512" />
 
-  <!-- iOS/iPadOS startup images (already in your repo root) -->
-  <link rel="apple-touch-startup-image" href="splash-640x1136.png"  media="(device-width:320px) and (device-height:568px) and (-webkit-device-pixel-ratio:2)" />
-  <link rel="apple-touch-startup-image" href="splash-750x1334.png"  media="(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2)" />
-  <link rel="apple-touch-startup-image" href="splash-828x1792.png"  media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2)" />
-  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3)" />
-  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3)" />
-  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:3)" />
-  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3)" />
+  <!-- iOS/iPadOS startup images (ensure these exist in your repo root) -->
+  <link rel="apple-touch-startup-image" href="splash-640x1136.png"  media="(device-width:320px) and (device-height:568px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-750x1334.png"  media="(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-828x1792.png"  media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width:375px) and (device-height:812px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width:390px) and (device-height:844px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1242x2208.png" media="(device-width:414px) and (device-height:736px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1290x2796.png" media="(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1320x2868.png" media="(device-width:430px) and (device-height:938px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(device-width:768px) and (device-height:1024px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width:834px) and (device-height:1112px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width:834px) and (device-height:1194px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
@@ -32,14 +38,18 @@
 
   <style>
     :root{
-      --magenta:#d6006e;
+      --brand:#d6006e;
       --bg:#fafafa;
       --card:#ffffff;
       --border:#e7e7ea;
       --ink:#111;
+      --content-max: 640px; /* shared width for logo + dropdowns */
     }
 
+    /* Reset & layout guards */
+    *, *::before, *::after { box-sizing: border-box; }
     html, body { height: 100%; }
+    html, body { overflow-x: hidden; } /* prevent side-to-side scroll */
     body{
       margin:0;
       color:var(--ink);
@@ -48,27 +58,29 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* STICKY HEADER — bigger logo & tight padding so content starts right away */
+    /* Sticky header with logo sized to the same width as the form */
     header{
       position: sticky;
       top: 0;
       z-index: 1000;
-      display:flex;
-      justify-content:center;
-      align-items:center;
       background:#fff;
+      border-bottom:1px solid #eee;
       padding-top: calc(env(safe-area-inset-top, 0px) + 6px);
       padding-bottom: 6px;
-      border-bottom:1px solid #eee;
     }
-    header img{
-      max-height: 140px;     /* make it larger */
+    .header-inner{
+      width: min(96vw, var(--content-max));
+      margin: 0 auto;
+    }
+    .brand{
+      width: 100%;          /* same width as dropdowns */
       height: auto;
-      width: auto;
-      display:block;
+      display: block;
+      max-height: 220px;    /* keep a reasonable height on tall phones */
+      object-fit: contain;
     }
 
-    /* Content wrapper — minimal padding so it sits near the top */
+    /* Page content */
     .wrap{
       padding: 8px 12px 16px;
       background: var(--bg);
@@ -79,16 +91,17 @@
       border:1px solid var(--border);
       border-radius:14px;
       box-shadow:0 4px 14px rgba(0,0,0,.06);
-      margin: 8px auto 16px;              /* small margin just under header */
+      margin: 8px auto 16px;
       padding:14px;
-      width:min(96vw, 640px);
+      width: min(96vw, var(--content-max));
     }
 
     h2{
       margin:6px 6px 12px;
       font-size: clamp(22px, 3.8vw, 28px);
       text-align:center;
-      color:var(--magenta);
+      color:var(--brand);
+      font-weight: 800;
     }
 
     .controls{ display:flex; flex-direction:column; gap:10px; }
@@ -110,26 +123,30 @@
       margin-top:10px;
     }
     .primary{
-      background:var(--magenta);
+      background:var(--brand);
       color:#fff; font-weight:800;
       border:none; cursor:pointer;
     }
     .primary:disabled{ background:#c7c7ce; cursor:not-allowed; }
     .ghost{
-      background:#ffe6f1; color:var(--magenta);
+      background:#ffe6f1; color:var(--brand);
       border:1px solid #ffd0e6; font-weight:800;
     }
 
     #notifStatus{
       margin:6px 2px 0;
       font-size:14px; text-align:center; color:#666;
+      min-height: 18px;
     }
   </style>
 </head>
 
 <body>
   <header>
-    <img src="logo-512.png" alt="Company Logo" />
+    <div class="header-inner">
+      <!-- Logo scaled to same width as form -->
+      <img class="brand" src="logo-512.png" alt="Company Logo" />
+    </div>
   </header>
 
   <div class="wrap">
