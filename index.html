@@ -2,35 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
   <title>Sales Tracker</title>
 
-  <!-- Manifest -->
+  <!-- Manifest / Icons -->
   <link rel="manifest" href="manifest.json" />
-
-  <!-- PWA Meta -->
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="white" />
   <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
-  <link rel="apple-touch-icon" href="logo-192.png" />
+  <!-- iOS home screen icon (180px is the most commonly used size) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="logo-192.png" />
+  <!-- Fallback / additional icons -->
   <link rel="apple-touch-icon" sizes="512x512" href="logo-512.png" />
+  <link rel="icon" href="logo-64.png" sizes="64x64" />
+  <link rel="icon" href="logo-192.png" sizes="192x192" />
+  <link rel="icon" href="logo-512.png" sizes="512x512" />
 
-  <!-- Splash Screens -->
-  <link rel="apple-touch-startup-image" href="splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" />
-  <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)" />
-  <link rel="apple-touch-startup-image" href="splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" />
+  <!-- iPhone startup images -->
+  <link rel="apple-touch-startup-image" href="splash-640x1136.png"
+        media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1136x640.png"
+        media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
 
-  <!-- Styles -->
+  <link rel="apple-touch-startup-image" href="splash-750x1334.png"
+        media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1334x750.png"
+        media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-1125x2436.png"
+        media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2436x1125.png"
+        media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png"
+        media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2532x1170.png"
+        media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" />
+
+  <!-- NEW: iPhone 15/15 Pro Max (1290×2796) -->
+  <link rel="apple-touch-startup-image" href="splash-1290x2796.png"
+        media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2796x1290.png"
+        media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-1242x2688.png"
+        media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2688x1242.png"
+        media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-1284x2778.png"
+        media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2778x1284.png"
+        media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-828x1792.png"
+        media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-1792x828.png"
+        media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
+
+  <!-- NEW: classic Plus sizes (1242×2208) -->
+  <link rel="apple-touch-startup-image" href="splash-1242x2208.png"
+        media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2208x1242.png"
+        media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" />
+
+  <!-- NEW: iPhone 15 Pro (1179×2556) -->
+  <link rel="apple-touch-startup-image" href="splash-1179x2556.png"
+        media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2556x1179.png"
+        media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)" />
+
+  <!-- iPad startup images -->
+  <link rel="apple-touch-startup-image" href="splash-1536x2048.png"
+        media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2048x1536.png"
+        media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-1668x2224.png"
+        media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2224x1668.png"
+        media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-1668x2388.png"
+        media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2388x1668.png"
+        media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
+
+  <link rel="apple-touch-startup-image" href="splash-2048x2732.png"
+        media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+  <link rel="apple-touch-startup-image" href="splash-2732x2048.png"
+        media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
+
   <style>
+    :root { --brand:#e20074; }
     body {
       font-family: Arial, sans-serif;
       background: #f5f5f5;
@@ -38,26 +106,34 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
+    }
+    header {
+      position: sticky;
+      top: 8px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+      z-index: 10;
     }
     header img {
       max-height: 40px;
-      position: sticky;
-      top: 8px;
     }
     .container {
       background: #fff;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
+      width: 92%;
+      max-width: 420px;
       text-align: center;
     }
     h2 {
-      color: #e20074;
-      margin-bottom: 20px;
+      color: var(--brand);
+      margin: 6px 0 16px;
+      font-weight: 800;
     }
     select, button {
       width: 100%;
@@ -68,7 +144,7 @@
       font-size: 16px;
     }
     button {
-      background: #e20074;
+      background: var(--brand);
       color: #fff;
       border: none;
       font-weight: bold;
@@ -76,32 +152,41 @@
     }
     button:disabled {
       background: #ccc;
+      cursor: not-allowed;
     }
+    #notifStatus { font-size: 14px; color:#333; min-height: 18px; }
   </style>
 </head>
 <body>
   <header>
     <img src="logo-192.png" alt="Company Logo" />
   </header>
+
   <div class="container">
     <h2>Select Your Store</h2>
+
     <select id="areaSelect">
       <option disabled selected>Select Area</option>
     </select>
+
     <select id="regionSelect" disabled>
       <option disabled selected>Select Region</option>
     </select>
+
     <select id="districtSelect" disabled>
       <option disabled selected>Select District</option>
     </select>
+
     <select id="storeSelect" disabled>
       <option disabled selected>Select Store</option>
     </select>
+
     <button id="enableBtn">Enabled</button>
     <button id="skipBtn">No thanks</button>
     <p id="notifStatus"></p>
   </div>
 
+  <!-- Your existing app logic (dropdowns + notifications) -->
   <script src="app/app.js"></script>
 </body>
 </html>
