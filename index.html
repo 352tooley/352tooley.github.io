@@ -21,6 +21,7 @@
   <link rel="icon" href="logo-512.png" sizes="512x512" />
 
   <!-- iOS/iPadOS startup images (ensure these exist in your repo root) -->
+  <!-- iPhone -->
   <link rel="apple-touch-startup-image" href="splash-640x1136.png"  media="(device-width:320px) and (device-height:568px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-750x1334.png"  media="(device-width:375px) and (device-height:667px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-828x1792.png"  media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
@@ -29,8 +30,11 @@
   <link rel="apple-touch-startup-image" href="splash-1242x2208.png" media="(device-width:414px) and (device-height:736px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width:414px) and (device-height:896px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width:428px) and (device-height:926px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <!-- 15/15 Pro Max -->
   <link rel="apple-touch-startup-image" href="splash-1290x2796.png" media="(device-width:430px) and (device-height:932px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <!-- 16 Pro Max (logical 430×938) -->
   <link rel="apple-touch-startup-image" href="splash-1320x2868.png" media="(device-width:430px) and (device-height:938px) and (-webkit-device-pixel-ratio:3) and (orientation:portrait)" />
+  <!-- iPad -->
   <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(device-width:768px) and (device-height:1024px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width:834px) and (device-height:1112px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
   <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width:834px) and (device-height:1194px) and (-webkit-device-pixel-ratio:2) and (orientation:portrait)" />
@@ -58,7 +62,7 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
-    /* Sticky header with logo sized to the same width as the form */
+    /* Sticky header with full-width logo */
     header{
       position: sticky;
       top: 0;
@@ -76,9 +80,17 @@
       width: 100%;          /* same width as dropdowns */
       height: auto;
       display: block;
-      max-height: 220px;    /* keep a reasonable height on tall phones */
+      max-height: 220px;    /* keep reasonable height on tall phones */
       object-fit: contain;
     }
+
+    /* In-app splash overlay (always shows for ~2s on load) */
+    #splash {
+      position: fixed; inset: 0; z-index: 2000;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #splash img { width: clamp(160px, 40vw, 280px); height: auto; }
 
     /* Page content */
     .wrap{
@@ -122,13 +134,19 @@
       gap:10px;
       margin-top:10px;
     }
-    .primary{
-      background:var(--brand);
-      color:#fff; font-weight:800;
-      border:none; cursor:pointer;
+
+    /* Reverted notification button look & text */
+    #enableBtn{
+      background:#111;       /* previous dark button */
+      color:#fff;
+      border:none;
+      font-weight:800;
+      cursor:pointer;
     }
-    .primary:disabled{ background:#c7c7ce; cursor:not-allowed; }
-    .ghost{
+    #enableBtn:disabled{ background:#c7c7ce; cursor:not-allowed; }
+
+    /* Keep "No thanks" */
+    #skipBtn{
       background:#ffe6f1; color:var(--brand);
       border:1px solid #ffd0e6; font-weight:800;
     }
@@ -142,6 +160,9 @@
 </head>
 
 <body>
+  <!-- In-app splash (2s every launch) -->
+  <div id="splash"><img src="logo-512.png" alt="Company Logo" /></div>
+
   <header>
     <div class="header-inner">
       <!-- Logo scaled to same width as form -->
@@ -172,15 +193,25 @@
       </div>
 
       <div class="cta">
-        <button id="enableBtn" class="primary">Enabled</button>
-        <button id="skipBtn" class="ghost">No thanks</button>
+        <!-- Reverted text/feel -->
+        <button id="enableBtn">🔔 Enable notifications</button>
+        <button id="skipBtn">No thanks</button>
       </div>
 
       <p id="notifStatus" role="status" aria-live="polite"></p>
     </section>
   </div>
 
-  <!-- Your app logic (filters, OneSignal wiring, saving selections, etc.) -->
+  <!-- App logic (filters, OneSignal wiring, saving selections, etc.) -->
+  <script>
+    // Simple in-app splash: always shows ~2s
+    window.addEventListener('load', function () {
+      setTimeout(function(){
+        var s = document.getElementById('splash');
+        if (s) s.style.display = 'none';
+      }, 2000);
+    });
+  </script>
   <script src="app/app.js"></script>
 </body>
 </html>
