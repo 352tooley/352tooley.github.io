@@ -1,33 +1,15 @@
 /* =============================
-   Sales Tracker - app/app.js
+   Sales Tracker - app/app.js (v6)
    =============================
 
-   What this file does:
-   - Holds the embedded company tree (AREA → REGION → DISTRICT → STORES).
-   - Populates the 4 cascading dropdowns.
-   - Saves/restores selections to localStorage.
-   - Handles OneSignal notifications (Enable / Off) + “No thanks” option.
-
-   👉 To load your complete organization tree, replace the DATA_TREE below
-      with your full JSON object (same structure as the sample).
-
-   Tip: After replacing, bump the query version on the script tag in app/index.html:
-      <script src="./app.js?v=4" defer></script>
+   - Cascading dropdowns (Area → Region → District → Store)
+   - Saves/restores selections in localStorage
+   - OneSignal notifications (Enable / No thanks)
+   - DORT button now routes to the full app at the ROOT (/index.html)
 */
 
-/* ---------- 1) COMPANY TREE (sample) ----------
-   Replace the entire DATA_TREE with your full data.
-   Structure:
-   {
-     "Area A": {
-       "Region A1": {
-         "District A1-1": ["Store 1","Store 2"],
-         "District A1-2": ["Store ..."]
-       },
-       "Region A2": { ... }
-     },
-     "Area B": { ... }
-   }
+/* ---------- COMPANY TREE (sample) ----------
+   Replace with your full data when ready.
 */
 const DATA_TREE = {
   "West": {
@@ -47,17 +29,15 @@ const DATA_TREE = {
     }
   }
 };
-/* ---------- end of sample tree ---------- */
+/* ---------- end sample ---------- */
 
-
-/* ---------- 2) Utilities ---------- */
 const $ = (id) => document.getElementById(id);
 const areaSel     = $("areaSelect");
 const regionSel   = $("regionSelect");
 const districtSel = $("districtSelect");
 const storeSel    = $("storeSelect");
-const btnDORT     = $("btnDort") || $("dortBtn") || $("enableBtn"); // fallback
-const notifBtn    = $("notifBtn");
+const btnDORT     = $("btnDort") || $("enableBtn");
+const notifBtn    = $("notifBtn") || $("btnEnable");
 const skipBtn     = $("skipBtn");
 const notifStatus = $("notifStatus");
 
@@ -156,12 +136,9 @@ function onStoreChange(){
   saveSelections();
 }
 
-/* ---------- 3) OneSignal notifications ---------- */
-
+/* ---------- OneSignal ---------- */
 const ONESIGNAL_APP_ID = "5ecaba08-de2f-44b8-a4f0-369508265505";
-
 function setNotifUI(status){
-  // status: "on" | "off" | "blocked"
   if (!notifBtn || !notifStatus) return;
   if (status === "on") {
     notifBtn.textContent = "Notifications On";
@@ -177,34 +154,27 @@ function setNotifUI(status){
     notifStatus.textContent = "";
   }
 }
-
 async function initNotifications(){
   if (!window.OneSignalDeferred) window.OneSignalDeferred = [];
   OneSignalDeferred.push(async (OneSignal) => {
     await OneSignal.init({ appId: ONESIGNAL_APP_ID });
-
     try {
       const optedIn = await OneSignal.User.PushSubscription.optedIn;
       setNotifUI(optedIn ? "on" : "off");
     } catch(e){
       setNotifUI("off");
     }
-
     if (notifBtn) {
       notifBtn.addEventListener("click", async () => {
         try {
           await OneSignal.Slidedown.promptPush();
           const enabled = await OneSignal.User.PushSubscription.optedIn;
           setNotifUI(enabled ? "on" : "off");
-        } catch(e){
-          console.warn("Notification prompt error:", e);
-        }
+        } catch(e){ console.warn("Notification prompt error:", e); }
       });
     }
   });
 }
-
-// Respect “No thanks” (do not auto prompt again)
 if (skipBtn) {
   skipBtn.addEventListener("click", () => {
     localStorage.setItem("notif_opt_out", "1");
@@ -212,9 +182,8 @@ if (skipBtn) {
   });
 }
 
-/* ---------- 4) Wire up & start ---------- */
+/* ---------- Start ---------- */
 document.addEventListener("DOMContentLoaded", () => {
-  // dropdowns
   areaSel.addEventListener("change", onAreaChange);
   regionSel.addEventListener("change", onRegionChange);
   districtSel.addEventListener("change", onDistrictChange);
@@ -222,23 +191,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   restoreSelections();
 
-  // OneSignal (only if not opted out)
   if (!localStorage.getItem("notif_opt_out")) {
     initNotifications();
   } else {
     setNotifUI("off");
   }
 
-  // DORT button - leave as-is (navigates to next page if you’ve wired it)
+  // Route to the full app at the ROOT
   if (btnDORT) {
     btnDORT.addEventListener("click", () => {
-      // Example: navigate into app flow. Update this target as needed.
-      // If you have your DORT page at /app/dort.html, change the href here.
-      window.location.href = "/app/index.html";
+      window.location.href = "/index.html";
     });
   }
 });
 
-// Prevent horizontal scroll on iOS (only vertical)
+// Prevent horizontal scroll
 document.documentElement.style.overflowX = "hidden";
 document.body.style.overflowX = "hidden";
