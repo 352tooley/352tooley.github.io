@@ -1,207 +1,107 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sales Tracker</title>
 
+  <!-- Manifest -->
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#ffffff" />
 
+  <!-- PWA Meta -->
+  <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="white" />
   <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
   <link rel="apple-touch-icon" href="logo-192.png" />
-  <link rel="icon" href="logo-64.png" sizes="64x64" />
-  <link rel="icon" href="logo-512.png" sizes="512x512" />
+  <link rel="apple-touch-icon" sizes="512x512" href="logo-512.png" />
 
-  <!-- iOS/iPadOS startup images (ensure these files exist in your repo root) -->
-  <link rel="apple-touch-startup-image" href="splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2732x2048.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2388x1668.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2224x1668.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2048x1536.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2796x1290.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2778x1284.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2532x1170.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2688x1242.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-1792x828.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2208x1242.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-1334x750.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
-  <link rel="apple-touch-startup-image" href="splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-1136x640.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <!-- Splash Screens -->
+  <link rel="apple-touch-startup-image" href="splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" />
 
+  <!-- Styles -->
   <style>
-    :root { --card:#fff; --border:#e5e7eb; --ink:#111; --muted:#666; --magenta:#d6006e; }
-    html,body { margin:0; height:100%; background:#fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-
-    #splash { position:fixed; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:9999; }
-    #splash img { width:160px; height:160px; }
-
-    .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; width:min(92vw, 560px); margin: 20px auto; box-shadow:0 8px 20px rgba(0,0,0,.06); }
-    h1 { margin:0 0 10px; font-size:22px; color:var(--magenta); text-align:center; }
-    .row { display:flex; flex-direction:column; gap:10px; }
-    select { width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); font-size:16px; }
-    select:disabled { background:#f4f4f4; color:#9a9a9a; }
-    .muted { font-size:13px; color:var(--muted); text-align:center; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    header img {
+      max-height: 40px;
+      position: sticky;
+      top: 8px;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h2 {
+      color: #e20074;
+      margin-bottom: 20px;
+    }
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: #e20074;
+      color: #fff;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #ccc;
+    }
   </style>
 </head>
-
 <body>
-  <div id="splash"><img src="logo-512.png" alt="Company Logo" /></div>
+  <header>
+    <img src="logo-192.png" alt="Company Logo" />
+  </header>
+  <div class="container">
+    <h2>Select Your Store</h2>
+    <select id="areaSelect">
+      <option disabled selected>Select Area</option>
+    </select>
+    <select id="regionSelect" disabled>
+      <option disabled selected>Select Region</option>
+    </select>
+    <select id="districtSelect" disabled>
+      <option disabled selected>Select District</option>
+    </select>
+    <select id="storeSelect" disabled>
+      <option disabled selected>Select Store</option>
+    </select>
+    <button id="enableBtn">Enabled</button>
+    <button id="skipBtn">No thanks</button>
+    <p id="notifStatus"></p>
+  </div>
 
-  <main class="card" id="app" style="display:none">
-    <h1>Select Your Store</h1>
-    <div class="row" style="margin-bottom:12px">
-      <select id="areaSelect" disabled><option value="">Select Area</option></select>
-      <select id="regionSelect" disabled><option value="">Select Region</option></select>
-      <select id="districtSelect" disabled><option value="">Select District</option></select>
-      <select id="storeSelect" disabled><option value="">Select Store</option></select>
-    </div>
-    <div class="muted">Your selections are saved on this device.</div>
-  </main>
-
-  <script>
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        document.getElementById('splash').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-      }, 2000);
-    });
-
-    const DATA_TREE = {"East": {"NORTHEAST": {"HUDSON": ["County Road", "Frederick", "Hamburg", "Lakeview", "Moger", "Morris", "North Broadway", "Route 9", "Washington"], "LAKESHORE": ["Alliance", "Ashtabula", "Clifton", "Fremont", "Garfield Heights", "Green", "Independence", "Solon", "Stow", "Streetsboro", "Twinsburg"], "LONG ISLAND": ["Baisley Blvd", "Bethpage", "Commack", "East Islip", "Hempstead", "Jericho", "New York Avenue", "Rockaway", "West Islip"], "MASSACHUSETTS": ["Albany Turnpike", "Billerica", "Harwich", "Haverhill", "Malden", "Methuen", "North Street", "River Road", "Spencer"], "MID ATLANTIC": ["Bristow", "Buckeystown", "Damascus", "Lexington", "Marlboro", "Montanus", "Salisbury Blvd", "Village Center", "West Ruark"], "MID ATLANTIC EAST": ["Big Elk", "Marlboro", "Middletown", "Newark DE", "Salisbury Blvd", "West Ruark"], "MID ATLANTIC WEST": ["Bristow", "Buckeystown", "Damascus", "Lexington", "Montanus", "Village Center"], "PHILADELPHIA": ["Big Elk", "Commons", "County Road", "Crossing", "Dilworthtown", "Middletown", "Newark DE", "Route 9", "Summit Square", "Yard Ville"], "QUEENS": ["8th Avenue", "Broadway", "College Point", "Elmont", "Glen Oaks", "Horace", "Linden", "Main Street", "Ozone Park", "Ridgewood", "Springfield Blvd"], "STEEL VALLEY": ["Alliance", "Beaver Falls", "Cambridge", "Coshocton", "Countryside", "Hermitage", "St Clairsville", "Steubenville", "Triadelphia", "Uniontown", "Youngstown", "Zanesville"]}, "OHIO VALLEY": {"CENTRAL OHIO EAST": ["Canal Winchester", "Circleville", "Heath", "Hillsboro", "London", "Newark", "Pataskala", "Reynoldsburg", "Sunbury", "Sycamore Plaza", "Washington Court House"], "CINCINNATI SOUTH": ["Centennial", "Eastgate", "Fairfield", "Harrison Avenue", "Hebron", "Highland Heights", "Lawrenceburg", "Newport", "North Bend"], "INDY CITY": ["Anderson", "Carmel", "Frankfort", "Hazel Dell", "Heartland", "Marion", "Muncie", "Noblesville", "West Lafayette", "Zionsville"], "INDY GP": ["Bargersville", "Bloomington", "Greenfield", "Keystone", "Martinsville", "New Castle", "Nora", "Norgate", "Rushville", "Seymour", "Shelbyville"], "MI/IN": ["Chapel Ridge", "Dupont", "Elkhart", "Kendallville", "Milford", "Rochester Hills", "South Lyon", "Warsaw"], "MICHIGAN": ["Allendale", "Big Rapids", "Grand Haven", "Grand Rapids", "Greenville", "Knapps Corner", "Ludington", "Muskegon", "Northland", "Three Rivers", "Walker", "West 48th"], "MID OHIO": ["Ashland", "Bellefontaine", "Bucyrus", "Delaware", "Fremont", "Marysville", "Mt. Gilead", "Mt. Vernon", "Norwalk", "Ontario", "Westfield"], "OHIO SOUTHWEST": ["Brandt Pike", "Centerville", "Hamilton", "Lebanon", "Oxford", "Piqua", "Sidney", "South Main Street", "Springboro", "Springfield", "Urbana", "Wilmington", "Xenia"]}, "SOUTHEAST": {"ATLANTA": ["Commerce", "Dacula", "Epps Bridge", "Locust Grove", "Peachtree City", "Winder", "Wrightsboro"], "ATLANTIC COAST": ["Beaufort", "Brunswick", "Lowes Village", "Macclenny", "Savannah Crossing"], "CAROLINA EAST": ["31st Ave", "Clayton", "Coastal Grand Mall", "East Hanes", "Fordham", "Morehead City", "Samet", "Thomasville"], "CAROLINA WEST": ["Augusta", "Boiling Springs", "Columbia", "Gaffney", "Kernersville", "greenwood"], "FLORIDA": ["Andover", "Apopka", "Granada", "Ocala", "Rolling Oaks", "Seminole"], "NORTH GEORGIA": ["Athens", "Cartersville", "Chapel Hill", "Dalton", "Marietta", "Rome", "Smyrna", "Villa Rica"], "TN/VA": ["Asheville", "Elizabethton", "Exit Seven", "Kingston Pike", "Knoxville", "Morristown", "Oak Ridge"]}, "Total": {"nan": ["nan"]}}, "No filters applied": {"nan": {"nan": ["nan"]}}, "North": {"NORTH CENTRAL": {"ATLANTA SOUTH": ["Commerce", "Dacula", "Epps Bridge", "Locust Grove", "Peachtree City", "Winder", "Wrightsboro"], "CAROLINA EAST": ["31st Ave", "Clayton", "Coastal Grand Mall", "East Hanes", "Fordham", "Morehead City", "Samet", "Thomasville"], "CAROLINA WEST": ["Augusta", "Boiling Springs", "Columbia", "Gaffney", "Kernersville", "greenwood"], "FAYETTEVILLE": ["31st Ave", "Clayton", "Coastal Grand Mall", "East Hanes", "Fordham", "Morehead City", "Samet", "Thomasville"], "LAKESHORE": ["Ashtabula", "Clifton", "Fremont", "Garfield Heights", "Green", "Independence", "Norwalk", "Solon", "Stow", "Streetsboro", "Twinsburg"], "MI/IN": ["Chapel Ridge", "Dupont", "Elkhart", "Kendallville", "Milford", "Rochester Hills", "South Lyon", "Warsaw"], "MICHIGAN": ["Allendale", "Big Rapids", "Grand Haven", "Grand Rapids", "Greenville", "Knapps Corner", "Ludington", "Muskegon", "Northland", "Three Rivers", "Walker", "West 48th"], "MID OHIO": ["Ashland", "Bellefontaine", "Bucyrus", "Delaware", "Marysville", "Mt. Gilead", "Mt. Vernon", "Ontario", "Sunbury", "Westfield", "Zanesville"], "NORTH GEORGIA": ["Athens", "Cartersville", "Chapel Hill", "Dalton", "Marietta", "Rome", "Smyrna", "Villa Rica"], "STEEL VALLEY": ["Alliance", "Beaver Falls", "Cambridge", "Coshocton", "Countryside", "Hermitage", "Triadelphia", "Uniontown", "Youngstown", "Zanesville"], "TN/VA": ["Asheville", "Elizabethton", "Exit Seven", "Kingston Pike", "Knoxville", "Morristown", "Oak Ridge"], "WINSTON-SALEM": ["Augusta", "Boiling Springs", "Columbia", "Gaffney", "Kernersville", "greenwood"]}, "NORTHEAST": {"HUDSON": ["Frederick", "Hamburg", "Lakeview", "Moger", "Morris", "North Broadway", "Washington"], "LONG ISLAND": ["Baisley Blvd", "Bethpage", "Commack", "East Islip", "Hempstead", "Jericho", "New York Avenue", "Rockaway", "West Islip"], "MASSACHUSETTS": ["Albany Turnpike", "Billerica", "Harwich", "Haverhill", "Malden", "Methuen", "North Street", "River Road", "Spencer"], "MID ATLANTIC EAST": ["Big Elk", "Marlboro", "Middletown", "Newark DE", "Salisbury Blvd", "West Ruark"], "MID ATLANTIC WEST": ["Bristow", "Buckeystown", "Damascus", "Lexington", "Montanus", "Village Center"], "PHILADELPHIA": ["Commons", "County Road", "Crossing", "Dilworthtown", "Highway 35", "Route 9", "Summit Square", "Yard Ville"], "QUEENS": ["8th Avenue", "Broadway", "College Point", "Elmont", "Glen Oaks", "Horace", "Linden", "Main Street", "Ozone Park", "Ridgewood", "Springfield Blvd"], "STEEL VALLEY": ["Alliance", "Beaver Falls", "Cambridge", "Coshocton", "Countryside", "Hermitage", "St Clairsville", "Steubenville", "Triadelphia", "Uniontown", "Youngstown"]}, "OHIO VALLEY": {"CENTRAL OHIO EAST": ["Bellefontaine", "Canal Winchester", "Chapel Ridge", "Circleville", "Dupont", "Heath", "Hillsboro", "Kendallville", "London", "Mt. Vernon", "Newark", "Pataskala", "Reynoldsburg", "Sunbury", "Sycamore Plaza", "Washington Court House"], "CINCINNATI": ["Centennial", "Eastgate", "Fairfield", "Harrison Avenue", "Hebron", "Highland Heights", "Lawrenceburg", "Newport", "North Bend"], "CINCINNATI SOUTH": ["Centennial", "Eastgate", "Fairfield", "Harrison Avenue", "Hebron", "Highland Heights", "Jeffersonville", "La Grange", "Lawrenceburg", "Mt Washington", "New Circle", "Newport", "North Bend", "Springhurst"], "COLUMBUS": ["Bellefontaine", "Canal Winchester", "Circleville", "Heath", "Hillsboro", "London", "Newark", "Pataskala", "Reynoldsburg", "Sycamore Plaza", "Washington Court House"], "INDIANAPOLIS": ["Evansville Burk", "Frankfort", "Hazel Dell", "Heartland", "Marion", "Muncie", "Nora", "Norgate", "Owensboro", "Zionsville"], "INDY CITY": ["Anderson", "Carmel", "Frankfort", "Hazel Dell", "Heartland", "Marion", "Muncie", "Noblesville", "West Lafayette", "Zionsville"], "INDY GP": ["Bargersville", "Bloomington", "Greenfield", "Keystone", "Martinsville", "New Castle", "Nora", "Norgate", "Rushville", "Seymour", "Shelbyville"], "KENTUCKY": ["Evansville Burk", "Jeffersonville", "La Grange", "Maysville", "Mt Washington", "New Circle", "Owensboro", "Springhurst", "Winchester"], "MICHIGAN": ["Big Rapids", "Elkhart", "Grand Haven", "Greenville", "Ludington", "Muskegon", "Northland", "Rochester Hills", "Three Rivers", "Warsaw", "West 48th"], "MISSISSIPPI RIVER VALLEY": ["12th Street", "Dubuque", "Hannibal", "Jeff City", "Osage", "Paducah", "Rolla", "Virginia Avenue"], "NEBRASKA": ["180th Street", "Altoona", "Ames", "Center", "Council Bluffs", "Grand Island", "King Lane", "Maple"], "OHIO SOUTHWEST": ["Brandt Pike", "Centerville", "Hamilton", "Hillsboro", "Lebanon", "Oxford", "Piqua", "Sidney", "South Main Street", "Springboro", "Springfield", "Urbana", "Wilmington", "Xenia"]}, "Total": {"nan": ["nan"]}}, "South": {"GULF COAST": {"ARKANSAS": ["Hot Springs", "Little Rock", "Pine Bluff", "Russellville", "Searcy", "Van Buren"], "ATLANTA": ["Commerce", "Dacula", "Epps Bridge", "Locust Grove", "Peachtree City", "Winder", "Wrightsboro"], "ATLANTIC COAST": ["Beaufort", "Brunswick", "Lowes Village", "Macclenny", "Savannah Crossing"], "FLORIDA": ["Andover", "Apopka", "Granada", "Ocala", "Rolling Oaks", "Seminole"], "HOUSTON NORTH": ["Crosby", "Eva Plaza", "Huntsville", "Louetta", "Magnolia", "Mont Belvieu", "Sawdust", "Tomball", "Willis"], "HOUSTON SOUTH": ["529", "Angleton", "Bay City", "Cypress", "Lake Jackson", "Mason", "River Oaks", "Texas City", "Waterview"], "KANSAS": ["Broken Arrow", "George Washington", "Peoria Ave", "Ponca City", "Riverside Pkwy", "Sapulpa", "Schilling"], "LOUISIANA EAST": ["Airline", "Claiborne", "Covington", "Gentilly", "Hammond", "Rangeline", "Ridgeland", "Thibodaux", "Uptown", "Veterans"], "LOUISIANA WEST": ["Alexandria", "Denham Springs", "Hammond", "Lafayette", "New Iberia", "North Mall", "Oneal", "Pinhook", "Prairieville"], "NORTH GEORGIA": ["Athens", "Cartersville", "Chapel Hill", "Dalton", "Marietta", "Rome", "Smyrna", "Villa Rica"]}, "SOUTH CENTRAL": {"ATX CENTRAL": ["Belterra", "Bryan", "Buda", "College Station", "Creekside", "New Braunfels", "Texas Ave", "West Woods"], "ATX NORTH": ["Copperas Cove", "Killeen", "Killeen Mall", "Manor", "Marble Falls", "Round Rock", "Taylor"], "DFW CENTRAL": ["28th Street", "Cooper Street", "Duncanville", "Ennis", "Golden Triangle", "Red Oak", "Rufe Snow"], "DFW NORTH": ["Custer", "Dallas Pkwy", "Independence Pkwy", "Richardson TX", "Stonebrook", "Walnut"], "DFW WEST": ["Bedford", "Chisholm Trail", "Clifford", "Eastchase", "Weatherford"], "SATX NORTH": ["Cibolo", "Kerrville", "La Cantera", "Schertz", "Seguin", "Thousand Oaks"], "SATX SOUTH": ["HEB-Lytle", "Kingsville", "Marbach", "Palo Alto", "Rigsby Avenue", "SW Military", "South Park Mall", "Valley Hi"]}, "SOUTHWEST": {"ARIZONA SOUTH": ["Central", "Cochise", "Grant Road", "Harrison Plaza", "Las Plazas", "Nogales South", "Tucson Fashion Park"], "AZ-EAST": ["Apache", "Combs", "Coolidge", "Power", "Red Mountain", "Stapley", "Talking"], "AZ-WEST": ["303 & Waddell", "99th Avenue", "Central", "Desert", "Laveen", "Mcdowell", "Northern Avenue", "Union"], "COLORADO": ["Cheyenne", "Dillon", "Falcon", "Fountain", "Frontier", "Highpointe", "Northgate", "Peoria"], "DESERT MOUNTAIN": ["Farmington", "Flagstaff", "Highway 89", "Prescott Valley East", "Sedona"], "KANSAS": ["Broken Arrow", "George Washington", "Peoria Ave", "Ponca City", "Riverside Pkwy", "Sapulpa", "Schilling"], "OKC": ["Chickasha", "Garth Brooks Blvd", "Market Place", "Mustang", "Owen Garriott", "Plainview", "S. Georgia", "Wrangler"], "UTAH/CO": ["Draper", "Glenwood Springs", "Grand Junction", "Layton", "Lehi", "Vernal"]}, "Total": {"nan": ["nan"]}}, "Total": {"nan": {"nan": ["nan"]}}, "West": {"GULF COAST": {"ATX CENTRAL": ["Belterra", "Bryan", "Buda", "College Station", "Creekside", "Highway 71", "New Braunfels", "Texas Ave", "West Woods"], "ATX NORTH": ["Copperas Cove", "Killeen", "Killeen Mall", "Manor", "Marble Falls", "Round Rock", "Taylor"], "HOUSTON NORTH": ["529", "Crosby", "Cypress", "Eva Plaza", "HEB-Mont Belvieu", "Huntsville", "Kingwood", "Louetta", "Magnolia", "Mont Belvieu", "Sawdust", "Tomball", "Tuckerton", "Willis"], "HOUSTON SOUTH": ["Alice", "Angleton", "Bay City", "Beeville", "Bellaire", "Highway 6", "Lake Jackson", "Mason", "Parkwood", "River Oaks", "Texas City", "Victoria", "Waterview"], "LOUISIANA EAST": ["Airline", "Claiborne", "Covington", "Gentilly", "Hammond", "Rangeline", "Ridgeland", "Thibodaux", "Uptown", "Veterans"], "LOUISIANA WEST": ["Alexandria", "Denham Springs", "Lafayette", "New Iberia", "North Mall", "Oneal", "Pinhook", "Prairieville"], "SATX NORTH": ["Cibolo", "Kerrville", "La Cantera", "Schertz", "Seguin", "South Main", "Spring Branch", "Thousand Oaks"], "SATX SOUTH": ["Eagle Pass", "HEB-Lytle", "Kingsville", "Marbach", "Palo Alto", "Rigsby Avenue", "SW Military", "South Bibb", "South Park Mall", "Uvalde", "Valley Hi"], "SOUTH TEXAS": ["Alice", "Beeville", "Elsa", "North Conway", "Ocean Blvd", "Portland", "Rockport", "Stegner", "Viejo"]}, "MIDWEST": {"ARKANSAS": ["Hot Springs", "Little Rock", "Pine Bluff", "Russellville", "Searcy", "Van Buren"], "KANSAS": ["Broken Arrow", "George Washington", "Peoria Ave", "Ponca City", "Riverside Pkwy", "Sapulpa", "Schilling"], "KENTUCKY": ["Evansville Burk", "Jeffersonville", "La Grange", "Maysville", "Mt Washington", "New Circle", "Owensboro", "Springhurst", "Winchester"], "MISSISSIPPI RIVER VALLEY": ["12th Street", "Dubuque", "Hannibal", "Jeff City", "Osage", "Paducah", "Rolla", "Virginia Avenue"], "NEBRASKA": ["180th Street", "Altoona", "Ames", "Center", "Council Bluffs", "Grand Island", "King Lane", "Maple"], "OKC": ["Ardmore", "Bartlesville", "Chickasha", "Garth Brooks Blvd", "Market Place", "Mustang", "Owen Garriott", "Wrangler"]}, "SOUTHWEST": {"ARIZONA SOUTH": ["Cochise", "Grant Road", "Harrison Plaza", "Las Plazas", "Nogales South", "Tucson Fashion Park"], "AZ-EAST": ["Apache", "Combs", "Coolidge", "Power", "Red Mountain", "Stapley", "Talking"], "AZ-WEST": ["303 & Waddell", "99th Avenue", "Central", "Desert", "Laveen", "Mcdowell", "Northern Avenue", "Union"], "COLORADO": ["Cheyenne", "Dillon", "Falcon", "Fountain", "Frontier", "Highpointe", "Northgate", "Peoria"], "DESERT MOUNTAIN": ["Farmington", "Flagstaff", "Highway 89", "Prescott Valley East", "Sedona"], "DFW NORTH": ["Custer", "Dallas Pkwy", "Independence Pkwy", "Jefferson", "Pines Road", "Richardson TX", "Stonebrook", "Walnut", "Wesley"], "DFW SOUTH": ["Bedford", "Cooper Street", "Corsicana Hwy", "Duncanville", "Eastchase", "Ennis", "Red Oak", "Seventh Ave"], "DFW WEST": ["28th Street", "Chisholm Trail", "Cleburne", "Clifford", "Golden Triangle", "Granbury", "Rufe Snow", "Stephenville", "Weatherford"], "PAN HANDLE": ["Big Spring", "Midland", "Odessa", "Olton", "Plainview", "S. Georgia", "Walmart Court"], "UTAH/CO": ["Draper", "Glenwood Springs", "Grand Junction", "Layton", "Lehi", "Vernal"]}, "Total": {"nan": ["nan"]}}, "nan": {"nan": {"nan": ["nan"]}}};
-
-    const areaSel    = document.getElementById('areaSelect');
-    const regionSel  = document.getElementById('regionSelect');
-    const districtSel= document.getElementById('districtSelect');
-    const storeSel   = document.getElementById('storeSelect');
-
-    const setDisabled = function(el, on) { el.disabled = !!on; el.style.opacity = on ? 0.85 : 1; };
-    const fill = function(el, arr, ph) {
-      el.innerHTML = '<option value="' + '' + '">' + ph + '</option>';
-      arr.forEach(function(v){ el.insertAdjacentHTML('beforeend', '<option value="' + v + '">' + v + '</option>'); });
-    };
-
-    function save(){
-      localStorage.setItem('sel_area', areaSel.value || '');
-      localStorage.setItem('sel_region', regionSel.value || '');
-      localStorage.setItem('sel_district', districtSel.value || '');
-      localStorage.setItem('sel_store', storeSel.value || '');
-    }
-
-    function restore(){
-      const areas = Object.keys(DATA_TREE);
-      fill(areaSel, areas, 'Select Area');
-      setDisabled(areaSel, areas.length===0);
-
-      const a = localStorage.getItem('sel_area');
-      const r = localStorage.getItem('sel_region');
-      const d = localStorage.getItem('sel_district');
-      const s = localStorage.getItem('sel_store');
-
-      if (a && DATA_TREE[a]) {
-        areaSel.value = a; onArea();
-        if (r && DATA_TREE[a][r]) {
-          regionSel.value = r; onRegion();
-          if (d && (DATA_TREE[a][r][d])) {
-            districtSel.value = d; onDistrict();
-            if (s) {
-              const exists = Array.from(storeSel.options).some(function(o){ return o.value===s; });
-              if (exists) storeSel.value = s;
-            }
-          }
-        }
-      }
-    }
-
-    function onArea(){
-      const a = areaSel.value;
-      save();
-      if (!a) {
-        fill(regionSel, [], 'Select Region'); setDisabled(regionSel,true);
-        fill(districtSel, [], 'Select District'); setDisabled(districtSel,true);
-        fill(storeSel, [], 'Select Store'); setDisabled(storeSel,true);
-        return;
-      }
-      const regions = Object.keys(DATA_TREE[a] || {});
-      fill(regionSel, regions, 'Select Region'); setDisabled(regionSel, regions.length===0);
-      fill(districtSel, [], 'Select District'); setDisabled(districtSel, true);
-      fill(storeSel, [], 'Select Store'); setDisabled(storeSel, true);
-      localStorage.removeItem('sel_region'); localStorage.removeItem('sel_district'); localStorage.removeItem('sel_store');
-    }
-
-    function onRegion(){
-      const a = areaSel.value, r = regionSel.value;
-      save();
-      if (!a || !r) {
-        fill(districtSel, [], 'Select District'); setDisabled(districtSel,true);
-        fill(storeSel, [], 'Select Store'); setDisabled(storeSel,true);
-        return;
-      }
-      const districts = Object.keys(DATA_TREE[a] ? (DATA_TREE[a][r] || {}) : {});
-      fill(districtSel, districts, 'Select District'); setDisabled(districtSel, districts.length===0);
-      fill(storeSel, [], 'Select Store'); setDisabled(storeSel, true);
-      localStorage.removeItem('sel_district'); localStorage.removeItem('sel_store');
-    }
-
-    function onDistrict(){
-      const a = areaSel.value, r = regionSel.value, d = districtSel.value;
-      save();
-      if (!a || !r || !d) {
-        fill(storeSel, [], 'Select Store'); setDisabled(storeSel,true);
-        return;
-      }
-      const stores = (DATA_TREE[a] && DATA_TREE[a][r] && DATA_TREE[a][r][d]) ? DATA_TREE[a][r][d] : [];
-      fill(storeSel, stores, 'Select Store'); setDisabled(storeSel, stores.length===0);
-      localStorage.removeItem('sel_store');
-    }
-
-    function onStore(){ save(); }
-
-    areaSel.addEventListener('change', onArea);
-    regionSel.addEventListener('change', onRegion);
-    districtSel.addEventListener('change', onDistrict);
-    storeSel.addEventListener('change', onStore);
-
-    restore();
-  </script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async function() {
-        try {
-          const reg = await navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' });
-          reg.update();
-          navigator.serviceWorker.addEventListener('controllerchange', function() {
-            if (!window.__reloaded) { window.__reloaded = true; location.reload(); }
-          });
-          reg.addEventListener('updatefound', function() {
-            const nw = reg.installing;
-            if (!nw) return;
-            nw.addEventListener('statechange', function() {
-              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                nw.postMessage({ type: 'SKIP_WAITING' });
-              }
-            });
-          });
-          navigator.serviceWorker.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'SKIP_WAITING') {
-              if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-            }
-          });
-        } catch (e) { console.warn('SW registration failed:', e); }
-      });
-    }
-  </script>
+  <script src="app/app.js"></script>
 </body>
 </html>
