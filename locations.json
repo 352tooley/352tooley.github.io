@@ -1,0 +1,187 @@
+{
+  "West": {
+    "SOUTHWEST": {
+      "DFW WEST": [
+        "Bedford",
+        "Chisholm Trail",
+        "Clifford",
+        "Eastchase",
+        "Weatherford"
+      ],
+      "DFW NORTH": [
+        "Custer",
+        "Dallas Pkwy",
+        "Independence Pkwy",
+        "Richardson TX",
+        "Stonebrook",
+        "Walnut"
+      ],
+      "UTAH/CO": [
+        "Draper",
+        "Glenwood Springs",
+        "Grand Junction",
+        "Layton",
+        "Lehi",
+        "Vernal"
+      ],
+      "AZ-WEST": [
+        "303 & Waddell",
+        "99th Avenue",
+        "Central",
+        "Desert",
+        "Laveen",
+        "Mcdowell",
+        "Northern Avenue",
+        "Union"
+      ]
+    },
+    "MIDWEST": {
+      "NEBRASKA": [
+        "180th Street",
+        "Altoona",
+        "Ames",
+        "Center",
+        "Council Bluffs",
+        "Grand Island",
+        "King Lane",
+        "Maple"
+      ],
+      "MISSISSIPPI RIVER VALLEY": [
+        "12th Street",
+        "Dubuque",
+        "Hannibal",
+        "Jeff City",
+        "Osage",
+        "Paducah",
+        "Rolla",
+        "Virginia Avenue"
+      ]
+    }
+  },
+  "South": {
+    "GULF COAST": {
+      "LOUISIANA WEST": [
+        "Alexandria",
+        "Denham Springs",
+        "Lafayette",
+        "New Iberia",
+        "North Mall",
+        "Oneal",
+        "Pinhook",
+        "Prairieville"
+      ],
+      "LOUISIANA EAST": [
+        "Airline",
+        "Claiborne",
+        "Covington",
+        "Gentilly",
+        "Hammond",
+        "Rangeline",
+        "Ridgeland",
+        "Thibodaux",
+        "Uptown",
+        "Veterans"
+      ],
+      "HOUSTON SOUTH": [
+        "Alice",
+        "Angleton",
+        "Bay City",
+        "Bellaire",
+        "Lake Jackson",
+        "Mason",
+        "Parkwood",
+        "Texas City",
+        "Victoria",
+        "Waterview"
+      ]
+    },
+    "SOUTH CENTRAL": {
+      "SATX SOUTH": [
+        "HEB-Lytle",
+        "Kingsville",
+        "Marbach",
+        "Palo Alto",
+        "Rigsby Avenue",
+        "SW Military",
+        "South Park Mall",
+        "Valley Hi"
+      ],
+      "ATX NORTH": [
+        "Copperas Cove",
+        "Killeen",
+        "Killeen Mall",
+        "Manor",
+        "Marble Falls",
+        "Round Rock",
+        "Taylor"
+      ]
+    }
+  },
+  "East": {
+    "NORTHEAST": {
+      "LONG ISLAND": [
+        "Baisley Blvd",
+        "Bethpage",
+        "Commack",
+        "East Islip",
+        "Hempstead",
+        "Jericho",
+        "New York Avenue",
+        "Rockaway",
+        "West Islip"
+      ],
+      "MASSACHUSETTS": [
+        "Albany Turnpike",
+        "Billerica",
+        "Harwich",
+        "Haverhill",
+        "Malden",
+        "Methuen",
+        "North Street",
+        "River Road",
+        "Spencer"
+      ],
+      "QUEENS": [
+        "8th Avenue",
+        "Broadway",
+        "College Point",
+        "Elmont",
+        "Glen Oaks",
+        "Horace",
+        "Linden",
+        "Main Street",
+        "Ozone Park",
+        "Ridgewood",
+        "Springfield Blvd"
+      ]
+    },
+    "OHIO VALLEY": {
+      "INDY CITY": [
+        "Anderson",
+        "Carmel",
+        "Frankfort",
+        "Hazel Dell",
+        "Heartland",
+        "Marion",
+        "Muncie",
+        "Noblesville",
+        "West Lafayette",
+        "Zionsville"
+      ],
+      "MICHIGAN": [
+        "Allendale",
+        "Big Rapids",
+        "Grand Haven",
+        "Grand Rapids",
+        "Greenville",
+        "Knapps Corner",
+        "Ludington",
+        "Muskegon",
+        "Northland",
+        "Three Rivers",
+        "Walker",
+        "West 48th"
+      ]
+    }
+  }
+}
