@@ -5,92 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Goals & Gaps Tracker</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json" />
+  <!-- PWA bits (safe to keep) -->
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="white" />
   <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
   <link rel="apple-touch-icon" href="logo-192.png" />
-  <link rel="apple-touch-icon" sizes="512x512" href="logo-512.png" />
-
-  <!-- iOS startup images (you already uploaded these) -->
-  <link rel="apple-touch-startup-image" href="splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
-  <link rel="apple-touch-startup-image" href="splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
-  <link rel="apple-touch-startup-image" href="splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
-  <link rel="apple-touch-startup-image" href="splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
-  <link rel="apple-touch-startup-image" href="splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
-  <link rel="apple-touch-startup-image" href="splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)">
-  <link rel="apple-touch-startup-image" href="splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
-  <link rel="apple-touch-startup-image" href="splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-  <link rel="apple-touch-startup-image" href="splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
 
   <style>
-    :root { --card:#fff; --border:#e5e7eb; --ink:#111; --muted:#666; --magenta:#d6006e; }
-    html,body { margin:0; height:100%; background:#ffffff; color:var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-    /* Prevent side-to-side scrolling */
-    html, body { overflow-x: hidden; }
-
-    header { display:flex; justify-content:center; align-items:flex-start; padding:10px 0 0; }
-    .brand {
-      display:flex; flex-direction:column; align-items:center; width:100%;
-    }
-    .brand img {
-      width:min(88vw, 420px); /* roughly align to card width */
-      height:auto;
-      object-fit:contain;
-      margin:10px auto 4px;
-      display:block;
-    }
-
-    .card {
-      background:var(--card); border:1px solid var(--border); border-radius:16px;
-      width:min(92vw, 640px); margin: 8px auto 28px; padding:18px 16px 20px;
-      box-shadow:0 8px 24px rgba(0,0,0,.06);
-    }
-
-    h1 { font-size:20px; font-weight:700; color:var(--magenta); text-align:center; margin:4px 0 14px; }
-    h2 { font-size:26px; font-weight:800; color:var(--magenta); text-align:center; margin:0 0 16px; }
-
-    .row { display:flex; flex-direction:column; gap:10px; }
-    select {
-      width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); font-size:16px;
-      background:#f7f7f8;
-    }
-    select:disabled { background:#f2f2f3; color:#a1a1a1; }
-
-    .btn-primary {
-      background:var(--magenta); color:#fff; border:none; border-radius:12px;
-      font-weight:800; letter-spacing:.2px; font-size:18px; padding:14px; cursor:pointer; width:100%; margin-top:10px;
-    }
-    .muted { margin-top:12px; font-size:13px; color:var(--muted); text-align:center; }
+    :root{--pink:#d6006e;--ink:#111;--muted:#666;--card:#fff;--border:#e5e7eb;}
+    html,body{height:100%;margin:0;background:#fafafa;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden;}
+    .wrap{max-width:760px;margin:20px auto;padding:0 16px;}
+    .logo-bar{display:flex;justify-content:center;align-items:center;margin:12px 0 4px;}
+    .logo-bar img{width:min(460px,85vw);max-height:110px;height:auto;object-fit:contain;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 18px rgba(0,0,0,.06);padding:22px;}
+    h1{margin:0 0 6px;color:var(--pink);font-size:26px;text-align:center;}
+    h2{margin:8px 0 16px;font-weight:800;text-align:center;color:var(--ink);}
+    .row{display:flex;flex-direction:column;gap:10px;margin:10px 0 14px;}
+    select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:12px;font-size:16px;background:#fff;}
+    select:disabled{background:#f4f4f4;color:#999;}
+    .btn{display:block;width:100%;text-align:center;border:0;border-radius:14px;padding:14px 16px;font-weight:800;font-size:18px;color:#fff;background:var(--pink);text-decoration:none;cursor:pointer;}
+    .muted{margin-top:10px;text-align:center;color:var(--muted);font-size:13px;}
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand">
+  <div class="wrap">
+    <div class="logo-bar">
       <img src="logo-512.png" alt="Connectivity Source" />
     </div>
-  </header>
 
-  <main class="card">
-    <h1>Goals &amp; Gaps Tracker</h1>
-    <h2>Select Your Store</h2>
+    <div class="card">
+      <h1>Goals &amp; Gaps Tracker</h1>
+      <h2>Select Your Store</h2>
 
-    <div class="row">
-      <select id="areaSelect"><option value="">Select Area</option></select>
-      <select id="regionSelect" disabled><option value="">Select Region</option></select>
-      <select id="districtSelect" disabled><option value="">Select District</option></select>
-      <select id="storeSelect" disabled><option value="">Select Store</option></select>
-      <button id="btnDort" class="btn-primary">DORT →</button>
+      <div class="row">
+        <select id="areaSelect"><option value="">Select Area</option></select>
+        <select id="regionSelect" disabled><option value="">Select Region</option></select>
+        <select id="districtSelect" disabled><option value="">Select District</option></select>
+        <select id="storeSelect" disabled><option value="">Select Store</option></select>
+      </div>
+
+      <a id="goBtn" class="btn" href="/app/index.html">DORT →</a>
+      <div class="muted">Your selections are saved on this device.</div>
     </div>
+  </div>
 
-    <div class="muted">Your selections are saved on this device.</div>
-  </main>
-
-  <!-- App logic (data + dropdown wiring + DORT click). Cache-bust with v param. -->
-  <script src="app/app.js?v=autov1"></script>
+  <!-- Your dropdown/data logic -->
+  <script src="/app/app.js?v=autov2"></script>
 </body>
 </html>
