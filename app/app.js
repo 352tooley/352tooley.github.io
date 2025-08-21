@@ -1,239 +1,153 @@
-
-/* app_js_inline.js
-   Populates Area → Region → District → Store dropdowns from DATA_TREE,
-   saves selections in localStorage, and restores on reload.
+/* app/app.js — multi-screen flow
+   - Starts at DORT (uses saved store from root)
+   - Screens: DORT → SORT → Revenue → CSAT → T-Life → Daily Goals → Summary
+   - No store re-selection here; if missing, link back to root
 */
 
 (function(){
-  // ---------- Inline company tree (representative subset) ----------
-  // NOTE: You can expand this object with the full tree as needed.
-  const DATA_TREE = {
-    "West": {
-      "SOUTHWEST": {
-        "DFW WEST": [
-          "28th Street","Chisholm Trail","Cleburne","Clifford",
-          "Golden Triangle","Granbury","Rufe Snow","Stephenville","Weatherford"
-        ],
-        "DFW NORTH": [
-          "Custer","Dallas Pkwy","Independence Pkwy","Richardson TX","Stonebrook","Walnut"
-        ],
-        "AZ-WEST": [
-          "303 & Waddell","99th Avenue","Central","Desert","Laveen","Mcdowell","Northern Avenue","Union"
-        ],
-        "UTAH/CO": [
-          "Draper","Glenwood Springs","Grand Junction","Layton","Lehi","Vernal"
-        ]
-      },
-      "GULF COAST": {
-        "HOUSTON NORTH": [
-          "Crosby","Eva Plaza","Huntsville","Louetta","Magnolia","Mont Belvieu","Sawdust","Tomball","Willis"
-        ],
-        "HOUSTON SOUTH": [
-          "Angleton","Bay City","Lake Jackson","Mason","River Oaks","Texas City","Waterview"
-        ],
-        "SATX SOUTH": [
-          "HEB-Lytle","Kingsville","Marbach","Palo Alto","Rigsby Avenue","SW Military","South Park Mall","Valley Hi"
-        ]
-      }
-    },
-    "South": {
-      "GULF COAST": {
-        "LOUISIANA EAST": [
-          "Airline","Claiborne","Covington","Gentilly","Hammond","Rangeline","Ridgeland","Thibodaux","Uptown","Veterans"
-        ],
-        "LOUISIANA WEST": [
-          "Alexandria","Denham Springs","Lafayette","New Iberia","North Mall","Oneal","Pinhook","Prairieville"
-        ],
-        "FLORIDA": ["Andover","Apopka","Granada","Ocala","Rolling Oaks","Seminole"]
-      },
-      "SOUTH CENTRAL": {
-        "ATX CENTRAL": ["Belterra","Bryan","Buda","College Station","Creekside","New Braunfels","Texas Ave","West Woods"],
-        "ATX NORTH": ["Copperas Cove","Killeen","Killeen Mall","Manor","Marble Falls","Round Rock","Taylor"],
-        "DFW CENTRAL": ["28th Street","Cooper Street","Duncanville","Ennis","Golden Triangle","Red Oak","Rufe Snow"],
-        "SATX NORTH": ["Cibolo","Kerrville","La Cantera","Schertz","Seguin","Thousand Oaks"]
-      }
-    },
-    "East": {
-      "NORTHEAST": {
-        "QUEENS": ["8th Avenue","Broadway","College Point","Elmont","Glen Oaks","Linden","Main Street","Ozone Park","Ridgewood","Springfield Blvd"],
-        "LONG ISLAND": ["Baisley Blvd","Bethpage","Commack","East Islip","Hempstead","Jericho","New York Avenue","Rockaway","West Islip"],
-        "MASSACHUSETTS": ["Albany Turnpike","Billerica","Harwich","Haverhill","Malden","Methuen","North Street","River Road","Spencer"]
-      },
-      "OHIO VALLEY": {
-        "MI/IN": ["Chapel Ridge","Dupont","Elkhart","Kendallville","Milford","Rochester Hills","South Lyon","Warsaw"],
-        "MICHIGAN": ["Allendale","Big Rapids","Grand Haven","Grand Rapids","Greenville","Knapps Corner","Ludington","Muskegon","Northland","Three Rivers","Walker","West 48th"],
-        "MID OHIO": ["Ashland","Bellefontaine","Bucyrus","Delaware","Fremont","Marysville","Mt. Gilead","Mt. Vernon","Norwalk","Ontario","Westfield"]
-      }
-    },
-    "North": {
-      "NORTH CENTRAL": {
-        "NORTH GEORGIA": ["Athens","Cartersville","Chapel Hill","Dalton","Marietta","Rome","Smyrna","Villa Rica"],
-        "STEEL VALLEY": ["Alliance","Beaver Falls","Cambridge","Coshocton","Countryside","Hermitage","Triadelphia","Uniontown","Youngstown","Zanesville"],
-        "TN/VA": ["Asheville","Elizabethton","Exit Seven","Kingston Pike","Knoxville","Morristown","Oak Ridge"]
-      }
-    }
+  const byId = (id)=>document.getElementById(id);
+  const app = byId('app');
+
+  // Ensure store exists from root
+  const store = localStorage.getItem('selectedStore') || localStorage.getItem('sel_store');
+  const area  = localStorage.getItem('selectedArea')  || localStorage.getItem('sel_area');
+  const region= localStorage.getItem('selectedRegion')|| localStorage.getItem('sel_region');
+  const dist  = localStorage.getItem('selectedDistrict')|| localStorage.getItem('sel_district');
+  if(!store){ byId('warnRoot').style.display='block'; }
+
+  const state = { cfg:{ p360:60, tlife:70, vaf:19 } };
+
+  const num = v => parseFloat(v||0) || 0;
+  const int = v => parseInt(v||0) || 0;
+  const money = v => '$' + (num(v).toFixed(2));
+  const pct = (a,b)=> b>0 ? Math.round((a/b)*100) : 0;
+  const bandPct = p => (p>=90?'ok':(p>=60?'warn':'bad'));
+  const bandGap = g => (g<=0?'ok':'bad'));
+  function inputRow(label, id1, ph1, id2, ph2){
+    return `<div class="sec">
+      <label>${label}</label>
+      <div class="pair">
+        <input id="${id1}" type="number" placeholder="${ph1}" value="${localStorage.getItem(id1)||''}" oninput="localStorage.setItem('${id1}',this.value)">
+        <input id="${id2}" type="number" placeholder="${ph2}" value="${localStorage.getItem(id2)||''}" oninput="localStorage.setItem('${id2}',this.value)">
+      </div>
+    </div>`;
+  }
+  function header(title){
+    return `<h1>${area||'—'} • ${region||'—'} • ${dist||'—'} • ${store||'—'}</h1><h2>${title}</h2>`;
+  }
+  function nav(prev,next, prevLabel,nextLabel){
+    return `<div class="buttons">
+      ${prev ? `<button class="btn back" onclick="${prev}">← ${prevLabel}</button>`:''}
+      ${next ? `<button class="btn next" onclick="${next}">${nextLabel} →</button>`:''}
+    </div>`;
+  }
+
+  window.showDORT = function(){
+    app.innerHTML = header('DORT')+
+      inputRow('Voice','d_v_att','Attainment','d_v_goal','Goal')+
+      inputRow('BTS','d_b_att','Attainment','d_b_goal','Goal')+
+      inputRow('TFB','d_t_att','Attainment','d_t_goal','Goal')+
+      inputRow('Accessories','d_a_att','Attainment','d_a_goal','Goal')+
+      nav('', 'showSORT()','', 'SORT');
+  };
+  window.showSORT = function(){
+    app.innerHTML = header('SORT')+
+      inputRow('Voice','s_v_att','Attainment','s_v_goal','Goal')+
+      inputRow('BTS','s_b_att','Attainment','s_b_goal','Goal')+
+      inputRow('TFB','s_t_att','Attainment','s_t_goal','Goal')+
+      inputRow('Accessories','s_a_att','Attainment','s_a_goal','Goal')+
+      nav('showDORT()','showRevenue()','DORT','Revenue');
+  };
+  window.showRevenue = function(){
+    app.innerHTML = header('Revenue')+
+      inputRow('P360','p_opp','Opportunities','p_pct','Attach %')+
+      inputRow('VAF','v_opp','Opportunities','v_total','Total Revenue')+
+      nav('showSORT()','showCSAT()','SORT','CSAT');
+  };
+  window.showCSAT = function(){
+    app.innerHTML = header('CSAT')+
+      inputRow('CSAT','c_score','Current Score (0–10)','c_surveys','Surveys Taken')+
+      nav('showRevenue()','showTLife()','Revenue','T‑Life');
+  };
+  window.showTLife = function(){
+    app.innerHTML = header('T‑Life')+
+      inputRow('T‑Life','t2_att','Attainment %','t2_opp','Opportunities')+
+      nav('showCSAT()','showGoals()','CSAT','Daily Goals');
+  };
+  window.showGoals = function(){
+    app.innerHTML = header('Daily Goals')+`
+      <div class="sec"><label>Voice</label><input id="g_voice" type="number" placeholder="Voice Goal" value="${localStorage.getItem('g_voice')||''}" oninput="localStorage.setItem('g_voice',this.value)"></div>
+      <div class="sec"><label>BTS</label><input id="g_bts" type="number" placeholder="BTS Goal" value="${localStorage.getItem('g_bts')||''}" oninput="localStorage.setItem('g_bts',this.value)"></div>
+      <div class="sec"><label>Accessories</label><input id="g_acc" type="number" placeholder="Accessories Goal" value="${localStorage.getItem('g_acc')||''}" oninput="localStorage.setItem('g_acc',this.value)"></div>
+      <div class="sec"><label>TFB</label><input id="g_tfb" type="number" placeholder="TFB Goal" value="${localStorage.getItem('g_tfb')||''}" oninput="localStorage.setItem('g_tfb',this.value)"></div>
+    `+
+      nav('showTLife()','showSummary()','T‑Life','Summary');
   };
 
-  // Expose for debugging (optional)
-  window.__DATA_TREE__ = DATA_TREE;
+  function pill(content, cls){ return `<span class="status ${cls}">${content}</span>`; }
 
-  // ---------- Utility helpers ----------
-  const $ = (id) => document.getElementById(id);
-  const areaSel = $("areaSelect");
-  const regionSel = $("regionSelect");
-  const districtSel = $("districtSelect");
-  const storeSel = $("storeSelect");
-  const dortBtn = $("dortBtn");
+  window.showSummary = function(){
+    // combine
+    function comb(aD,gD,aS,gS){ const att=int(localStorage.getItem(aD))+int(localStorage.getItem(aS)); const goal=int(localStorage.getItem(gD))+int(localStorage.getItem(gS)); return {att,goal,pct:pct(att,goal),gap:goal-att}; }
+    const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
+    const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
+    const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
+    const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
 
-  function setDisabled(el, on) {
-    if (!el) return;
-    el.disabled = !!on;
-    el.style.opacity = on ? 0.7 : 1;
-  }
+    // p360
+    const pOpp=int(localStorage.getItem('p_opp')); const pPct=Math.max(0,Math.min(100,num(localStorage.getItem('p_pct')))); const pAtt=Math.round(pOpp*(pPct/100)); const tP=0.60; const pNeed=Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
 
-  function fillSelect(el, list, placeholder) {
-    if (!el) return;
-    el.innerHTML = "";
-    const ph = document.createElement("option");
-    ph.value = "";
-    ph.textContent = placeholder;
-    ph.disabled = true;
-    ph.selected = true;
-    el.appendChild(ph);
-    (list || []).forEach((label) => {
-      const opt = document.createElement("option");
-      opt.value = label;
-      opt.textContent = label;
-      el.appendChild(opt);
-    });
-  }
+    // csat
+    const cAvg=num(localStorage.getItem('c_score')); const cN=int(localStorage.getItem('c_surveys')); const cNeed=(cAvg>=9.5)?0:Math.max(0, Math.ceil(2*cN*(9.5-cAvg)));
 
-  function saveState() {
-    localStorage.setItem("sel_area", areaSel.value || "");
-    localStorage.setItem("sel_region", regionSel.value || "");
-    localStorage.setItem("sel_district", districtSel.value || "");
-    localStorage.setItem("sel_store", storeSel.value || "");
-  }
+    // tlife
+    const tlPct=Math.max(0, Math.min(100, num(localStorage.getItem('t2_att')))); const tlOpp=int(localStorage.getItem('t2_opp')); const tlSuc=Math.round(tlOpp*(tlPct/100)); const tT=0.70; const tlNeed=Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
 
-  function restoreState() {
-    // Areas
-    const areas = Object.keys(DATA_TREE).sort();
-    fillSelect(areaSel, areas, "Select Area");
-    setDisabled(areaSel, areas.length === 0);
+    // vaf
+    const vOpp=int(localStorage.getItem('v_opp')); const vTot=num(localStorage.getItem('v_total')); const vTarget=19; const needTotal=vTarget*vOpp; const vGap=Math.max(0, needTotal - vTot); const mrc=vOpp>0?(vTot/vOpp):0;
 
-    const a = localStorage.getItem("sel_area");
-    const r = localStorage.getItem("sel_region");
-    const d = localStorage.getItem("sel_district");
-    const s = localStorage.getItem("sel_store");
+    app.innerHTML = header('Summary')+`
+      <div class="sum-grid">
+        <div class="sec"><strong>DORT + SORT</strong>
+          <div class="kv"><span>Voice</span><span>${pill('Gap: '+(voice.gap>0?('+'+voice.gap):voice.gap), bandGap(voice.gap))} ${pill(voice.pct+'%', bandPct(voice.pct))}</span></div>
+          <div class="kv"><span>BTS</span><span>${pill('Gap: '+(bts.gap>0?('+'+bts.gap):bts.gap), bandGap(bts.gap))} ${pill(bts.pct+'%', bandPct(bts.pct))}</span></div>
+          <div class="kv"><span>TFB</span><span>${pill('Gap: '+(tfb.gap>0?('+'+tfb.gap):tfb.gap), bandGap(tfb.gap))} ${pill(tfb.pct+'%', bandPct(tfb.pct))}</span></div>
+          <div class="kv"><span>Accessories</span><span>${pill('Gap: '+(acc.gap>0?('+'+acc.gap):acc.gap), bandGap(acc.gap))} ${pill(acc.pct+'%', bandPct(acc.pct))}</span></div>
+        </div>
+        <div class="sec"><strong>Daily Goals</strong>
+          <div class="kv"><span>Voice</span><span><b>${localStorage.getItem('g_voice')||'—'}</b></span></div>
+          <div class="kv"><span>BTS</span><span><b>${localStorage.getItem('g_bts')||'—'}</b></span></div>
+          <div class="kv"><span>TFB</span><span><b>${localStorage.getItem('g_tfb')||'—'}</b></span></div>
+          <div class="kv"><span>Accessories</span><span><b>${localStorage.getItem('g_acc')||'—'}</b></span></div>
+        </div>
+        <div class="sec"><strong>P360</strong>
+          <div class="kv"><span>% to Goal</span><span>${pill(Math.round(pPct)+'%', bandPct(Math.round(pPct)))}</span></div>
+          <div class="kv"><span>Target</span><span>60%</span></div>
+          <div class="kv"><span>Needed</span><span>${pill(pNeed+' tx', pNeed===0?'ok':'bad')}</span></div>
+        </div>
+        <div class="sec"><strong>CSAT</strong>
+          <div class="kv"><span>Score</span><span>${pill(isNaN(cAvg)?'—':cAvg, (cAvg>=9.5?'ok':(cAvg>=9?'warn':'bad')))}</span></div>
+          <div class="kv"><span>Target</span><span>9.5</span></div>
+          <div class="kv"><span>Needed</span><span>${pill(cNeed+' perfect 10s', cNeed===0?'ok':'bad')}</span></div>
+        </div>
+        <div class="sec"><strong>T‑Life</strong>
+          <div class="kv"><span>Attainment</span><span>${pill(Math.round(tlPct)+'%', bandPct(Math.round(tlPct)))}</span></div>
+          <div class="kv"><span>Target</span><span>70%</span></div>
+          <div class="kv"><span>Needed</span><span>${pill(tlNeed+' opportunities', tlNeed===0?'ok':'bad')}</span></div>
+        </div>
+        <div class="sec"><strong>VAF</strong>
+          <div class="kv"><span>MRC</span><span>${pill(money(mrc), (mrc>=19?'ok':((19-mrc)<=1?'warn':'bad')))}</span></div>
+          <div class="kv"><span>Target</span><span>$19/op</span></div>
+          <div class="kv"><span>Gap</span><span>${pill(money(vGap), vGap<=0?'ok':'bad')}</span></div>
+        </div>
+      </div>
+      <div class="buttons" style="margin-top:14px">
+        <button class="btn back" onclick="showGoals()">← Daily Goals</button>
+        <button class="btn back" onclick="window.print()">🖨 Print</button>
+      </div>
+    `;
+  };
 
-    if (a && DATA_TREE[a]) {
-      areaSel.value = a;
-      onAreaChange();
-      if (r && DATA_TREE[a][r]) {
-        regionSel.value = r;
-        onRegionChange();
-        if (d && DATA_TREE[a][r][d]) {
-          districtSel.value = d;
-          onDistrictChange();
-          // store
-          if (s) {
-            const exists = Array.from(storeSel.options).some(o => o.value === s);
-            if (exists) storeSel.value = s;
-          }
-        }
-      }
-    }
-    updateDortState();
-  }
-
-  function onAreaChange() {
-    saveState();
-    const a = areaSel.value;
-    if (!a || !DATA_TREE[a]) {
-      fillSelect(regionSel, [], "Select Region");
-      fillSelect(districtSel, [], "Select District");
-      fillSelect(storeSel, [], "Select Store");
-      setDisabled(regionSel, true);
-      setDisabled(districtSel, true);
-      setDisabled(storeSel, true);
-      updateDortState();
-      return;
-    }
-    const regions = Object.keys(DATA_TREE[a]).sort();
-    fillSelect(regionSel, regions, "Select Region");
-    setDisabled(regionSel, regions.length === 0);
-    fillSelect(districtSel, [], "Select District");
-    setDisabled(districtSel, true);
-    fillSelect(storeSel, [], "Select Store");
-    setDisabled(storeSel, true);
-    localStorage.removeItem("sel_region");
-    localStorage.removeItem("sel_district");
-    localStorage.removeItem("sel_store");
-    updateDortState();
-  }
-
-  function onRegionChange() {
-    saveState();
-    const a = areaSel.value, r = regionSel.value;
-    if (!a || !r || !DATA_TREE[a] || !DATA_TREE[a][r]) {
-      fillSelect(districtSel, [], "Select District");
-      setDisabled(districtSel, true);
-      fillSelect(storeSel, [], "Select Store");
-      setDisabled(storeSel, true);
-      updateDortState();
-      return;
-    }
-    const dists = Object.keys(DATA_TREE[a][r]).sort();
-    fillSelect(districtSel, dists, "Select District");
-    setDisabled(districtSel, dists.length === 0);
-    fillSelect(storeSel, [], "Select Store");
-    setDisabled(storeSel, true);
-    localStorage.removeItem("sel_district");
-    localStorage.removeItem("sel_store");
-    updateDortState();
-  }
-
-  function onDistrictChange() {
-    saveState();
-    const a = areaSel.value, r = regionSel.value, d = districtSel.value;
-    if (!a || !r || !d || !DATA_TREE[a] || !DATA_TREE[a][r] || !DATA_TREE[a][r][d]) {
-      fillSelect(storeSel, [], "Select Store");
-      setDisabled(storeSel, true);
-      updateDortState();
-      return;
-    }
-    const stores = DATA_TREE[a][r][d].slice().sort();
-    fillSelect(storeSel, stores, "Select Store");
-    setDisabled(storeSel, stores.length === 0);
-    localStorage.removeItem("sel_store");
-    updateDortState();
-  }
-
-  function onStoreChange() {
-    saveState();
-    updateDortState();
-  }
-
-  function updateDortState() {
-    if (!dortBtn) return;
-    const enabled = !!(areaSel.value && regionSel.value && districtSel.value && storeSel.value);
-    dortBtn.disabled = !enabled;
-  }
-
-  // ---------- Init ----------
-  document.addEventListener("DOMContentLoaded", function(){
-    // Wire handlers
-    if (areaSel) areaSel.addEventListener("change", onAreaChange);
-    if (regionSel) regionSel.addEventListener("change", onRegionChange);
-    if (districtSel) districtSel.addEventListener("change", onDistrictChange);
-    if (storeSel) storeSel.addEventListener("change", onStoreChange);
-    if (dortBtn) {
-      dortBtn.addEventListener("click", function(){
-        // Navigate to app flow (DORT) if needed; currently just saves and stays
-        saveState();
-        // Example: window.location.href = "/app/index.html#dort";
-      });
-    }
-    restoreState();
-  });
+  // Start at DORT
+  window.showDORT();
 })();
