@@ -1,153 +1,167 @@
-/* app/app.js — multi-screen flow
-   - Starts at DORT (uses saved store from root)
-   - Screens: DORT → SORT → Revenue → CSAT → T-Life → Daily Goals → Summary
-   - No store re-selection here; if missing, link back to root
+
+/* Goals & Gaps Tracker – Full Locations + dropdown wiring
+   - This file embeds the full Area → Region → District → Store tree
+   - Persists user selections in localStorage
+   - Enables the DORT button when a store is selected
 */
 
-(function(){
-  const byId = (id)=>document.getElementById(id);
-  const app = byId('app');
+// ---- Full Company Hierarchy (auto-generated) ----
+const companyTree = {"EAST": {"NORTHEAST": {"HUDSON": ["County Road", "Frederick", "Hamburg", "Lakeview", "Moger", "Morris", "North Broadway", "Route 9", "Washington"], "LAKESHORE": ["Alliance", "Ashtabula", "Clifton", "Garfield Heights", "Green", "Independence", "Solon", "Stow", "Streetsboro", "Twinsburg"], "LONG ISLAND": ["Baisley Blvd", "Bethpage", "Commack", "East Islip", "Hempstead", "Jericho", "New York Avenue", "Rockaway", "West Islip"], "MASSACHUSETTS": ["Albany Turnpike", "Billerica", "Harwich", "Haverhill", "Malden", "Methuen", "North Street", "River Road", "Spencer"], "MID ATLANTIC": ["Bristow", "Buckeystown", "Damascus", "Lexington", "Marlboro", "Montanus", "Salisbury Blvd", "Village Center", "West Ruark"], "PHILADELPHIA": ["Big Elk", "Commons", "Crossing", "Dilworthtown", "Middletown", "Newark DE", "Summit Square", "Yard Ville"], "QUEENS": ["8th Avenue", "Broadway", "College Point", "Elmont", "Glen Oaks", "Horace", "Linden", "Main Street", "Ozone Park", "Ridgewood", "Springfield Blvd"], "STEEL VALLEY": ["Beaver Falls", "Cambridge", "Coshocton", "Countryside", "Hermitage", "St Clairsville", "Steubenville", "Triadelphia", "Uniontown", "Youngstown", "Zanesville"]}, "OHIO VALLEY": {"CENTRAL OHIO EAST": ["Canal Winchester", "Circleville", "Heath", "Hillsboro", "London", "Newark", "Pataskala", "Reynoldsburg", "Sunbury", "Sycamore Plaza", "Washington Court House"], "CINCINNATI SOUTH": ["Centennial", "Eastgate", "Fairfield", "Harrison Avenue", "Hebron", "Highland Heights", "Lawrenceburg", "Newport", "North Bend"], "INDY CITY": ["Anderson", "Carmel", "Frankfort", "Hazel Dell", "Heartland", "Marion", "Muncie", "Noblesville", "West Lafayette", "Zionsville"], "INDY GP": ["Bargersville", "Bloomington", "Greenfield", "Keystone", "Martinsville", "New Castle", "Nora", "Norgate", "Rushville", "Seymour", "Shelbyville"], "MI/IN": ["Chapel Ridge", "Dupont", "Elkhart", "Kendallville", "Milford", "Rochester Hills", "South Lyon", "Warsaw"], "MICHIGAN": ["Allendale", "Big Rapids", "Grand Haven", "Grand Rapids", "Greenville", "Knapps Corner", "Ludington", "Muskegon", "Northland", "Three Rivers", "Walker", "West 48th"], "MID OHIO": ["Ashland", "Bellefontaine", "Bucyrus", "Delaware", "Fremont", "Marysville", "Mt. Gilead", "Mt. Vernon", "Norwalk", "Ontario", "Westfield"], "OHIO SOUTHWEST": ["Brandt Pike", "Centerville", "Hamilton", "Lebanon", "Oxford", "Piqua", "Sidney", "South Main Street", "Springboro", "Springfield", "Urbana", "Wilmington", "Xenia"]}, "SOUTHEAST": {"ATLANTA": ["Commerce", "Dacula", "Epps Bridge", "Locust Grove", "Peachtree City", "Winder", "Wrightsboro"], "ATLANTIC COAST": ["Beaufort", "Brunswick", "Lowes Village", "Macclenny", "Savannah Crossing"], "CAROLINA EAST": ["31st Ave", "Clayton", "Coastal Grand Mall", "East Hanes", "Fordham", "Morehead City", "Samet", "Thomasville"], "CAROLINA WEST": ["Augusta", "Boiling Springs", "Columbia", "Gaffney", "Greenwood", "Kernersville"], "FLORIDA": ["Andover", "Apopka", "Granada", "Ocala", "Rolling Oaks", "Seminole"], "NORTH GEORGIA": ["Athens", "Cartersville", "Chapel Hill", "Dalton", "Marietta", "Rome", "Smyrna", "Villa Rica"], "TN/VA": ["Asheville", "Elizabethton", "Exit Seven", "Kingston Pike", "Knoxville", "Morristown", "Oak ridge"]}}, "WEST": {"GULF COAST": {"ATX CENTRAL": ["Belterra", "Bryan", "Buda", "College Station", "Creekside", "Highway 71", "New Braunfels", "Texas Ave", "West Woods"], "ATX NORTH": ["Copperas Cove", "Killeen", "Killeen Mall", "Manor", "Marble Falls", "Round Rock", "Taylor"], "HOUSTON NORTH": ["529", "Crosby", "Cypress", "Eva Plaza", "Huntsville", "Kingwood", "Louetta", "Magnolia", "Mont Belvieu", "Sawdust", "Tomball", "Tuckerton", "Willis"], "HOUSTON SOUTH": ["Alice", "Angleton", "Bay City", "Beeville", "Bellaire", "Highway 6", "Lake Jackson", "Mason", "Parkwood", "River Oaks", "Texas City", "Victoria", "Waterview"], "LOUISIANA EAST": ["Airline", "Claiborne", "Covington", "Gentilly", "Hammond", "Rangeline", "Ridgeland", "Thibodaux", "Uptown", "Veterans"], "LOUISIANA WEST": ["Alexandria", "Denham Springs", "Lafayette", "New Iberia", "North Mall", "Oneal", "Pinhook", "Prairieville"], "SATX NORTH": ["Cibolo", "Kerrville", "La Cantera", "Schertz", "Seguin", "South Main", "Spring Branch", "Thousand Oaks"], "SATX SOUTH": ["Eagle Pass", "HEB-Lytle", "Kingsville", "Marbach", "Palo Alto", "Rigsby Avenue", "SW Military", "South Bibb", "South Park Mall", "Uvalde", "Valley Hi"], "SOUTH TEXAS": ["Elsa", "North Conway", "Ocean Blvd", "Portland", "Rockport", "Stegner", "Viejo"]}, "MIDWEST": {"ARKANSAS": ["Hot Springs", "Little Rock", "Pine Bluff", "Russellville", "Searcy", "Van Buren"], "KANSAS": ["Broken Arrow", "George Washington", "Peoria Ave", "Ponca City", "Riverside Pkwy", "Sapulpa", "Schilling"], "KENTUCKY": ["Evansville Burk", "Jeffersonville", "La Grange", "Maysville", "Mt Washington", "New Circle", "Owensboro", "Springhurst", "Winchester"], "MISSISSIPPI RIVER VALLEY": ["12th Street", "Dubuque", "Hannibal", "Jeff City", "Osage", "Paducah", "Rolla", "Virginia Avenue"], "NEBRASKA": ["180th Street", "Altoona", "Ames", "Center", "Council Bluffs", "Grand Island", "King Lane", "Maple"], "OKC": ["Ardmore", "Bartlesville", "Chickasha", "Garth Brooks Blvd", "Market Place", "Mustang", "Owen Garriott", "Wrangler"]}, "SOUTHWEST": {"ARIZONA SOUTH": ["Cochise", "Grant Road", "Harrison Plaza", "Las Plazas", "Nogales South", "Tucson Fashion Park"], "AZ-EAST": ["Apache", "Combs", "Coolidge", "Power", "Red Mountain", "Stapley", "Talking"], "AZ-WEST": ["303 & Waddell", "99th Avenue", "Central", "Desert", "Laveen", "Mcdowell", "Northern Avenue", "Union"], "COLORADO": ["Cheyenne", "Dillon", "Falcon", "Fountain", "Frontier", "Highpointe", "Northgate", "Peoria"], "DESERT MOUNTAIN": ["Farmington", "Flagstaff", "Highway 89", "Prescott Valley East", "Sedona"], "DFW NORTH": ["Custer", "Dallas Pkwy", "Independence Pkwy", "Jefferson", "Pines Road", "Richardson TX", "Stonebrook", "Walnut", "Wesley"], "DFW SOUTH": ["Bedford", "Cooper Street", "Corsicana Hwy", "Duncanville", "Eastchase", "Ennis", "Red Oak", "Seventh Ave"], "DFW WEST": ["28th Street", "Chisholm Trail", "Cleburne", "Clifford", "Golden Triangle", "Granbury", "Rufe Snow", "Stephenville", "Weatherford"], "PAN HANDLE": ["Big Spring", "Midland", "Odessa", "Olton", "Plainview", "S. Georgia", "Walmart Court"], "UTAH/CO": ["Draper", "Glenwood Springs", "Grand Junction", "Layton", "Lehi", "Vernal"]}}};
 
-  // Ensure store exists from root
-  const store = localStorage.getItem('selectedStore') || localStorage.getItem('sel_store');
-  const area  = localStorage.getItem('selectedArea')  || localStorage.getItem('sel_area');
-  const region= localStorage.getItem('selectedRegion')|| localStorage.getItem('sel_region');
-  const dist  = localStorage.getItem('selectedDistrict')|| localStorage.getItem('sel_district');
-  if(!store){ byId('warnRoot').style.display='block'; }
+// ---- DOM helpers ----
+const $ = (id) => document.getElementById(id);
+const setDisabled = (el, on) => { if (!el) return; el.disabled = !!on; el.style.opacity = on ? 0.65 : 1; };
+const fill = (el, items, placeholder) => {
+  if (!el) return;
+  el.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = placeholder;
+  el.appendChild(opt0);
+  (items || []).forEach(v => {
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    el.appendChild(o);
+  });
+};
 
-  const state = { cfg:{ p360:60, tlife:70, vaf:19 } };
+function saveSelections() {
+  localStorage.setItem("sel_area", $("areaSelect")?.value || "");
+  localStorage.setItem("sel_region", $("regionSelect")?.value || "");
+  localStorage.setItem("sel_district", $("districtSelect")?.value || "");
+  localStorage.setItem("sel_store", $("storeSelect")?.value || "");
+}
 
-  const num = v => parseFloat(v||0) || 0;
-  const int = v => parseInt(v||0) || 0;
-  const money = v => '$' + (num(v).toFixed(2));
-  const pct = (a,b)=> b>0 ? Math.round((a/b)*100) : 0;
-  const bandPct = p => (p>=90?'ok':(p>=60?'warn':'bad'));
-  const bandGap = g => (g<=0?'ok':'bad'));
-  function inputRow(label, id1, ph1, id2, ph2){
-    return `<div class="sec">
-      <label>${label}</label>
-      <div class="pair">
-        <input id="${id1}" type="number" placeholder="${ph1}" value="${localStorage.getItem(id1)||''}" oninput="localStorage.setItem('${id1}',this.value)">
-        <input id="${id2}" type="number" placeholder="${ph2}" value="${localStorage.getItem(id2)||''}" oninput="localStorage.setItem('${id2}',this.value)">
-      </div>
-    </div>`;
+function restoreSelections() {
+  const areaSel = $("areaSelect");
+  const regionSel = $("regionSelect");
+  const districtSel = $("districtSelect");
+  const storeSel = $("storeSelect");
+
+  // Fill areas
+  const areas = Object.keys(companyTree);
+  fill(areaSel, areas, "Select Area");
+  setDisabled(areaSel, areas.length === 0);
+
+  const savedArea = localStorage.getItem("sel_area") || "";
+  const savedRegion = localStorage.getItem("sel_region") || "";
+  const savedDistrict = localStorage.getItem("sel_district") || "";
+  const savedStore = localStorage.getItem("sel_store") || "";
+
+  if (savedArea && companyTree[savedArea]) {
+    areaSel.value = savedArea;
+    onAreaChange();
+    if (savedRegion && companyTree[savedArea][savedRegion]) {
+      $("regionSelect").value = savedRegion;
+      onRegionChange();
+      if (savedDistrict && companyTree[savedArea][savedRegion][savedDistrict]) {
+        $("districtSelect").value = savedDistrict;
+        onDistrictChange();
+        if (savedStore) {
+          const exists = Array.from($("storeSelect").options).some(o => o.value === savedStore);
+          if (exists) $("storeSelect").value = savedStore;
+        }
+      }
+    }
   }
-  function header(title){
-    return `<h1>${area||'—'} • ${region||'—'} • ${dist||'—'} • ${store||'—'}</h1><h2>${title}</h2>`;
+  updateGoBtn();
+}
+
+function onAreaChange() {
+  const a = $("areaSelect")?.value || "";
+  const regionSel = $("regionSelect");
+  const districtSel = $("districtSelect");
+  const storeSel = $("storeSelect");
+
+  saveSelections();
+
+  if (!a || !companyTree[a]) {
+    fill(regionSel, [], "Select Region"); setDisabled(regionSel, true);
+    fill(districtSel, [], "Select District"); setDisabled(districtSel, true);
+    fill(storeSel, [], "Select Store"); setDisabled(storeSel, true);
+    return;
   }
-  function nav(prev,next, prevLabel,nextLabel){
-    return `<div class="buttons">
-      ${prev ? `<button class="btn back" onclick="${prev}">← ${prevLabel}</button>`:''}
-      ${next ? `<button class="btn next" onclick="${next}">${nextLabel} →</button>`:''}
-    </div>`;
+  const regions = Object.keys(companyTree[a] || {});
+  fill(regionSel, regions, "Select Region"); setDisabled(regionSel, regions.length === 0);
+  fill(districtSel, [], "Select District"); setDisabled(districtSel, true);
+  fill(storeSel, [], "Select Store"); setDisabled(storeSel, true);
+
+  localStorage.removeItem("sel_region");
+  localStorage.removeItem("sel_district");
+  localStorage.removeItem("sel_store");
+  updateGoBtn();
+}
+
+function onRegionChange() {
+  const a = $("areaSelect")?.value || "";
+  const r = $("regionSelect")?.value || "";
+  const districtSel = $("districtSelect");
+  const storeSel = $("storeSelect");
+
+  saveSelections();
+
+  if (!a || !r || !companyTree[a] || !companyTree[a][r]) {
+    fill(districtSel, [], "Select District"); setDisabled(districtSel, true);
+    fill(storeSel, [], "Select Store"); setDisabled(storeSel, true);
+    return;
   }
+  const districts = Object.keys(companyTree[a][r] || {});
+  fill(districtSel, districts, "Select District"); setDisabled(districtSel, districts.length === 0);
+  fill(storeSel, [], "Select Store"); setDisabled(storeSel, true);
 
-  window.showDORT = function(){
-    app.innerHTML = header('DORT')+
-      inputRow('Voice','d_v_att','Attainment','d_v_goal','Goal')+
-      inputRow('BTS','d_b_att','Attainment','d_b_goal','Goal')+
-      inputRow('TFB','d_t_att','Attainment','d_t_goal','Goal')+
-      inputRow('Accessories','d_a_att','Attainment','d_a_goal','Goal')+
-      nav('', 'showSORT()','', 'SORT');
-  };
-  window.showSORT = function(){
-    app.innerHTML = header('SORT')+
-      inputRow('Voice','s_v_att','Attainment','s_v_goal','Goal')+
-      inputRow('BTS','s_b_att','Attainment','s_b_goal','Goal')+
-      inputRow('TFB','s_t_att','Attainment','s_t_goal','Goal')+
-      inputRow('Accessories','s_a_att','Attainment','s_a_goal','Goal')+
-      nav('showDORT()','showRevenue()','DORT','Revenue');
-  };
-  window.showRevenue = function(){
-    app.innerHTML = header('Revenue')+
-      inputRow('P360','p_opp','Opportunities','p_pct','Attach %')+
-      inputRow('VAF','v_opp','Opportunities','v_total','Total Revenue')+
-      nav('showSORT()','showCSAT()','SORT','CSAT');
-  };
-  window.showCSAT = function(){
-    app.innerHTML = header('CSAT')+
-      inputRow('CSAT','c_score','Current Score (0–10)','c_surveys','Surveys Taken')+
-      nav('showRevenue()','showTLife()','Revenue','T‑Life');
-  };
-  window.showTLife = function(){
-    app.innerHTML = header('T‑Life')+
-      inputRow('T‑Life','t2_att','Attainment %','t2_opp','Opportunities')+
-      nav('showCSAT()','showGoals()','CSAT','Daily Goals');
-  };
-  window.showGoals = function(){
-    app.innerHTML = header('Daily Goals')+`
-      <div class="sec"><label>Voice</label><input id="g_voice" type="number" placeholder="Voice Goal" value="${localStorage.getItem('g_voice')||''}" oninput="localStorage.setItem('g_voice',this.value)"></div>
-      <div class="sec"><label>BTS</label><input id="g_bts" type="number" placeholder="BTS Goal" value="${localStorage.getItem('g_bts')||''}" oninput="localStorage.setItem('g_bts',this.value)"></div>
-      <div class="sec"><label>Accessories</label><input id="g_acc" type="number" placeholder="Accessories Goal" value="${localStorage.getItem('g_acc')||''}" oninput="localStorage.setItem('g_acc',this.value)"></div>
-      <div class="sec"><label>TFB</label><input id="g_tfb" type="number" placeholder="TFB Goal" value="${localStorage.getItem('g_tfb')||''}" oninput="localStorage.setItem('g_tfb',this.value)"></div>
-    `+
-      nav('showTLife()','showSummary()','T‑Life','Summary');
-  };
+  localStorage.removeItem("sel_district");
+  localStorage.removeItem("sel_store");
+  updateGoBtn();
+}
 
-  function pill(content, cls){ return `<span class="status ${cls}">${content}</span>`; }
+function onDistrictChange() {
+  const a = $("areaSelect")?.value || "";
+  const r = $("regionSelect")?.value || "";
+  const d = $("districtSelect")?.value || "";
+  const storeSel = $("storeSelect");
 
-  window.showSummary = function(){
-    // combine
-    function comb(aD,gD,aS,gS){ const att=int(localStorage.getItem(aD))+int(localStorage.getItem(aS)); const goal=int(localStorage.getItem(gD))+int(localStorage.getItem(gS)); return {att,goal,pct:pct(att,goal),gap:goal-att}; }
-    const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
-    const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
-    const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
-    const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
+  saveSelections();
 
-    // p360
-    const pOpp=int(localStorage.getItem('p_opp')); const pPct=Math.max(0,Math.min(100,num(localStorage.getItem('p_pct')))); const pAtt=Math.round(pOpp*(pPct/100)); const tP=0.60; const pNeed=Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
+  if (!a || !r || !d || !companyTree[a] || !companyTree[a][r] || !companyTree[a][r][d]) {
+    fill(storeSel, [], "Select Store"); setDisabled(storeSel, true);
+    return;
+  }
+  const stores = companyTree[a][r][d] || [];
+  fill(storeSel, stores, "Select Store"); setDisabled(storeSel, stores.length === 0);
 
-    // csat
-    const cAvg=num(localStorage.getItem('c_score')); const cN=int(localStorage.getItem('c_surveys')); const cNeed=(cAvg>=9.5)?0:Math.max(0, Math.ceil(2*cN*(9.5-cAvg)));
+  localStorage.removeItem("sel_store");
+  updateGoBtn();
+}
 
-    // tlife
-    const tlPct=Math.max(0, Math.min(100, num(localStorage.getItem('t2_att')))); const tlOpp=int(localStorage.getItem('t2_opp')); const tlSuc=Math.round(tlOpp*(tlPct/100)); const tT=0.70; const tlNeed=Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
+function onStoreChange() {
+  saveSelections();
+  updateGoBtn();
+}
 
-    // vaf
-    const vOpp=int(localStorage.getItem('v_opp')); const vTot=num(localStorage.getItem('v_total')); const vTarget=19; const needTotal=vTarget*vOpp; const vGap=Math.max(0, needTotal - vTot); const mrc=vOpp>0?(vTot/vOpp):0;
+function updateGoBtn() {
+  const goBtn = $("goBtn");
+  const hasStore = !!($("storeSelect")?.value);
+  if (goBtn) {
+    goBtn.style.pointerEvents = hasStore ? "auto" : "none";
+    goBtn.style.opacity = hasStore ? "1" : "0.5";
+  }
+}
 
-    app.innerHTML = header('Summary')+`
-      <div class="sum-grid">
-        <div class="sec"><strong>DORT + SORT</strong>
-          <div class="kv"><span>Voice</span><span>${pill('Gap: '+(voice.gap>0?('+'+voice.gap):voice.gap), bandGap(voice.gap))} ${pill(voice.pct+'%', bandPct(voice.pct))}</span></div>
-          <div class="kv"><span>BTS</span><span>${pill('Gap: '+(bts.gap>0?('+'+bts.gap):bts.gap), bandGap(bts.gap))} ${pill(bts.pct+'%', bandPct(bts.pct))}</span></div>
-          <div class="kv"><span>TFB</span><span>${pill('Gap: '+(tfb.gap>0?('+'+tfb.gap):tfb.gap), bandGap(tfb.gap))} ${pill(tfb.pct+'%', bandPct(tfb.pct))}</span></div>
-          <div class="kv"><span>Accessories</span><span>${pill('Gap: '+(acc.gap>0?('+'+acc.gap):acc.gap), bandGap(acc.gap))} ${pill(acc.pct+'%', bandPct(acc.pct))}</span></div>
-        </div>
-        <div class="sec"><strong>Daily Goals</strong>
-          <div class="kv"><span>Voice</span><span><b>${localStorage.getItem('g_voice')||'—'}</b></span></div>
-          <div class="kv"><span>BTS</span><span><b>${localStorage.getItem('g_bts')||'—'}</b></span></div>
-          <div class="kv"><span>TFB</span><span><b>${localStorage.getItem('g_tfb')||'—'}</b></span></div>
-          <div class="kv"><span>Accessories</span><span><b>${localStorage.getItem('g_acc')||'—'}</b></span></div>
-        </div>
-        <div class="sec"><strong>P360</strong>
-          <div class="kv"><span>% to Goal</span><span>${pill(Math.round(pPct)+'%', bandPct(Math.round(pPct)))}</span></div>
-          <div class="kv"><span>Target</span><span>60%</span></div>
-          <div class="kv"><span>Needed</span><span>${pill(pNeed+' tx', pNeed===0?'ok':'bad')}</span></div>
-        </div>
-        <div class="sec"><strong>CSAT</strong>
-          <div class="kv"><span>Score</span><span>${pill(isNaN(cAvg)?'—':cAvg, (cAvg>=9.5?'ok':(cAvg>=9?'warn':'bad')))}</span></div>
-          <div class="kv"><span>Target</span><span>9.5</span></div>
-          <div class="kv"><span>Needed</span><span>${pill(cNeed+' perfect 10s', cNeed===0?'ok':'bad')}</span></div>
-        </div>
-        <div class="sec"><strong>T‑Life</strong>
-          <div class="kv"><span>Attainment</span><span>${pill(Math.round(tlPct)+'%', bandPct(Math.round(tlPct)))}</span></div>
-          <div class="kv"><span>Target</span><span>70%</span></div>
-          <div class="kv"><span>Needed</span><span>${pill(tlNeed+' opportunities', tlNeed===0?'ok':'bad')}</span></div>
-        </div>
-        <div class="sec"><strong>VAF</strong>
-          <div class="kv"><span>MRC</span><span>${pill(money(mrc), (mrc>=19?'ok':((19-mrc)<=1?'warn':'bad')))}</span></div>
-          <div class="kv"><span>Target</span><span>$19/op</span></div>
-          <div class="kv"><span>Gap</span><span>${pill(money(vGap), vGap<=0?'ok':'bad')}</span></div>
-        </div>
-      </div>
-      <div class="buttons" style="margin-top:14px">
-        <button class="btn back" onclick="showGoals()">← Daily Goals</button>
-        <button class="btn back" onclick="window.print()">🖨 Print</button>
-      </div>
-    `;
-  };
+// Wire up
+document.addEventListener("DOMContentLoaded", () => {
+  const areaSel = $("areaSelect");
+  const regionSel = $("regionSelect");
+  const districtSel = $("districtSelect");
+  const storeSel = $("storeSelect");
 
-  // Start at DORT
-  window.showDORT();
-})();
+  areaSel && areaSel.addEventListener("change", onAreaChange);
+  regionSel && regionSel.addEventListener("change", onRegionChange);
+  districtSel && districtSel.addEventListener("change", onDistrictChange);
+  storeSel && storeSel.addEventListener("change", onStoreChange);
+
+  restoreSelections();
+});
+
+// Expose for debugging
+window.__companyTree = companyTree;
