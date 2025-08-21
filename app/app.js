@@ -1,550 +1,239 @@
-/* =========================================================
-   Sales Tracker - app/app.js  (Company Tree + App Logic)
-   =========================================================
 
-   - Cascading dropdowns (Area → Region → District → Store)
-   - Saves/restores selections in localStorage
-   - OneSignal “Enable Notifications” (+ “No thanks”)
-   - DORT button routes to the full app at the ROOT (/index.html)
-   - DATA_TREE embedded: expand/adjust as needed when you have the full list
+/* app_js_inline.js
+   Populates Area → Region → District → Store dropdowns from DATA_TREE,
+   saves selections in localStorage, and restores on reload.
 */
 
-/* ------------------ COMPANY TREE ------------------
-   Format:
-   {
-     "Area": {
-       "Region": {
-         "District": ["Store A", "Store B", ...]
-       }
-     }
-   }
-   NOTE: You can safely add/remove keys and stores here later.
-*/
-const DATA_TREE = {
-  "West": {
-    "SOUTHWEST": {
-      "DFW WEST": [
-        "Cleburne",
-        "Rufe Snow",
-        "Chisholm Trail",
-        "28th Street",
-        "Clifford",
-        "Golden Triangle",
-        "Granbury",
-        "Stephenville",
-        "Weatherford"
-      ],
-      "DFW NORTH": [
-        "Custer",
-        "Dallas Pkwy",
-        "Independence Pkwy",
-        "Richardson TX",
-        "Stonebrook",
-        "Walnut"
-      ],
-      "UTAH/CO": [
-        "Draper",
-        "Glenwood Springs",
-        "Grand Junction",
-        "Layton",
-        "Lehi",
-        "Vernal"
-      ],
-      "AZ-WEST": [
-        "303 & Waddell",
-        "99th Avenue",
-        "Central",
-        "Desert",
-        "Laveen",
-        "Mcdowell",
-        "Northern Avenue",
-        "Union"
-      ],
-      "AZ-EAST": [
-        "Apache",
-        "Combs",
-        "Coolidge",
-        "Power",
-        "Red Mountain",
-        "Stapley",
-        "Talking"
-      ],
-      "COLORADO": [
-        "Cheyenne",
-        "Dillon",
-        "Falcon",
-        "Fountain",
-        "Frontier",
-        "Highpointe",
-        "Northgate",
-        "Peoria"
-      ],
-      "DESERT MOUNTAIN": [
-        "Farmington",
-        "Flagstaff",
-        "Highway 89",
-        "Prescott Valley East",
-        "Sedona"
-      ]
+(function(){
+  // ---------- Inline company tree (representative subset) ----------
+  // NOTE: You can expand this object with the full tree as needed.
+  const DATA_TREE = {
+    "West": {
+      "SOUTHWEST": {
+        "DFW WEST": [
+          "28th Street","Chisholm Trail","Cleburne","Clifford",
+          "Golden Triangle","Granbury","Rufe Snow","Stephenville","Weatherford"
+        ],
+        "DFW NORTH": [
+          "Custer","Dallas Pkwy","Independence Pkwy","Richardson TX","Stonebrook","Walnut"
+        ],
+        "AZ-WEST": [
+          "303 & Waddell","99th Avenue","Central","Desert","Laveen","Mcdowell","Northern Avenue","Union"
+        ],
+        "UTAH/CO": [
+          "Draper","Glenwood Springs","Grand Junction","Layton","Lehi","Vernal"
+        ]
+      },
+      "GULF COAST": {
+        "HOUSTON NORTH": [
+          "Crosby","Eva Plaza","Huntsville","Louetta","Magnolia","Mont Belvieu","Sawdust","Tomball","Willis"
+        ],
+        "HOUSTON SOUTH": [
+          "Angleton","Bay City","Lake Jackson","Mason","River Oaks","Texas City","Waterview"
+        ],
+        "SATX SOUTH": [
+          "HEB-Lytle","Kingsville","Marbach","Palo Alto","Rigsby Avenue","SW Military","South Park Mall","Valley Hi"
+        ]
+      }
     },
-    "GULF COAST": {
-      "HOUSTON SOUTH": [
-        "Alice",
-        "Angleton",
-        "Bay City",
-        "Beeville",
-        "Bellaire",
-        "Highway 6",
-        "Lake Jackson",
-        "Mason",
-        "Parkwood",
-        "River Oaks",
-        "Texas City",
-        "Victoria",
-        "Waterview"
-      ],
-      "HOUSTON NORTH": [
-        "529",
-        "Crosby",
-        "Cypress",
-        "Eva Plaza",
-        "HEB-Mont Belvieu",
-        "Huntsville",
-        "Kingwood",
-        "Louetta",
-        "Magnolia",
-        "Mont Belvieu",
-        "Sawdust",
-        "Tomball",
-        "Tuckerton",
-        "Willis"
-      ],
-      "SATX NORTH": [
-        "Cibolo",
-        "Kerrville",
-        "La Cantera",
-        "Schertz",
-        "Seguin",
-        "South Main",
-        "Spring Branch",
-        "Thousand Oaks"
-      ],
-      "SATX SOUTH": [
-        "Eagle Pass",
-        "HEB-Lytle",
-        "Kingsville",
-        "Marbach",
-        "Palo Alto",
-        "Rigsby Avenue",
-        "SW Military",
-        "South Bibb",
-        "South Park Mall",
-        "Uvalde",
-        "Valley Hi"
-      ],
-      "SOUTH TEXAS": [
-        "Alice",
-        "Beeville",
-        "Elsa",
-        "North Conway",
-        "Ocean Blvd",
-        "Portland",
-        "Rockport",
-        "Stegner",
-        "Viejo"
-      ]
+    "South": {
+      "GULF COAST": {
+        "LOUISIANA EAST": [
+          "Airline","Claiborne","Covington","Gentilly","Hammond","Rangeline","Ridgeland","Thibodaux","Uptown","Veterans"
+        ],
+        "LOUISIANA WEST": [
+          "Alexandria","Denham Springs","Lafayette","New Iberia","North Mall","Oneal","Pinhook","Prairieville"
+        ],
+        "FLORIDA": ["Andover","Apopka","Granada","Ocala","Rolling Oaks","Seminole"]
+      },
+      "SOUTH CENTRAL": {
+        "ATX CENTRAL": ["Belterra","Bryan","Buda","College Station","Creekside","New Braunfels","Texas Ave","West Woods"],
+        "ATX NORTH": ["Copperas Cove","Killeen","Killeen Mall","Manor","Marble Falls","Round Rock","Taylor"],
+        "DFW CENTRAL": ["28th Street","Cooper Street","Duncanville","Ennis","Golden Triangle","Red Oak","Rufe Snow"],
+        "SATX NORTH": ["Cibolo","Kerrville","La Cantera","Schertz","Seguin","Thousand Oaks"]
+      }
     },
-    "MIDWEST": {
-      "KENTUCKY": [
-        "Evansville Burk",
-        "Jeffersonville",
-        "La Grange",
-        "Maysville",
-        "Mt Washington",
-        "New Circle",
-        "Owensboro",
-        "Springhurst",
-        "Winchester"
-      ],
-      "NEBRASKA": [
-        "180th Street",
-        "Altoona",
-        "Ames",
-        "Center",
-        "Council Bluffs",
-        "Grand Island",
-        "King Lane",
-        "Maple"
-      ],
-      "MISSISSIPPI RIVER VALLEY": [
-        "12th Street",
-        "Dubuque",
-        "Hannibal",
-        "Jeff City",
-        "Osage",
-        "Paducah",
-        "Rolla",
-        "Virginia Avenue"
-      ],
-      "OKC": [
-        "Ardmore",
-        "Bartlesville",
-        "Chickasha",
-        "Garth Brooks Blvd",
-        "Market Place",
-        "Mustang",
-        "Owen Garriott",
-        "Wrangler"
-      ],
-      "ARKANSAS": [
-        "Hot Springs",
-        "Little Rock",
-        "Pine Bluff",
-        "Russellville",
-        "Searcy",
-        "Van Buren"
-      ],
-      "KANSAS": [
-        "Broken Arrow",
-        "George Washington",
-        "Peoria Ave",
-        "Ponca City",
-        "Riverside Pkwy",
-        "Sapulpa",
-        "Schilling"
-      ]
-    }
-  },
-
-  "South": {
-    "SOUTH CENTRAL": {
-      "ATX CENTRAL": [
-        "Belterra",
-        "Bryan",
-        "Buda",
-        "College Station",
-        "Creekside",
-        "New Braunfels",
-        "Texas Ave",
-        "West Woods"
-      ],
-      "ATX NORTH": [
-        "Copperas Cove",
-        "Killeen",
-        "Killeen Mall",
-        "Manor",
-        "Marble Falls",
-        "Round Rock",
-        "Taylor"
-      ],
-      "DFW CENTRAL": [
-        "28th Street",
-        "Cooper Street",
-        "Duncanville",
-        "Ennis",
-        "Golden Triangle",
-        "Red Oak",
-        "Rufe Snow"
-      ],
-      "DFW NORTH": [
-        "Custer",
-        "Dallas Pkwy",
-        "Independence Pkwy",
-        "Richardson TX",
-        "Stonebrook",
-        "Walnut"
-      ],
-      "DFW WEST": [
-        "Bedford",
-        "Chisholm Trail",
-        "Clifford",
-        "Eastchase",
-        "Weatherford"
-      ],
-      "SATX NORTH": [
-        "Cibolo",
-        "Kerrville",
-        "La Cantera",
-        "Schertz",
-        "Seguin",
-        "Thousand Oaks"
-      ],
-      "SATX SOUTH": [
-        "HEB-Lytle",
-        "Kingsville",
-        "Marbach",
-        "Palo Alto",
-        "Rigsby Avenue",
-        "SW Military",
-        "South Park Mall",
-        "Valley Hi"
-      ]
+    "East": {
+      "NORTHEAST": {
+        "QUEENS": ["8th Avenue","Broadway","College Point","Elmont","Glen Oaks","Linden","Main Street","Ozone Park","Ridgewood","Springfield Blvd"],
+        "LONG ISLAND": ["Baisley Blvd","Bethpage","Commack","East Islip","Hempstead","Jericho","New York Avenue","Rockaway","West Islip"],
+        "MASSACHUSETTS": ["Albany Turnpike","Billerica","Harwich","Haverhill","Malden","Methuen","North Street","River Road","Spencer"]
+      },
+      "OHIO VALLEY": {
+        "MI/IN": ["Chapel Ridge","Dupont","Elkhart","Kendallville","Milford","Rochester Hills","South Lyon","Warsaw"],
+        "MICHIGAN": ["Allendale","Big Rapids","Grand Haven","Grand Rapids","Greenville","Knapps Corner","Ludington","Muskegon","Northland","Three Rivers","Walker","West 48th"],
+        "MID OHIO": ["Ashland","Bellefontaine","Bucyrus","Delaware","Fremont","Marysville","Mt. Gilead","Mt. Vernon","Norwalk","Ontario","Westfield"]
+      }
     },
-    "GULF COAST": {
-      "ATLANTA": [
-        "Commerce",
-        "Dacula",
-        "Epps Bridge",
-        "Locust Grove",
-        "Peachtree City",
-        "Winder",
-        "Wrightsboro"
-      ],
-      "ATLANTIC COAST": [
-        "Beaufort",
-        "Brunswick",
-        "Lowes Village",
-        "Macclenny",
-        "Savannah Crossing"
-      ],
-      "FLORIDA": [
-        "Andover",
-        "Apopka",
-        "Granada",
-        "Ocala",
-        "Rolling Oaks",
-        "Seminole"
-      ],
-      "NORTH GEORGIA": [
-        "Athens",
-        "Cartersville",
-        "Chapel Hill",
-        "Dalton",
-        "Marietta",
-        "Rome",
-        "Smyrna",
-        "Villa Rica"
-      ],
-      "HOUSTON NORTH": [
-        "Crosby",
-        "Eva Plaza",
-        "Huntsville",
-        "Louetta",
-        "Magnolia",
-        "Mont Belvieu",
-        "Sawdust",
-        "Tomball",
-        "Willis"
-      ],
-      "HOUSTON SOUTH": [
-        "529",
-        "Angleton",
-        "Bay City",
-        "Cypress",
-        "Lake Jackson",
-        "Mason",
-        "River Oaks",
-        "Texas City",
-        "Waterview"
-      ],
-      "LOUISIANA EAST": [
-        "Airline",
-        "Claiborne",
-        "Covington",
-        "Gentilly",
-        "Hammond",
-        "Rangeline",
-        "Ridgeland",
-        "Thibodaux",
-        "Uptown",
-        "Veterans"
-      ],
-      "LOUISIANA WEST": [
-        "Alexandria",
-        "Denham Springs",
-        "Hammond",
-        "Lafayette",
-        "New Iberia",
-        "North Mall",
-        "Oneal",
-        "Pinhook",
-        "Prairieville"
-      ],
-      "KANSAS": [
-        "Broken Arrow",
-        "George Washington",
-        "Peoria Ave",
-        "Ponca City",
-        "Riverside Pkwy",
-        "Sapulpa",
-        "Schilling"
-      ]
-    },
-    "SOUTHWEST": {
-      "ARIZONA SOUTH": [
-        "Central",
-        "Cochise",
-        "Grant Road",
-        "Harrison Plaza",
-        "Las Plazas",
-        "Nogales South",
-        "Tucson Fashion Park"
-      ],
-      "OKC": [
-        "Chickasha",
-        "Garth Brooks Blvd",
-        "Market Place",
-        "Mustang",
-        "Owen Garriott",
-        "Plainview",
-        "S. Georgia",
-        "Wrangler"
-      ],
-      "UTAH/CO": [
-        "Draper",
-        "Glenwood Springs",
-        "Grand Junction",
-        "Layton",
-        "Lehi",
-        "Vernal"
-      ]
-    }
-  }
-};
-/* ------------------ end COMPANY TREE ------------------ */
-
-
-/* ------------------ UTILITIES ------------------ */
-const $ = (id) => document.getElementById(id);
-const areaSel     = $("areaSelect");
-const regionSel   = $("regionSelect");
-const districtSel = $("districtSelect");
-const storeSel    = $("storeSelect");
-const btnDORT     = $("dortBtn") || $("btnDort") || $("enableBtn");
-const notifBtn    = $("enableBtn");
-const skipBtn     = $("skipBtn");
-const notifStatus = $("notifStatus");
-
-function fillSelect(selectEl, items, placeholder){
-  selectEl.innerHTML = "";
-  const opt0 = document.createElement("option");
-  opt0.value = "";
-  opt0.textContent = placeholder;
-  opt0.disabled = true;
-  opt0.selected = true;
-  selectEl.appendChild(opt0);
-  (items || []).forEach(v => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    opt.textContent = v;
-    selectEl.appendChild(opt);
-  });
-  selectEl.disabled = items.length === 0;
-}
-
-function saveSelections(){
-  localStorage.setItem("sel_area", areaSel.value || "");
-  localStorage.setItem("sel_region", regionSel.value || "");
-  localStorage.setItem("sel_district", districtSel.value || "");
-  localStorage.setItem("sel_store", storeSel.value || "");
-}
-
-function restoreSelections(){
-  // Areas
-  const areas = Object.keys(DATA_TREE || {});
-  fillSelect(areaSel, areas, "Select Area");
-
-  const a = localStorage.getItem("sel_area");
-  const r = localStorage.getItem("sel_region");
-  const d = localStorage.getItem("sel_district");
-  const s = localStorage.getItem("sel_store");
-
-  if (a && DATA_TREE[a]) {
-    areaSel.value = a;
-    onAreaChange(false);
-
-    if (r && DATA_TREE[a][r]) {
-      regionSel.value = r;
-      onRegionChange(false);
-
-      if (d && DATA_TREE[a][r][d]) {
-        districtSel.value = d;
-        onDistrictChange(false);
-
-        const exists = Array.from(storeSel.options).some(o => o.value === s);
-        if (s && exists) storeSel.value = s;
+    "North": {
+      "NORTH CENTRAL": {
+        "NORTH GEORGIA": ["Athens","Cartersville","Chapel Hill","Dalton","Marietta","Rome","Smyrna","Villa Rica"],
+        "STEEL VALLEY": ["Alliance","Beaver Falls","Cambridge","Coshocton","Countryside","Hermitage","Triadelphia","Uniontown","Youngstown","Zanesville"],
+        "TN/VA": ["Asheville","Elizabethton","Exit Seven","Kingston Pike","Knoxville","Morristown","Oak Ridge"]
       }
     }
-  }
-}
+  };
 
-function onAreaChange(save=true){
-  const a = areaSel.value;
-  const regions = a ? Object.keys(DATA_TREE[a] || {}) : [];
-  fillSelect(regionSel, regions, "Select Region");
-  fillSelect(districtSel, [], "Select District");
-  fillSelect(storeSel, [], "Select Store");
-  if (save) {
+  // Expose for debugging (optional)
+  window.__DATA_TREE__ = DATA_TREE;
+
+  // ---------- Utility helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const areaSel = $("areaSelect");
+  const regionSel = $("regionSelect");
+  const districtSel = $("districtSelect");
+  const storeSel = $("storeSelect");
+  const dortBtn = $("dortBtn");
+
+  function setDisabled(el, on) {
+    if (!el) return;
+    el.disabled = !!on;
+    el.style.opacity = on ? 0.7 : 1;
+  }
+
+  function fillSelect(el, list, placeholder) {
+    if (!el) return;
+    el.innerHTML = "";
+    const ph = document.createElement("option");
+    ph.value = "";
+    ph.textContent = placeholder;
+    ph.disabled = true;
+    ph.selected = true;
+    el.appendChild(ph);
+    (list || []).forEach((label) => {
+      const opt = document.createElement("option");
+      opt.value = label;
+      opt.textContent = label;
+      el.appendChild(opt);
+    });
+  }
+
+  function saveState() {
+    localStorage.setItem("sel_area", areaSel.value || "");
+    localStorage.setItem("sel_region", regionSel.value || "");
+    localStorage.setItem("sel_district", districtSel.value || "");
+    localStorage.setItem("sel_store", storeSel.value || "");
+  }
+
+  function restoreState() {
+    // Areas
+    const areas = Object.keys(DATA_TREE).sort();
+    fillSelect(areaSel, areas, "Select Area");
+    setDisabled(areaSel, areas.length === 0);
+
+    const a = localStorage.getItem("sel_area");
+    const r = localStorage.getItem("sel_region");
+    const d = localStorage.getItem("sel_district");
+    const s = localStorage.getItem("sel_store");
+
+    if (a && DATA_TREE[a]) {
+      areaSel.value = a;
+      onAreaChange();
+      if (r && DATA_TREE[a][r]) {
+        regionSel.value = r;
+        onRegionChange();
+        if (d && DATA_TREE[a][r][d]) {
+          districtSel.value = d;
+          onDistrictChange();
+          // store
+          if (s) {
+            const exists = Array.from(storeSel.options).some(o => o.value === s);
+            if (exists) storeSel.value = s;
+          }
+        }
+      }
+    }
+    updateDortState();
+  }
+
+  function onAreaChange() {
+    saveState();
+    const a = areaSel.value;
+    if (!a || !DATA_TREE[a]) {
+      fillSelect(regionSel, [], "Select Region");
+      fillSelect(districtSel, [], "Select District");
+      fillSelect(storeSel, [], "Select Store");
+      setDisabled(regionSel, true);
+      setDisabled(districtSel, true);
+      setDisabled(storeSel, true);
+      updateDortState();
+      return;
+    }
+    const regions = Object.keys(DATA_TREE[a]).sort();
+    fillSelect(regionSel, regions, "Select Region");
+    setDisabled(regionSel, regions.length === 0);
+    fillSelect(districtSel, [], "Select District");
+    setDisabled(districtSel, true);
+    fillSelect(storeSel, [], "Select Store");
+    setDisabled(storeSel, true);
     localStorage.removeItem("sel_region");
     localStorage.removeItem("sel_district");
     localStorage.removeItem("sel_store");
-    saveSelections();
+    updateDortState();
   }
-}
 
-function onRegionChange(save=true){
-  const a = areaSel.value;
-  const r = regionSel.value;
-  const districts = (a && r) ? Object.keys((DATA_TREE[a]||{})[r] || {}) : [];
-  fillSelect(districtSel, districts, "Select District");
-  fillSelect(storeSel, [], "Select Store");
-  if (save) {
+  function onRegionChange() {
+    saveState();
+    const a = areaSel.value, r = regionSel.value;
+    if (!a || !r || !DATA_TREE[a] || !DATA_TREE[a][r]) {
+      fillSelect(districtSel, [], "Select District");
+      setDisabled(districtSel, true);
+      fillSelect(storeSel, [], "Select Store");
+      setDisabled(storeSel, true);
+      updateDortState();
+      return;
+    }
+    const dists = Object.keys(DATA_TREE[a][r]).sort();
+    fillSelect(districtSel, dists, "Select District");
+    setDisabled(districtSel, dists.length === 0);
+    fillSelect(storeSel, [], "Select Store");
+    setDisabled(storeSel, true);
     localStorage.removeItem("sel_district");
     localStorage.removeItem("sel_store");
-    saveSelections();
+    updateDortState();
   }
-}
 
-function onDistrictChange(save=true){
-  const a = areaSel.value;
-  const r = regionSel.value;
-  const d = districtSel.value;
-  const stores = (a && r && d) ? (((DATA_TREE[a]||{})[r]||{})[d] || []) : [];
-  fillSelect(storeSel, stores, "Select Store");
-  if (save) {
+  function onDistrictChange() {
+    saveState();
+    const a = areaSel.value, r = regionSel.value, d = districtSel.value;
+    if (!a || !r || !d || !DATA_TREE[a] || !DATA_TREE[a][r] || !DATA_TREE[a][r][d]) {
+      fillSelect(storeSel, [], "Select Store");
+      setDisabled(storeSel, true);
+      updateDortState();
+      return;
+    }
+    const stores = DATA_TREE[a][r][d].slice().sort();
+    fillSelect(storeSel, stores, "Select Store");
+    setDisabled(storeSel, stores.length === 0);
     localStorage.removeItem("sel_store");
-    saveSelections();
+    updateDortState();
   }
-}
 
-function onStoreChange(){ saveSelections(); }
-
-
-/* ------------------ Notifications ------------------ */
-/* Keeping the simple in-app prompt style + "No thanks" */
-enableBtn?.addEventListener("click", async () => {
-  try {
-    const permission = await Notification.requestPermission();
-    notifStatus.textContent = permission === "granted"
-      ? "Notifications enabled!"
-      : "Permission denied.";
-  } catch (err) {
-    notifStatus.textContent = "Error: " + err;
+  function onStoreChange() {
+    saveState();
+    updateDortState();
   }
-});
 
-skipBtn?.addEventListener("click", () => {
-  notifStatus.textContent = "Notifications skipped.";
-});
-
-
-/* ------------------ Start ------------------ */
-document.addEventListener("DOMContentLoaded", () => {
-  areaSel.addEventListener("change", onAreaChange);
-  regionSel.addEventListener("change", onRegionChange);
-  districtSel.addEventListener("change", onDistrictChange);
-  storeSel.addEventListener("change", onStoreChange);
-
-  restoreSelections();
-
-  // Route to the full app at the ROOT when clicking DORT
-  if (btnDORT) {
-    btnDORT.addEventListener("click", () => {
-      window.location.href = "/index.html";
-    });
+  function updateDortState() {
+    if (!dortBtn) return;
+    const enabled = !!(areaSel.value && regionSel.value && districtSel.value && storeSel.value);
+    dortBtn.disabled = !enabled;
   }
-});
 
-// Avoid horizontal scroll on iOS
-document.documentElement.style.overflowX = "hidden";
-document.body.style.overflowX = "hidden";
+  // ---------- Init ----------
+  document.addEventListener("DOMContentLoaded", function(){
+    // Wire handlers
+    if (areaSel) areaSel.addEventListener("change", onAreaChange);
+    if (regionSel) regionSel.addEventListener("change", onRegionChange);
+    if (districtSel) districtSel.addEventListener("change", onDistrictChange);
+    if (storeSel) storeSel.addEventListener("change", onStoreChange);
+    if (dortBtn) {
+      dortBtn.addEventListener("click", function(){
+        // Navigate to app flow (DORT) if needed; currently just saves and stays
+        saveState();
+        // Example: window.location.href = "/app/index.html#dort";
+      });
+    }
+    restoreState();
+  });
+})();
