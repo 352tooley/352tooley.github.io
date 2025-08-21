@@ -1,134 +1,84 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Goals & Gaps Tracker</title>
-
-  <!-- PWA basics (safe to keep) -->
-  <link rel="manifest" href="../manifest.json" />
-  <meta name="theme-color" content="#ffffff" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="white" />
-  <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
-  <link rel="apple-touch-icon" href="../logo-192.png" />
-  <link rel="icon" href="../logo-64.png" sizes="64x64" />
-  <link rel="icon" href="../logo-512.png" sizes="512x512" />
-
   <style>
-    :root{
-      --magenta:#d6006e;
-      --ink:#111;
-      --muted:#666;
-      --card:#fff;
-      --border:#e5e7eb;
-      --shadow:0 8px 20px rgba(0,0,0,.06);
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      text-align: center;
+      margin: 0;
+      padding: 0;
     }
-    html,body{height:100%;margin:0;overflow-x:hidden;background:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
-    /* Top brand area */
-    .brand-wrap{
-      position:sticky; top:0;
-      background:#fff; z-index:5;
-      display:flex; align-items:center; justify-content:center;
-      padding:10px 12px 0;
-      border-bottom:1px solid rgba(0,0,0,.04);
+    .logo {
+      width: 200px;
+      margin: 20px auto;
+      display: block;
     }
-    .brand{
-      width: min(92vw, 520px);
-      height:auto;
-      max-height: 120px;  /* keeps it from getting too tall */
-      object-fit: contain;
-      display:block;
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-
-    main{max-width: 820px; margin: 0 auto; padding: 10px 14px 24px;}
-
-    .title-h1{
-      margin: 10px 0 8px;
-      text-align:center; color:var(--ink);
-      font-weight:800; font-size: 22px;
+    h1 {
+      color: #000;
+      font-size: 22px;
+      margin-bottom: 10px;
     }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:14px; box-shadow:var(--shadow);
-      padding:18px; margin: 10px auto 16px;
+    h2 {
+      color: #e20074;
+      font-size: 20px;
+      margin: 15px 0;
     }
-
-    h2{
-      margin:0 0 12px; text-align:center;
-      color:var(--magenta); font-size:22px;
+    select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
     }
-
-    .row{display:flex; flex-direction:column; gap:10px;}
-
-    select{
-      width:100%; padding:12px; border-radius:10px;
-      border:1px solid var(--border); font-size:16px; background:#fff;
+    button {
+      background: #e20074;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
     }
-    select:disabled{background:#f4f4f4;color:#9a9a9a;}
-
-    .btn{
-      width:100%; padding:14px 16px; border-radius:12px;
-      border:none; font-size:18px; font-weight:800; cursor:pointer;
-      background:var(--magenta); color:#fff;
+    button:disabled {
+      background: #ddd;
+      color: #999;
     }
-    .btn:disabled{background:#e7e7e7;color:#9a9a9a;cursor:not-allowed;}
-
-    .muted{font-size:13px;color:var(--muted);text-align:center;margin-top:6px;}
   </style>
 </head>
 <body>
+  <!-- Embedded logo as base64 PNG -->
+  <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAYAAAB5G3Q2AAAABHNCSVQICAgIfAhkiAAABqJJREFUeJzt3cFu2kAQgOHbKjQhC2QJbAkbXQrVYEKr0M8W4rDwCsdjWnZ6dHZ2J17J15Sk6XnD69uvr39/P6dsHxYMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPBZ0/X1+fXwmtmvb+9k5Pf7U8n4ea0E3n6/+z4d2fXmZbtknhXy4nJH/1uPtb3xrp7fYtaFuz3smnHrZ2uCzP5J1GrcpwHxj3qZXu/fVJX7en+9QMz9OP5YV9Vm7n+lKda4l5unb7RbWS+8yivqbfKaXN93pe1JtQ/NdTtReazx4zddH6nyo7OnT9eU/bpqQucZrWo+/7h9zFc+luMT1b5nm4j5pefukrridXhU3qNffb35so/LS8LJ/tk78HytvQffVbjKq7OsnN65r1a+W1+WXHdjN1x0t92jcmW+mv9fkvVqXaYNX1VV8dR8tX2vy4P3ylOjV9ef4n1QnYN9Lr58L/zvWX1zOf2sszSnXaNZfdbE2r+R2rybXiq/Gj9sqbW9vlk8ZXyq3k8/v04fNfT2mJq4fZx1p3qLWc1uzLmfM1+fGP1kG5Vz1tqcrOzeqmLlm7ldmr/dFe1a64i5V8UuVRbNRftUlxE7Fftl5fVxZPabUxgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8P/4CVJrHvMfOZFYAAAAASUVORK5CYII=" alt="Connectivity Source Logo">
 
-  <!-- Larger, full-width brand at the very top -->
-  <div class="brand-wrap">
-    <img class="brand" src="../logo-512.png" alt="Connectivity Source" />
+  <div class="container">
+    <h1>Goals & Gaps Tracker</h1>
+    <h2>Select Your Store</h2>
+    <select id="areaSelect">
+      <option>Select Area</option>
+    </select>
+    <select id="regionSelect" disabled>
+      <option>Select Region</option>
+    </select>
+    <select id="districtSelect" disabled>
+      <option>Select District</option>
+    </select>
+    <select id="storeSelect" disabled>
+      <option>Select Store</option>
+    </select>
+    <button id="continueBtn" disabled>DORT →</button>
+    <p style="font-size: 12px; color: #555;">Your selections are saved on this device.</p>
   </div>
 
-  <main>
-    <div class="title-h1">Goals &amp; Gaps Tracker</div>
-
-    <div class="card">
-      <h2>Select Your Store</h2>
-      <div class="row">
-        <select id="areaSelect">
-          <option value="">Select Area</option>
-        </select>
-        <select id="regionSelect" disabled>
-          <option value="">Select Region</option>
-        </select>
-        <select id="districtSelect" disabled>
-          <option value="">Select District</option>
-        </select>
-        <select id="storeSelect" disabled>
-          <option value="">Select Store</option>
-        </select>
-
-        <button id="dortBtn" class="btn" disabled>DORT →</button>
-        <div class="muted">Your selections are saved on this device.</div>
-      </div>
-    </div>
-  </main>
-
-  <!-- IMPORTANT: app.js must be in the same folder as this file -->
-  <script src="./app.js"></script>
-
-  <script>
-    // Keep DORT disabled until a store is selected
-    const storeSel = document.getElementById('storeSelect');
-    const dortBtn  = document.getElementById('dortBtn');
-    function refreshDort(){
-      dortBtn.disabled = !storeSel.value;
-    }
-    storeSel.addEventListener('change', refreshDort);
-    // Navigate to the legacy full app (Summary etc.)
-    dortBtn.addEventListener('click', () => {
-      // If you use a different entry page for the main app, change the path here:
-      location.href = '/index.html';
-    });
-    // Initialize once in case app.js restored a selection
-    window.addEventListener('DOMContentLoaded', refreshDort);
-  </script>
+  <script src="./app.js?v=3"></script>
 </body>
 </html>
