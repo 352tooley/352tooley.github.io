@@ -1,31 +1,58 @@
+/* Print-only overrides to fit ONE page cleanly */
 @media print {
-  /* Scale page to fit one sheet */
+  /* 1) Page size & margins */
   @page {
     size: Letter portrait;
-    margin: 0.5in;
+    margin: 0.45in;
   }
 
-  body {
-    zoom: 90%; /* auto-fit */
+  html, body {
+    background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  header img {
-    max-width: 100%;
-    max-height: 120px; /* ensures logo never gets cut */
-    object-fit: contain;
-  }
+  /* 2) Header / Logo never cropped */
+  .logo-wrap { height: 72px !important; }
+  .logo-wrap img,
+  header img { max-height: 72px !important; width: auto !important; object-fit: contain !important; }
 
-  .summary-card,
-  .content {
-    page-break-inside: avoid;
-  }
+  /* 3) Compress spacing & fonts for one-page fit */
+  h1 { font-size: 20px !important; margin: 4px 0 6px !important; }
+  h2 { font-size: 14px !important; margin: 2px 0 6px !important; }
+  h3, h4 { font-size: 13px !important; margin: 2px 0 4px !important; }
+  p, li, label, .muted { font-size: 12px !important; }
+  .kv { margin: 4px 0 !important; }
+  .status { font-size: 12px !important; padding: 2px 6px !important; }
 
-  /* Force summary into 2 neat columns */
+  /* 4) Enforce 2-column compact summary */
+  .sum-grid,
   .summary-grid {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 12px !important;
+    gap: 8px !important;
+  }
+
+  /* 5) Avoid page breaks inside cards/tiles */
+  .sec, .tile, .summary-card, .content {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .tile.tall, .tile.short {
+    min-height: auto !important;
+  }
+
+  /* 6) Stretch container to full width; remove shadows */
+  .container, .shell, .sum-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #cfcfcf !important;
+  }
+
+  /* 7) Hide interactive-only UI in print */
+  .buttons, .actions, .reminder, .print-hide {
+    display: none !important;
   }
 }
