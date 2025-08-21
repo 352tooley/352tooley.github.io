@@ -1,0 +1,31 @@
+@media print {
+  /* Scale page to fit one sheet */
+  @page {
+    size: Letter portrait;
+    margin: 0.5in;
+  }
+
+  body {
+    zoom: 90%; /* auto-fit */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  header img {
+    max-width: 100%;
+    max-height: 120px; /* ensures logo never gets cut */
+    object-fit: contain;
+  }
+
+  .summary-card,
+  .content {
+    page-break-inside: avoid;
+  }
+
+  /* Force summary into 2 neat columns */
+  .summary-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+}
