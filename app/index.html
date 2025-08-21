@@ -1,96 +1,140 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Sales Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Sales Tracker – App</title>
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="../logo-64.png">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #fff;
+    :root{
+      --magenta:#d6006e;
+      --ink:#111;
+      --muted:#667085;
+      --border:#e5e7eb;
+      --card:#fff;
+      --bg:#fafafa;
+      --brandbg:#f7f7f7; /* off‑white to blend with logo PNG background */
     }
-    header {
-      background: #f8f8f8;
-      text-align: center;
-      padding: 10px;
+    html,body{margin:0;height:100%;background:var(--bg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
+    .wrap{max-width:960px;margin:0 auto;padding:16px;}
+    header{
+      background:var(--brandbg);
+      display:flex;align-items:center;justify-content:center;
+      height:120px; /* tall header */
+      border-bottom:1px solid var(--border);
     }
-    header img {
-      max-height: 80px;
-      width: auto;
-      object-fit: contain;
-      background-color: #f8f8f8;
+    header .logo{
+      height:100%; max-width:90%;
+      object-fit:contain; object-position:center;
+      display:block;
+      image-rendering:auto;
     }
-    .container {
-      padding: 20px;
+    h1{
+      font-size:clamp(24px,4vw,36px);
+      margin:20px 0 8px;
+      text-align:left;
+      font-weight:800;
+      letter-spacing:-0.02em;
     }
-    table {
-      border-collapse: collapse;
-      width: 100%;
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,.06);
+      margin-top:16px;
     }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
+    .card h2{
+      color:var(--magenta);
+      font-size:clamp(18px,3.3vw,26px);
+      text-align:left;margin:0 0 12px;
     }
-    th {
-      background-color: #f2f2f2;
+    .actions{display:flex;gap:10px;margin:10px 0 0}
+    .btn{
+      appearance:none; border:0; padding:12px 18px; border-radius:999px;
+      background:var(--magenta); color:#fff; font-weight:700; font-size:16px;
+      box-shadow:0 6px 18px rgba(214,0,110,.28);
+      cursor:pointer;
     }
-    @media print {
-      body {
-        zoom: 90%;
-      }
-      header img {
-        max-height: 60px;
-      }
-      .no-print {
-        display: none;
-      }
+    .btn.secondary{background:#111;box-shadow:0 6px 18px rgba(0,0,0,.25);}
+    .btn.small{font-size:14px;padding:8px 14px;border-radius:10px}
+    table{
+      width:100%; border-collapse:separate;border-spacing:0; overflow:hidden;
+      border:1px solid var(--border); border-radius:12px; background:#fff;
+    }
+    th,td{padding:14px 12px; text-align:left; border-top:1px solid var(--border);}
+    thead th{background:#f6f7f9; border-top:0; font-weight:700}
+    tr:first-child th:first-child{border-top-left-radius:12px}
+    tr:first-child th:last-child{border-top-right-radius:12px}
+    tr:last-child td:first-child{border-bottom-left-radius:12px}
+    tr:last-child td:last-child{border-bottom-right-radius:12px}
+    .num{text-align:right; font-variant-numeric:tabular-nums}
+    .gap.minus{color:#b42318; font-weight:700} /* under goal */
+    .gap.plus{color:#027a48; font-weight:700}   /* over goal  */
+    .note{color:var(--muted); font-size:13px; margin-top:8px}
+    /* Make print friendly */
+    @media print{
+      @page{ size:auto; margin:10mm }
+      body{ background:#fff }
+      header{ height:90px }
+      .wrap{ padding:0 }
+      .card{ box-shadow:none; border:0; padding:0; margin:0 }
+      h1{ font-size:24px; margin:8mm 0 3mm }
+      .actions{ display:none !important }
+      table{ font-size:12px }
+      th,td{ padding:8px 10px }
     }
   </style>
 </head>
 <body>
   <header>
-    <img src="logo.png" alt="Company Logo">
-    <h1>Sales Tracker Summary</h1>
+    <img class="logo" src="../logo-512.png" alt="Connectivity Source">
   </header>
-  <div class="container">
-    <h2>Summary</h2>
-    <table>
-      <tr>
-        <th>Metric</th>
-        <th>Goal</th>
-        <th>Actual</th>
-        <th>Gap</th>
-      </tr>
-      <tr>
-        <td>Voice</td>
-        <td>100</td>
-        <td>90</td>
-        <td>-10</td>
-      </tr>
-      <tr>
-        <td>BTS</td>
-        <td>80</td>
-        <td>85</td>
-        <td>+5</td>
-      </tr>
-      <tr>
-        <td>Accessories ($)</td>
-        <td>$2000</td>
-        <td>$1800</td>
-        <td>-$200</td>
-      </tr>
-      <tr>
-        <td>P360 Adds</td>
-        <td>50</td>
-        <td>60</td>
-        <td>+10</td>
-      </tr>
-    </table>
-    <button class="no-print" onclick="window.print()">Print</button>
+
+  <div class="wrap">
+    <h1>Sales Tracker Summary</h1>
+    <div class="card">
+      <h2>Summary</h2>
+      <div id="summaryMount">
+        <!-- app.js will inject the table here if it renders its own.
+             We also include a fallback empty structure so it always looks good. -->
+        <table id="summaryTable">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th class="num">Goal</th>
+              <th class="num">Actual</th>
+              <th class="num">Gap</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody">
+            <!-- Filled by app.js -->
+          </tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button class="btn small" id="printBtn" type="button">Print</button>
+      </div>
+      <div class="note">Your selections and entries are saved on this device.</div>
+    </div>
   </div>
+
+  <script>
+    // Make sure the print button always fits page width when printing
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+    // Helpers for app.js to style gaps consistently:
+    window.formatGapCell = function(td, value){
+      td.classList.add('num','gap', value < 0 ? 'minus':'plus');
+      td.textContent = (value>0?'+':'') + value;
+    };
+    // Currency helper for accessories
+    window.formatCurrency = function(n){
+      try{
+        return new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
+      }catch(e){ return '$'+Math.round(n); }
+    };
+  </script>
+  <script src="app.js"></script>
 </body>
 </html>
