@@ -2,63 +2,140 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Goals & Gaps Tracker — App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Goals & Gaps Tracker</title>
+  <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#ffffff" />
+
   <style>
-    :root{ --magenta:#d6006e; --ink:#111; --muted:#666; --card:#fff; --border:#e5e7eb; }
-    html,body{height:100%; margin:0; background:#fafafa; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;}
-    body{ overflow-x:hidden; }
-    header{ position:sticky; top:0; background:#fff; border-bottom:1px solid var(--border); display:flex; justify-content:center; z-index:5; }
-    .logo-wrap{ padding:8px 0; max-width:720px; width:100%; display:flex; justify-content:center; }
-    .logo{ display:block; width:min(260px, 86%); height:auto; }
-    .container{ padding:14px; display:flex; justify-content:center; }
-    .card{ width:min(94vw, 720px); background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.06); padding:16px; }
-    h1{ margin:4px 0 8px; text-align:center; font-size:22px; font-weight:800; color:var(--ink); }
-    h2{ margin:6px 0 14px; text-align:center; font-size:24px; font-weight:900; color:var(--magenta); }
-    label{ font-weight:700; margin:8px 0 6px; display:block; }
-    .pair{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-    @media(max-width:420px){ .pair{ grid-template-columns:1fr; } }
-    input{ width:100%; padding:12px; border:1px solid var(--border); border-radius:12px; font-size:16px; }
-    .buttons{ display:flex; gap:10px; margin-top:16px; }
-    .btn{ flex:1; height:52px; border:none; border-radius:12px; font-weight:800; font-size:18px; cursor:pointer; }
-    .btn.back{ background:#eee; color:#333; }
-    .btn.next{ background:var(--magenta); color:#fff; }
-    .sec{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:12px; margin:10px 0; }
-    .banner{ text-align:center; font-size:14px; color:#b00; margin:8px 0 0; }
-    /* Summary */
-    .sum-grid{ display:grid; grid-template-columns:1fr; gap:12px; }
-    @media(min-width:760px){ .sum-grid{ grid-template-columns:1fr 1fr; } }
-    .kv{ display:flex; justify-content:space-between; margin:4px 0; gap:8px; }
-    .status{ padding:3px 8px; border-radius:999px; font-size:13px; font-weight:800; display:inline-block; }
-    .ok{ background:rgba(0,200,0,.14); color:#0a0; border:1px solid rgba(0,200,0,.28); }
-    .warn{ background:rgba(255,200,0,.16); color:#a60; border:1px solid rgba(255,200,0,.32); }
-    .bad{ background:rgba(255,80,80,.16); color:#a00; border:1px solid rgba(255,80,80,.32); }
-    @media print{
-      @page{ size: Letter; margin: 0.5in; }
-      body{ background:#fff; }
-      header{ display:none; }
-      .card{ box-shadow:none; border:1px solid #ccc; }
-      .buttons{ display:none; }
+    :root{
+      --magenta:#d6006e;
+      --ink:#0f0f0f;
+      --muted:#666;
+      --card:#fff;
+      --border:#e7e7ea;
+      /* off-white to match your logo's background */
+      --offwhite:#f7f7f7;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background:#ffffff;
+      color:var(--ink);
+      -webkit-text-size-adjust:100%;
+      overflow-x:hidden; /* prevent sideways scroll */
+    }
+
+    /* Header that "crops" the logo background margins */
+    .brand-header{
+      width:100%;
+      max-width:960px;
+      margin:0 auto;
+      background:var(--offwhite) url("/logo-512.png") center/cover no-repeat;
+      /* The height controls how much gets cropped; adjust if you want the logo taller/shorter */
+      height:140px;
+      /* Hide any image overflow to achieve the crop effect */
+      border-bottom:1px solid var(--border);
+    }
+
+    /* Card */
+    .card{
+      width:min(94vw, 760px);
+      margin:20px auto 32px;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:0 8px 24px rgba(0,0,0,.06);
+      padding:22px 18px 26px;
+    }
+    h1{
+      margin:8px 0 6px;
+      text-align:center;
+      color:var(--magenta);
+      font-size:28px;
+      line-height:1.15;
+    }
+    h2{
+      margin:6px 0 14px;
+      text-align:center;
+      font-size:24px;
+      line-height:1.15;
+    }
+    .row{display:flex; flex-direction:column; gap:10px}
+
+    select{
+      width:100%;
+      padding:14px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      font-size:16px;
+      background:#f9f9fb;
+      appearance:none;
+      -webkit-appearance:none;
+    }
+    select:disabled{opacity:.6; background:#f3f3f6; color:#9a9a9a}
+
+    /* Centered, narrower DORT button */
+    .btn{
+      display:block;
+      width:78%;
+      margin:16px auto 0;
+      padding:15px 18px;
+      border-radius:14px;
+      border:none;
+      font-weight:800;
+      letter-spacing:.2px;
+      font-size:18px;
+      cursor:pointer;
+      text-align:center;
+      color:#fff;
+      background:var(--magenta);
+    }
+    .note{
+      font-size:13px;
+      color:var(--muted);
+      text-align:center;
+      margin-top:10px;
+    }
+
+    @media (min-width: 430px){
+      .brand-header{height:150px}
+    }
+    @media (min-width: 768px){
+      .brand-header{height:160px}
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo-wrap">
-      <img class="logo" src="../logo-512.png" alt="Connectivity Source" />
+  <!-- Cropping header: uses background-size:cover to remove off-white edge pixels -->
+  <div class="brand-header" role="img" aria-label="Connectivity Source"></div>
+
+  <main class="card">
+    <h1>Goals &amp; Gaps Tracker</h1>
+    <h2>Select Your Store</h2>
+
+    <div class="row">
+      <select id="areaSelect">
+        <option value="">Select Area</option>
+      </select>
+      <select id="regionSelect" disabled>
+        <option value="">Select Region</option>
+      </select>
+      <select id="districtSelect" disabled>
+        <option value="">Select District</option>
+      </select>
+      <select id="storeSelect" disabled>
+        <option value="">Select Store</option>
+      </select>
     </div>
-  </header>
 
-  <div class="container">
-    <main class="card">
-      <div id="warnRoot" class="banner" style="display:none">
-        Store not selected. <a href="../index.html">Go to selector</a>
-      </div>
-      <div id="app"></div>
-    </main>
-  </div>
+    <button class="btn" id="btnGo">DORT →</button>
+    <div class="note">Your selections are saved on this device.</div>
+  </main>
 
-  <script src="app.js"></script>
+  <!-- Your app logic / data loader -->
+  <script src="/app/app.js"></script>
 </body>
 </html>
