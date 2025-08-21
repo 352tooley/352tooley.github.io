@@ -14,76 +14,64 @@
       --border:#e5e7eb;
       --card:#fff;
       --bg:#fafafa;
-      --brandbg:#f7f7f7; /* off‑white to blend with logo PNG background */
+      --brandbg:#f7f7f7;
+      --fs-base:18px; --fs-label:18px; --fs-h2:26px; --fs-btn:18px;
+      --control-h:54px;
+      --radius:12px;
     }
-    html,body{margin:0;height:100%;background:var(--bg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
-    .wrap{max-width:960px;margin:0 auto;padding:16px;}
+    html,body{margin:0;height:100%;background:var(--bg);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);font-size:var(--fs-base)}
+    /* Header */
     header{
       background:var(--brandbg);
       display:flex;align-items:center;justify-content:center;
-      height:120px; /* tall header */
+      height:100px;
       border-bottom:1px solid var(--border);
+      position:sticky; top:0; z-index:10;
     }
-    header .logo{
-      height:100%; max-width:90%;
-      object-fit:contain; object-position:center;
-      display:block;
-      image-rendering:auto;
+    header .logo{height:88px; width:auto; object-fit:contain; object-position:center; display:block}
+    /* Container */
+    .container{padding:14px 16px 20px; max-width:760px; margin:0 auto}
+    h2{margin:10px 0 12px; color:var(--magenta); text-align:center; font-size:var(--fs-h2)}
+    .metric{margin:14px 0}
+    .metric label{display:block; margin-bottom:8px; font-weight:700; font-size:var(--fs-label)}
+    .pair{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px}
+    @media(max-width:420px){ .pair{grid-template-columns:1fr} }
+    input{width:100%; height:var(--control-h); padding:12px; font-size:19px; border:1px solid var(--border); border-radius:12px; background:#fff; color:#111; box-sizing:border-box}
+    .sec{background:var(--card); padding:16px; border-radius:var(--radius); border:1px solid var(--border); box-shadow:0 2px 6px rgba(0,0,0,.05); margin:12px 0}
+    .buttons{margin:18px 0 24px; display:flex; gap:12px}
+    button{flex:1; height:var(--control-h); padding:0 16px; font-size:var(--fs-btn); font-weight:800; letter-spacing:.2px; border:none; border-radius:12px; cursor:pointer}
+    .back{background:#e9e9e9; color:#333}
+    .next{background:var(--magenta); color:#fff}
+    button:disabled{background:#efefef; color:#9b9b9b; cursor:not-allowed}
+    .kv{display:flex; justify-content:space-between; gap:12px; margin:6px 0}
+    .status{padding:4px 10px; border-radius:999px; font-size:14px; font-weight:800; display:inline-block}
+    .ok{background:rgba(0,200,0,.14); color:#0a0; border:1px solid rgba(0,200,0,.28)}
+    .warn{background:rgba(255,200,0,.16); color:#a60; border:1px solid rgba(255,200,0,.32)}
+    .bad{background:rgba(255,80,80,.16); color:#a00; border:1px solid rgba(255,80,80,.32)}
+    /* Summary grid (unchanged layout) */
+    .sum-head{margin:2px 0 10px; text-align:center}
+    .sum-date,.sum-store{font-size:20px; font-weight:800}
+    .sum-grid{display:grid; grid-template-columns:1fr; gap:12px}
+    .tile{display:flex; flex-direction:column; justify-content:flex-start}
+    .tile.tall{min-height:220px}
+    .tile.short{min-height:190px}
+    @media(min-width:760px){
+      .container{max-width:1100px}
+      .sum-grid{grid-template-columns:1fr 1fr; gap:12px}
     }
-    h1{
-      font-size:clamp(24px,4vw,36px);
-      margin:20px 0 8px;
-      text-align:left;
-      font-weight:800;
-      letter-spacing:-0.02em;
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:16px;
-      padding:18px;
-      box-shadow:0 10px 30px rgba(0,0,0,.06);
-      margin-top:16px;
-    }
-    .card h2{
-      color:var(--magenta);
-      font-size:clamp(18px,3.3vw,26px);
-      text-align:left;margin:0 0 12px;
-    }
-    .actions{display:flex;gap:10px;margin:10px 0 0}
-    .btn{
-      appearance:none; border:0; padding:12px 18px; border-radius:999px;
-      background:var(--magenta); color:#fff; font-weight:700; font-size:16px;
-      box-shadow:0 6px 18px rgba(214,0,110,.28);
-      cursor:pointer;
-    }
-    .btn.secondary{background:#111;box-shadow:0 6px 18px rgba(0,0,0,.25);}
-    .btn.small{font-size:14px;padding:8px 14px;border-radius:10px}
-    table{
-      width:100%; border-collapse:separate;border-spacing:0; overflow:hidden;
-      border:1px solid var(--border); border-radius:12px; background:#fff;
-    }
-    th,td{padding:14px 12px; text-align:left; border-top:1px solid var(--border);}
-    thead th{background:#f6f7f9; border-top:0; font-weight:700}
-    tr:first-child th:first-child{border-top-left-radius:12px}
-    tr:first-child th:last-child{border-top-right-radius:12px}
-    tr:last-child td:first-child{border-bottom-left-radius:12px}
-    tr:last-child td:last-child{border-bottom-right-radius:12px}
-    .num{text-align:right; font-variant-numeric:tabular-nums}
-    .gap.minus{color:#b42318; font-weight:700} /* under goal */
-    .gap.plus{color:#027a48; font-weight:700}   /* over goal  */
-    .note{color:var(--muted); font-size:13px; margin-top:8px}
-    /* Make print friendly */
+    /* PRINT ONLY — auto-fit to a single page & keep logo fully visible */
     @media print{
-      @page{ size:auto; margin:10mm }
-      body{ background:#fff }
-      header{ height:90px }
-      .wrap{ padding:0 }
-      .card{ box-shadow:none; border:0; padding:0; margin:0 }
-      h1{ font-size:24px; margin:8mm 0 3mm }
-      .actions{ display:none !important }
-      table{ font-size:12px }
-      th,td{ padding:8px 10px }
+      @page{ size: Letter; margin: 0.5in }
+      html,body{ background:#fff; color:#000 }
+      header{ height:70px }
+      header .logo{ height:60px }
+      .buttons{ display:none !important }
+      .sec{ box-shadow:none; border:1px solid #ccc }
+      .sum-grid{ grid-template-columns:1fr 1fr; gap:10px }
+      .sum-head .sum-date, .sum-head .sum-store{ font-size:18px }
+      .status{ font-size:12px; padding:3px 8px }
+      /* Nudge overall content slightly smaller for one-page fit */
+      .container{ transform: scale(0.95); transform-origin: top center }
     }
   </style>
 </head>
@@ -91,50 +79,9 @@
   <header>
     <img class="logo" src="../logo-512.png" alt="Connectivity Source">
   </header>
-
-  <div class="wrap">
-    <h1>Sales Tracker Summary</h1>
-    <div class="card">
-      <h2>Summary</h2>
-      <div id="summaryMount">
-        <!-- app.js will inject the table here if it renders its own.
-             We also include a fallback empty structure so it always looks good. -->
-        <table id="summaryTable">
-          <thead>
-            <tr>
-              <th>Metric</th>
-              <th class="num">Goal</th>
-              <th class="num">Actual</th>
-              <th class="num">Gap</th>
-            </tr>
-          </thead>
-          <tbody id="summaryBody">
-            <!-- Filled by app.js -->
-          </tbody>
-        </table>
-      </div>
-      <div class="actions">
-        <button class="btn small" id="printBtn" type="button">Print</button>
-      </div>
-      <div class="note">Your selections and entries are saved on this device.</div>
-    </div>
-  </div>
-
-  <script>
-    // Make sure the print button always fits page width when printing
-    document.getElementById('printBtn').addEventListener('click', () => window.print());
-    // Helpers for app.js to style gaps consistently:
-    window.formatGapCell = function(td, value){
-      td.classList.add('num','gap', value < 0 ? 'minus':'plus');
-      td.textContent = (value>0?'+':'') + value;
-    };
-    // Currency helper for accessories
-    window.formatCurrency = function(n){
-      try{
-        return new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);
-      }catch(e){ return '$'+Math.round(n); }
-    };
-  </script>
+  <main class="container">
+    <div id="app"></div>
+  </main>
   <script src="app.js"></script>
 </body>
 </html>
