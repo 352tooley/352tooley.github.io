@@ -1,310 +1,284 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>Goals & Gaps Tracker</title>
-  <link rel="stylesheet" href="print.css" media="print">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Goals & Gaps Tracker</title>
+<link rel="stylesheet" href="/print.css">
+<style>
+  :root {
+    --brand:#e20074;
+    --card:#fafafa; /* off-white to blend with logo background */
+    --ring:#d0d0d0;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;overflow-x:hidden;background:#fff;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;line-height:1.25;}
 
-  <style>
-    :root{
-      --brand:#e20074;
-      --card:#ffffff;
-      --logoBg:#f7f7f7; /* off‑white to blend with logo backdrop */
-      --text:#111;
-      --muted:#666;
-      --radius:18px;
-      --shadow:0 8px 24px rgba(0,0,0,.08);
-    }
-    html,body{height:100%;margin:0;overflow-x:hidden;background:#fafafa;-webkit-font-smoothing:antialiased}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  /* Header logo band */
+  .brand-band{
+    background:var(--card);
+    padding:6px 10px 0;
+    border-bottom:1px solid #eee;
+  }
+  .brand-band .logo{
+    display:block;
+    margin:0 auto;
+    width:100%;
+    max-width:720px;
+    height:clamp(72px, 20vw, 140px);
+    object-fit:contain; /* shows full logo, trims visual whitespace */
+  }
 
-    /* Header with big logo, minimal gaps */
-    .header{
-      background:var(--logoBg);
-      padding:8px 0 4px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-    }
-    .header .logo{
-      width:min(680px, 92vw);
-      height:120px;              /* fixed band height */
-      display:block;
-      object-fit:contain;        /* preserve ratio; trims off-white visually */
-      object-position:center;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,.05));
-    }
+  /* Card */
+  .wrap{display:flex;justify-content:center;padding:12px;}
+  .card{
+    width:min(720px, 100%);
+    background:#fff;
+    border-radius:18px;
+    box-shadow:0 8px 28px rgba(0,0,0,.08);
+    padding:18px;
+    margin-top:-2px; /* pull right up under the logo band */
+  }
 
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      margin:8px auto 24px;      /* pull up closer to header */
-      padding:20px 18px 24px;
-      width:min(720px,92vw);
-    }
-    h1{
-      margin:6px 0 10px;
-      text-align:center;
-      color:var(--brand);
-      font-size:clamp(24px, 4.5vw, 34px);
-      font-weight:800;
-      letter-spacing:.3px;
-    }
-    h2{
-      margin:0 0 16px;
-      text-align:center;
-      color:#111;
-      font-size:clamp(18px, 3.6vw, 26px);
-      font-weight:800;
-    }
+  h1{
+    margin:6px 0 8px;
+    text-align:center;
+    color:var(--brand);
+    font-size:clamp(24px, 4.8vw, 34px);
+    letter-spacing:.3px;
+  }
+  h2{
+    margin:0 0 12px;
+    text-align:center;
+    font-size:clamp(18px, 4vw, 24px);
+    color:#111;
+  }
+  label{
+    display:block;
+    font-weight:600;
+    margin:10px 0 6px;
+    color:#333;
+  }
+  select{
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    padding:14px 16px;
+    border:1px solid var(--ring);
+    border-radius:12px;
+    background:#f6f6f6;
+    font-size:18px;
+    outline:none;
+  }
+  .btn{
+    display:block;
+    width:100%;
+    border:0;
+    border-radius:14px;
+    padding:16px 14px;
+    font-weight:800;
+    letter-spacing:.4px;
+    text-align:center;
+    background:var(--brand);
+    color:#fff;
+    margin-top:16px;
+    font-size:22px;
+  }
+  .btn:disabled{
+    background:#e5a8c9;
+    color:#fff;
+    opacity:.85;
+  }
+  .tip{text-align:center;color:#666;margin-top:10px;}
 
-    label{display:block;margin:10px 4px 6px;color:#333;font-weight:700}
-    select{
-      width:100%;
-      padding:14px 12px;
-      font-size:16px;
-      border-radius:12px;
-      border:1px solid #e0e0e0;
-      background:#f5f5f7;
-      outline:none;
-      -webkit-appearance:none;
-      appearance:none;
-      box-shadow:inset 0 1px 0 rgba(0,0,0,.02);
-    }
-    select:disabled{color:#999;background:#f1f1f1}
-    .btn{
-      width:100%;
-      padding:16px 14px;
-      margin-top:16px;
-      border:0;
-      border-radius:14px;
-      background:var(--brand);
-      color:#fff;
-      font-weight:800;
-      font-size:20px;
-      cursor:pointer;
-      transition:transform .06s ease, opacity .2s ease, box-shadow .2s ease;
-      box-shadow:0 10px 24px rgba(226,0,116,.25);
-    }
-    .btn:disabled{background:#d6a7c2;color:#fff;box-shadow:none;cursor:not-allowed}
-    .fine{color:var(--muted);text-align:center;margin:10px 0 0}
-
-    /* Prevent sideways scroll on iOS */
-    .wrap{overflow-x:hidden}
-
-    /* Print tidy header spacing if someone prints this page */
-    @media print{
-      .header{padding:0}
-      .card{box-shadow:none;width:100%;margin:0;padding:0;border-radius:0}
-      .btn{display:none}
-      select{border:1px solid #aaa}
-    }
-  </style>
+  /* Prevent sideways scroll on iOS */
+  .safe{
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+</style>
 </head>
-<body>
-  <div class="wrap">
-    <header class="header">
-      <!-- Uses your existing logo-512.png; keep filename as-is. If you prefer embedded,
-           replace src with a data URI. -->
-      <img class="logo" src="logo-512.png" alt="Connectivity Source"/>
-    </header>
+<body class="safe">
+<div class="brand-band">
+  <img class="logo" src="/logo-512.png" alt="Connectivity Source">
+</div>
+<div class="wrap">
+  <main class="card">
+    <h1>Goals &amp; Gaps Tracker</h1>
+    <h2>Select Your Store</h2>
 
-    <main class="card">
-      <h1>Goals & Gaps Tracker</h1>
-      <h2>Select Your Store</h2>
+    <label for="areaSelect">Area</label>
+    <select id="areaSelect"><option value="">Select Area</option></select>
 
-      <label for="area">Area</label>
-      <select id="area"><option value="">Select Area</option></select>
+    <label for="regionSelect">Region</label>
+    <select id="regionSelect" disabled><option value="">Select Region</option></select>
 
-      <label for="region">Region</label>
-      <select id="region" disabled><option value="">Select Region</option></select>
+    <label for="districtSelect">District</label>
+    <select id="districtSelect" disabled><option value="">Select District</option></select>
 
-      <label for="district">District</label>
-      <select id="district" disabled><option value="">Select District</option></select>
+    <label for="storeSelect">Store</label>
+    <select id="storeSelect" disabled><option value="">Select Store</option></select>
 
-      <label for="store">Store</label>
-      <select id="store" disabled><option value="">Select Store</option></select>
+    <button id="dortBtn" class="btn" disabled>DORT →</button>
+    <p class="tip">Your selections are saved on this device.</p>
+  </main>
+</div>
+<script>
+(async function() {
+  const selArea = document.getElementById('areaSelect');
+  const selRegion = document.getElementById('regionSelect');
+  const selDistrict = document.getElementById('districtSelect');
+  const selStore = document.getElementById('storeSelect');
+  const dortBtn = document.getElementById('dortBtn');
 
-      <button id="goBtn" class="btn" disabled>DORT →</button>
-      <p class="fine">Your selections are saved on this device.</p>
-    </main>
-  </div>
-
-  <script>
-  (function(){
-    const els = {
-      area: document.getElementById('area'),
-      region: document.getElementById('region'),
-      district: document.getElementById('district'),
-      store: document.getElementById('store'),
-      goBtn: document.getElementById('goBtn')
-    };
-    const KEY='ggt.selection.v1';
-
-    // small helper
-    const uniqSort = arr => Array.from(new Set(arr)).sort((a,b)=> a.localeCompare(b));
-
-    async function loadLocations(){
-      // try current folder first, then fall back one level
-      const paths = ['locations.json','./app/locations.json','../locations.json'];
-      let data=null, lastErr=null;
-      for(const p of paths){
-        try{
-          const r = await fetch(p, {cache:'no-store'});
-          if(r.ok){ data = await r.json(); break; }
-        }catch(e){ lastErr=e; }
-      }
-      if(!data){ console.error('Failed to load locations.json', lastErr); return []; }
-      return data;
+  function getVal(o, names) {
+    for (const n of names) {
+      if (o[n] != null && String(o[n]).trim() !== '') return String(o[n]).trim();
     }
+    return '';
+  }
 
-    function buildIndex(rows){
-      // Expect keys: Area, Region, District, Store
-      const index = {};
-      for(const r of rows){
-        const area = (r.Area||'').trim();
-        const region = (r.Region||'').trim();
-        const district = (r.District||'').trim();
-        const store = (r.Store||r.StoreName||'').trim();
-        if(!area||!region||!district||!store) continue;
-        index[area] ??= {};
-        index[area][region] ??= {};
-        index[area][region][district] ??= [];
-        index[area][region][district].push(store);
-      }
-      // sort stores in each district
-      for(const a of Object.keys(index)){
-        for(const r of Object.keys(index[a])){
-          for(const d of Object.keys(index[a][r])){
-            index[a][r][d] = uniqSort(index[a][r][d]);
-          }
-        }
-      }
-      return index;
+  async function tryFetch(url) {
+    try {
+      const r = await fetch(url + (url.includes('?') ? '' : '?_=' + Date.now()));
+      if (r.ok) return await r.json();
+    } catch(e) {}
+    return null;
+  }
+
+  const sources = [
+    './locations.json',
+    '/locations.json',
+    '/app/locations.json',
+    '../locations.json'
+  ];
+
+  let data=null;
+  for (const s of sources) {
+    data = await tryFetch(s);
+    if (Array.isArray(data) && data.length) break;
+  }
+  if (!Array.isArray(data)) {
+    console.error('locations.json not found or invalid'); 
+    return;
+  }
+
+  // Normalize to Area/Region/District/Store
+  const rows = data.map(r => ({
+    area: getVal(r, ['area','Area','AREA','S','s']),
+    region: getVal(r, ['region','Region','REGION','P','p']),
+    district: getVal(r, ['district','District','DISTRICT','M','m']),
+    store: getVal(r, ['store','Store','STORE','store_name','D','d'])
+  })).filter(r => r.area && r.region && r.district && r.store);
+
+  // Build maps
+  const byArea = new Map();
+  for (const r of rows) {
+    if (!byArea.has(r.area)) byArea.set(r.area, new Map());
+    const reg = byArea.get(r.area);
+    if (!reg.has(r.region)) reg.set(r.region, new Map());
+    const dist = reg.get(r.region);
+    if (!dist.has(r.district)) dist.set(r.district, new Set());
+    dist.get(r.district).add(r.store);
+  }
+
+  function fillSelect(sel, items, placeholder) {
+    sel.innerHTML = '';
+    const opt0 = document.createElement('option');
+    opt0.value=''; opt0.textContent = placeholder; sel.appendChild(opt0);
+    for (const v of items) {
+      const o = document.createElement('option');
+      o.value = o.textContent = v; sel.appendChild(o);
     }
+    sel.disabled = items.length === 0;
+  }
 
-    function fillSelect(select, items, placeholder){
-      select.innerHTML = '';
-      const opt0 = document.createElement('option');
-      opt0.value=''; opt0.textContent = placeholder;
-      select.appendChild(opt0);
-      for(const v of items){
-        const o = document.createElement('option');
-        o.value=o.textContent=v;
-        select.appendChild(o);
-      }
-    }
+  function uniqueSorted(iter){
+    return Array.from(new Set(Array.from(iter))).sort((a,b)=>a.localeCompare(b));
+  }
 
-    function enable(el, on){ el.disabled = !on; }
+  // Restore last picks if available; else pick firsts so the page looks filled.
+  const saved = JSON.parse(localStorage.getItem('storePath') || '{}');
 
-    function restoreSelection(index){
-      const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
-      // verify saved values still exist; otherwise pick first available
-      const areas = uniqSort(Object.keys(index));
-      fillSelect(els.area, areas, 'Select Area');
-      let area = areas[0];
-      if(saved.area && areas.includes(saved.area)) area = saved.area;
-      els.area.value = area;
+  const areaList = uniqueSorted(byArea.keys());
+  fillSelect(selArea, areaList, 'Select Area');
 
-      const regions = uniqSort(Object.keys(index[area]||{}));
-      enable(els.region, true);
-      fillSelect(els.region, regions, 'Select Region');
-      let region = regions[0];
-      if(saved.region && regions.includes(saved.region)) region = saved.region;
-      els.region.value = region;
+  function setSelectValue(sel, val){
+    if (!val) return false;
+    for (const o of sel.options) { if (o.value === val) { sel.value = val; return true; } }
+    return false;
+  }
 
-      const districts = uniqSort(Object.keys((index[area]||{})[region]||{}));
-      enable(els.district, true);
-      fillSelect(els.district, districts, 'Select District');
-      let district = districts[0];
-      if(saved.district && districts.includes(saved.district)) district = saved.district;
-      els.district.value = district;
+  // populate cascade based on current selections
+  function populateRegions() {
+    const area = selArea.value;
+    const regMap = byArea.get(area) || new Map();
+    fillSelect(selRegion, uniqueSorted(regMap.keys()), 'Select Region');
+  }
+  function populateDistricts() {
+    const area = selArea.value;
+    const regMap = byArea.get(area) || new Map();
+    const distMap = regMap.get(selRegion.value) || new Map();
+    fillSelect(selDistrict, uniqueSorted(distMap.keys()), 'Select District');
+  }
+  function populateStores() {
+    const area = selArea.value;
+    const regMap = byArea.get(area) || new Map();
+    const distMap = regMap.get(selRegion.value) || new Map();
+    const storeSet = distMap.get(selDistrict.value) || new Set();
+    fillSelect(selStore, uniqueSorted(storeSet.values()), 'Select Store');
+  }
 
-      const stores = (index[area]?.[region]?.[district] || []);
-      enable(els.store, true);
-      fillSelect(els.store, stores, 'Select Store');
-      let store = stores[0];
-      if(saved.store && stores.includes(saved.store)) store = saved.store;
-      els.store.value = store;
+  selArea.addEventListener('change', ()=>{ populateRegions(); populateDistricts(); populateStores(); update(); });
+  selRegion.addEventListener('change', ()=>{ populateDistricts(); populateStores(); update(); });
+  selDistrict.addEventListener('change', ()=>{ populateStores(); update(); });
+  selStore.addEventListener('change', update);
 
-      els.goBtn.disabled = !store;
-      // persist the verified selection
-      localStorage.setItem(KEY, JSON.stringify({area,region,district,store}));
-    }
+  function prefill() {
+    // 1) set area
+    if (!setSelectValue(selArea, saved.area)) selArea.value = areaList[0] || '';
+    populateRegions();
+    // 2) region
+    if (!setSelectValue(selRegion, saved.region)) selRegion.selectedIndex = Math.min(1, selRegion.options.length-1);
+    populateDistricts();
+    // 3) district
+    if (!setSelectValue(selDistrict, saved.district)) selDistrict.selectedIndex = Math.min(1, selDistrict.options.length-1);
+    populateStores();
+    // 4) store
+    if (!setSelectValue(selStore, saved.store)) selStore.selectedIndex = Math.min(1, selStore.options.length-1);
+    update();
+  }
 
-    function wireCascades(index){
-      els.area.addEventListener('change', () => {
-        const area = els.area.value;
-        const regions = uniqSort(Object.keys(index[area]||{}));
-        fillSelect(els.region, regions, 'Select Region');
-        enable(els.region, true);
-
-        // reset deeper
-        fillSelect(els.district, [], 'Select District'); enable(els.district, false);
-        fillSelect(els.store, [], 'Select Store'); enable(els.store, false);
-        els.goBtn.disabled = true;
-        localStorage.setItem(KEY, JSON.stringify({area}));
-      });
-
-      els.region.addEventListener('change', () => {
-        const area = els.area.value;
-        const region = els.region.value;
-        const districts = uniqSort(Object.keys(index[area]?.[region]||{}));
-        fillSelect(els.district, districts, 'Select District');
-        enable(els.district, true);
-        fillSelect(els.store, [], 'Select Store'); enable(els.store, false);
-        els.goBtn.disabled = true;
-        localStorage.setItem(KEY, JSON.stringify({area, region}));
-      });
-
-      els.district.addEventListener('change', () => {
-        const area = els.area.value;
-        const region = els.region.value;
-        const district = els.district.value;
-        const stores = index[area]?.[region]?.[district] || [];
-        fillSelect(els.store, stores, 'Select Store');
-        enable(els.store, true);
-        els.goBtn.disabled = true;
-        localStorage.setItem(KEY, JSON.stringify({area, region, district}));
-      });
-
-      els.store.addEventListener('change', () => {
-        const area = els.area.value;
-        const region = els.region.value;
-        const district = els.district.value;
-        const store = els.store.value;
-        els.goBtn.disabled = !store;
-        localStorage.setItem(KEY, JSON.stringify({area,region,district,store}));
-      });
-
-      els.goBtn.addEventListener('click', () => {
-        const sel = JSON.parse(localStorage.getItem(KEY) || '{}');
-        if(!sel.store){return;}
-        // Prefer summary.html in this folder; if missing, try /app/summary.html
-        const here = location.pathname.replace(/[^\/]+$/, '');
-        const targets = [here+'summary.html','/app/summary.html','/summary.html'];
-        const qs = new URLSearchParams(sel).toString();
-        window.location.href = targets[0] + '?' + qs;
-      });
-    }
-
-    // boot
-    loadLocations().then(rows => {
-      // normalize any possible schema (Excel conversion or previous JSON)
-      // Accept either array of objects with keys {Area,Region,District,Store}
-      const normalized = rows.map(r => ({
-        Area: r.Area || r.area || r['area'],
-        Region: r.Region || r.region || r['region'],
-        District: r.District || r.district || r['district'],
-        Store: r.Store || r.store || r['store'] || r['Store Name'] || r['StoreName'] || r['Store name']
+  function update(){
+    const enabled = !!selStore.value;
+    dortBtn.disabled = !enabled;
+    selRegion.disabled = !selArea.value;
+    selDistrict.disabled = !selRegion.value;
+    selStore.disabled = !selDistrict.value;
+    if (enabled) {
+      localStorage.setItem('storePath', JSON.stringify({
+        area: selArea.value, region: selRegion.value, district: selDistrict.value, store: selStore.value
       }));
-      const index = buildIndex(normalized);
-      restoreSelection(index);
-      wireCascades(index);
-    });
-  })();
-  </script>
-</body>
-</html>
+    }
+  }
+
+  prefill();
+
+  dortBtn.addEventListener('click', () => {
+    if (!selStore.value) return;
+    // Navigate to summary.html in same folder; try fallbacks if moved
+    const tryUrls = [
+      'summary.html',
+      './summary.html',
+      '/summary.html',
+      '/app/summary.html'
+    ];
+    for (const u of tryUrls) { 
+      window.location.href = u + '?_=' + Date.now(); 
+      break;
+    }
+  });
+})();
+</script>
+</body></html>
