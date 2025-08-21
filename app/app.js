@@ -1,43 +1,417 @@
-/* =============================
-   Sales Tracker - app/app.js (v6)
-   =============================
+/* =========================================================
+   Sales Tracker - app/app.js  (Company Tree + App Logic)
+   =========================================================
 
    - Cascading dropdowns (Area → Region → District → Store)
    - Saves/restores selections in localStorage
-   - OneSignal notifications (Enable / No thanks)
-   - DORT button now routes to the full app at the ROOT (/index.html)
+   - OneSignal “Enable Notifications” (+ “No thanks”)
+   - DORT button routes to the full app at the ROOT (/index.html)
+   - DATA_TREE embedded: expand/adjust as needed when you have the full list
 */
 
-/* ---------- COMPANY TREE (sample) ----------
-   Replace with your full data when ready.
+/* ------------------ COMPANY TREE ------------------
+   Format:
+   {
+     "Area": {
+       "Region": {
+         "District": ["Store A", "Store B", ...]
+       }
+     }
+   }
+   NOTE: You can safely add/remove keys and stores here later.
 */
 const DATA_TREE = {
   "West": {
     "SOUTHWEST": {
-      "DFW WEST": ["Cleburne","Clifford","Chisholm Trail","Eastchase","Granbury","Rufe Snow","Weatherford","Stephenville"],
-      "DFW NORTH": ["Custer","Dallas Pkwy","Independence Pkwy","Richardson TX","Stonebrook","Walnut"]
+      "DFW WEST": [
+        "Cleburne",
+        "Rufe Snow",
+        "Chisholm Trail",
+        "28th Street",
+        "Clifford",
+        "Golden Triangle",
+        "Granbury",
+        "Stephenville",
+        "Weatherford"
+      ],
+      "DFW NORTH": [
+        "Custer",
+        "Dallas Pkwy",
+        "Independence Pkwy",
+        "Richardson TX",
+        "Stonebrook",
+        "Walnut"
+      ],
+      "UTAH/CO": [
+        "Draper",
+        "Glenwood Springs",
+        "Grand Junction",
+        "Layton",
+        "Lehi",
+        "Vernal"
+      ],
+      "AZ-WEST": [
+        "303 & Waddell",
+        "99th Avenue",
+        "Central",
+        "Desert",
+        "Laveen",
+        "Mcdowell",
+        "Northern Avenue",
+        "Union"
+      ],
+      "AZ-EAST": [
+        "Apache",
+        "Combs",
+        "Coolidge",
+        "Power",
+        "Red Mountain",
+        "Stapley",
+        "Talking"
+      ],
+      "COLORADO": [
+        "Cheyenne",
+        "Dillon",
+        "Falcon",
+        "Fountain",
+        "Frontier",
+        "Highpointe",
+        "Northgate",
+        "Peoria"
+      ],
+      "DESERT MOUNTAIN": [
+        "Farmington",
+        "Flagstaff",
+        "Highway 89",
+        "Prescott Valley East",
+        "Sedona"
+      ]
     },
     "GULF COAST": {
-      "HOUSTON SOUTH": ["Angleton","Bay City","Lake Jackson","Mason","River Oaks","Texas City","Waterview"],
-      "HOUSTON NORTH": ["Crosby","Huntsville","Louetta","Magnolia","Mont Belvieu","Sawdust","Tomball","Willis"]
+      "HOUSTON SOUTH": [
+        "Alice",
+        "Angleton",
+        "Bay City",
+        "Beeville",
+        "Bellaire",
+        "Highway 6",
+        "Lake Jackson",
+        "Mason",
+        "Parkwood",
+        "River Oaks",
+        "Texas City",
+        "Victoria",
+        "Waterview"
+      ],
+      "HOUSTON NORTH": [
+        "529",
+        "Crosby",
+        "Cypress",
+        "Eva Plaza",
+        "HEB-Mont Belvieu",
+        "Huntsville",
+        "Kingwood",
+        "Louetta",
+        "Magnolia",
+        "Mont Belvieu",
+        "Sawdust",
+        "Tomball",
+        "Tuckerton",
+        "Willis"
+      ],
+      "SATX NORTH": [
+        "Cibolo",
+        "Kerrville",
+        "La Cantera",
+        "Schertz",
+        "Seguin",
+        "South Main",
+        "Spring Branch",
+        "Thousand Oaks"
+      ],
+      "SATX SOUTH": [
+        "Eagle Pass",
+        "HEB-Lytle",
+        "Kingsville",
+        "Marbach",
+        "Palo Alto",
+        "Rigsby Avenue",
+        "SW Military",
+        "South Bibb",
+        "South Park Mall",
+        "Uvalde",
+        "Valley Hi"
+      ],
+      "SOUTH TEXAS": [
+        "Alice",
+        "Beeville",
+        "Elsa",
+        "North Conway",
+        "Ocean Blvd",
+        "Portland",
+        "Rockport",
+        "Stegner",
+        "Viejo"
+      ]
+    },
+    "MIDWEST": {
+      "KENTUCKY": [
+        "Evansville Burk",
+        "Jeffersonville",
+        "La Grange",
+        "Maysville",
+        "Mt Washington",
+        "New Circle",
+        "Owensboro",
+        "Springhurst",
+        "Winchester"
+      ],
+      "NEBRASKA": [
+        "180th Street",
+        "Altoona",
+        "Ames",
+        "Center",
+        "Council Bluffs",
+        "Grand Island",
+        "King Lane",
+        "Maple"
+      ],
+      "MISSISSIPPI RIVER VALLEY": [
+        "12th Street",
+        "Dubuque",
+        "Hannibal",
+        "Jeff City",
+        "Osage",
+        "Paducah",
+        "Rolla",
+        "Virginia Avenue"
+      ],
+      "OKC": [
+        "Ardmore",
+        "Bartlesville",
+        "Chickasha",
+        "Garth Brooks Blvd",
+        "Market Place",
+        "Mustang",
+        "Owen Garriott",
+        "Wrangler"
+      ],
+      "ARKANSAS": [
+        "Hot Springs",
+        "Little Rock",
+        "Pine Bluff",
+        "Russellville",
+        "Searcy",
+        "Van Buren"
+      ],
+      "KANSAS": [
+        "Broken Arrow",
+        "George Washington",
+        "Peoria Ave",
+        "Ponca City",
+        "Riverside Pkwy",
+        "Sapulpa",
+        "Schilling"
+      ]
     }
   },
+
   "South": {
     "SOUTH CENTRAL": {
-      "ATX CENTRAL": ["Belterra","Bryan","Buda","College Station","Creekside","New Braunfels","Texas Ave","West Woods"],
-      "SATX SOUTH": ["HEB-Lytle","Kingsville","Marbach","Palo Alto","Rigsby Avenue","SW Military","South Park Mall","Valley Hi"]
+      "ATX CENTRAL": [
+        "Belterra",
+        "Bryan",
+        "Buda",
+        "College Station",
+        "Creekside",
+        "New Braunfels",
+        "Texas Ave",
+        "West Woods"
+      ],
+      "ATX NORTH": [
+        "Copperas Cove",
+        "Killeen",
+        "Killeen Mall",
+        "Manor",
+        "Marble Falls",
+        "Round Rock",
+        "Taylor"
+      ],
+      "DFW CENTRAL": [
+        "28th Street",
+        "Cooper Street",
+        "Duncanville",
+        "Ennis",
+        "Golden Triangle",
+        "Red Oak",
+        "Rufe Snow"
+      ],
+      "DFW NORTH": [
+        "Custer",
+        "Dallas Pkwy",
+        "Independence Pkwy",
+        "Richardson TX",
+        "Stonebrook",
+        "Walnut"
+      ],
+      "DFW WEST": [
+        "Bedford",
+        "Chisholm Trail",
+        "Clifford",
+        "Eastchase",
+        "Weatherford"
+      ],
+      "SATX NORTH": [
+        "Cibolo",
+        "Kerrville",
+        "La Cantera",
+        "Schertz",
+        "Seguin",
+        "Thousand Oaks"
+      ],
+      "SATX SOUTH": [
+        "HEB-Lytle",
+        "Kingsville",
+        "Marbach",
+        "Palo Alto",
+        "Rigsby Avenue",
+        "SW Military",
+        "South Park Mall",
+        "Valley Hi"
+      ]
+    },
+    "GULF COAST": {
+      "ATLANTA": [
+        "Commerce",
+        "Dacula",
+        "Epps Bridge",
+        "Locust Grove",
+        "Peachtree City",
+        "Winder",
+        "Wrightsboro"
+      ],
+      "ATLANTIC COAST": [
+        "Beaufort",
+        "Brunswick",
+        "Lowes Village",
+        "Macclenny",
+        "Savannah Crossing"
+      ],
+      "FLORIDA": [
+        "Andover",
+        "Apopka",
+        "Granada",
+        "Ocala",
+        "Rolling Oaks",
+        "Seminole"
+      ],
+      "NORTH GEORGIA": [
+        "Athens",
+        "Cartersville",
+        "Chapel Hill",
+        "Dalton",
+        "Marietta",
+        "Rome",
+        "Smyrna",
+        "Villa Rica"
+      ],
+      "HOUSTON NORTH": [
+        "Crosby",
+        "Eva Plaza",
+        "Huntsville",
+        "Louetta",
+        "Magnolia",
+        "Mont Belvieu",
+        "Sawdust",
+        "Tomball",
+        "Willis"
+      ],
+      "HOUSTON SOUTH": [
+        "529",
+        "Angleton",
+        "Bay City",
+        "Cypress",
+        "Lake Jackson",
+        "Mason",
+        "River Oaks",
+        "Texas City",
+        "Waterview"
+      ],
+      "LOUISIANA EAST": [
+        "Airline",
+        "Claiborne",
+        "Covington",
+        "Gentilly",
+        "Hammond",
+        "Rangeline",
+        "Ridgeland",
+        "Thibodaux",
+        "Uptown",
+        "Veterans"
+      ],
+      "LOUISIANA WEST": [
+        "Alexandria",
+        "Denham Springs",
+        "Hammond",
+        "Lafayette",
+        "New Iberia",
+        "North Mall",
+        "Oneal",
+        "Pinhook",
+        "Prairieville"
+      ],
+      "KANSAS": [
+        "Broken Arrow",
+        "George Washington",
+        "Peoria Ave",
+        "Ponca City",
+        "Riverside Pkwy",
+        "Sapulpa",
+        "Schilling"
+      ]
+    },
+    "SOUTHWEST": {
+      "ARIZONA SOUTH": [
+        "Central",
+        "Cochise",
+        "Grant Road",
+        "Harrison Plaza",
+        "Las Plazas",
+        "Nogales South",
+        "Tucson Fashion Park"
+      ],
+      "OKC": [
+        "Chickasha",
+        "Garth Brooks Blvd",
+        "Market Place",
+        "Mustang",
+        "Owen Garriott",
+        "Plainview",
+        "S. Georgia",
+        "Wrangler"
+      ],
+      "UTAH/CO": [
+        "Draper",
+        "Glenwood Springs",
+        "Grand Junction",
+        "Layton",
+        "Lehi",
+        "Vernal"
+      ]
     }
   }
 };
-/* ---------- end sample ---------- */
+/* ------------------ end COMPANY TREE ------------------ */
 
+
+/* ------------------ UTILITIES ------------------ */
 const $ = (id) => document.getElementById(id);
 const areaSel     = $("areaSelect");
 const regionSel   = $("regionSelect");
 const districtSel = $("districtSelect");
 const storeSel    = $("storeSelect");
-const btnDORT     = $("btnDort") || $("enableBtn");
-const notifBtn    = $("notifBtn") || $("btnEnable");
+const btnDORT     = $("dortBtn") || $("btnDort") || $("enableBtn");
+const notifBtn    = $("enableBtn");
 const skipBtn     = $("skipBtn");
 const notifStatus = $("notifStatus");
 
@@ -66,6 +440,7 @@ function saveSelections(){
 }
 
 function restoreSelections(){
+  // Areas
   const areas = Object.keys(DATA_TREE || {});
   fillSelect(areaSel, areas, "Select Area");
 
@@ -132,57 +507,28 @@ function onDistrictChange(save=true){
   }
 }
 
-function onStoreChange(){
-  saveSelections();
-}
+function onStoreChange(){ saveSelections(); }
 
-/* ---------- OneSignal ---------- */
-const ONESIGNAL_APP_ID = "5ecaba08-de2f-44b8-a4f0-369508265505";
-function setNotifUI(status){
-  if (!notifBtn || !notifStatus) return;
-  if (status === "on") {
-    notifBtn.textContent = "Notifications On";
-    notifBtn.disabled = true;
-    notifStatus.textContent = "Subscribed";
-  } else if (status === "blocked") {
-    notifBtn.textContent = "Notifications Blocked";
-    notifBtn.disabled = true;
-    notifStatus.textContent = "Notifications are blocked at the browser level.";
-  } else {
-    notifBtn.textContent = "Enable Notifications";
-    notifBtn.disabled = false;
-    notifStatus.textContent = "";
+
+/* ------------------ Notifications ------------------ */
+/* Keeping the simple in-app prompt style + "No thanks" */
+enableBtn?.addEventListener("click", async () => {
+  try {
+    const permission = await Notification.requestPermission();
+    notifStatus.textContent = permission === "granted"
+      ? "Notifications enabled!"
+      : "Permission denied.";
+  } catch (err) {
+    notifStatus.textContent = "Error: " + err;
   }
-}
-async function initNotifications(){
-  if (!window.OneSignalDeferred) window.OneSignalDeferred = [];
-  OneSignalDeferred.push(async (OneSignal) => {
-    await OneSignal.init({ appId: ONESIGNAL_APP_ID });
-    try {
-      const optedIn = await OneSignal.User.PushSubscription.optedIn;
-      setNotifUI(optedIn ? "on" : "off");
-    } catch(e){
-      setNotifUI("off");
-    }
-    if (notifBtn) {
-      notifBtn.addEventListener("click", async () => {
-        try {
-          await OneSignal.Slidedown.promptPush();
-          const enabled = await OneSignal.User.PushSubscription.optedIn;
-          setNotifUI(enabled ? "on" : "off");
-        } catch(e){ console.warn("Notification prompt error:", e); }
-      });
-    }
-  });
-}
-if (skipBtn) {
-  skipBtn.addEventListener("click", () => {
-    localStorage.setItem("notif_opt_out", "1");
-    setNotifUI("off");
-  });
-}
+});
 
-/* ---------- Start ---------- */
+skipBtn?.addEventListener("click", () => {
+  notifStatus.textContent = "Notifications skipped.";
+});
+
+
+/* ------------------ Start ------------------ */
 document.addEventListener("DOMContentLoaded", () => {
   areaSel.addEventListener("change", onAreaChange);
   regionSel.addEventListener("change", onRegionChange);
@@ -191,13 +537,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   restoreSelections();
 
-  if (!localStorage.getItem("notif_opt_out")) {
-    initNotifications();
-  } else {
-    setNotifUI("off");
-  }
-
-  // Route to the full app at the ROOT
+  // Route to the full app at the ROOT when clicking DORT
   if (btnDORT) {
     btnDORT.addEventListener("click", () => {
       window.location.href = "/index.html";
@@ -205,6 +545,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Prevent horizontal scroll
+// Avoid horizontal scroll on iOS
 document.documentElement.style.overflowX = "hidden";
 document.body.style.overflowX = "hidden";
