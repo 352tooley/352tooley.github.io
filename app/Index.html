@@ -1,488 +1,134 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Sales Tracker – App</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Goals & Gaps Tracker</title>
 
-  <!-- PWA meta (icon references live in repo root) -->
+  <!-- PWA basics (safe to keep) -->
   <link rel="manifest" href="../manifest.json" />
   <meta name="theme-color" content="#ffffff" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="white" />
   <meta name="apple-mobile-web-app-title" content="Sales Tracker" />
   <link rel="apple-touch-icon" href="../logo-192.png" />
-  <link rel="apple-touch-icon" sizes="512x512" href="../logo-512.png" />
+  <link rel="icon" href="../logo-64.png" sizes="64x64" />
+  <link rel="icon" href="../logo-512.png" sizes="512x512" />
 
   <style>
     :root{
       --magenta:#d6006e;
-      --bg:#fafafa; --card:#ffffff; --ink:#111; --muted:#666; --border:#e5e7eb;
-      --radius:12px;
-      --fs-base:18px; --fs-label:18px; --fs-h2:26px; --fs-btn:18px;
-      --control-h:58px;
+      --ink:#111;
+      --muted:#666;
+      --card:#fff;
+      --border:#e5e7eb;
+      --shadow:0 8px 20px rgba(0,0,0,.06);
     }
-    html,body{height:100%; overflow-x:hidden;}
-    body{margin:0; font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background:#fff; color:var(--ink); font-size:var(--fs-base);}
-
-    /* Sticky micro header with small logo */
-    .topbar{position:sticky; top:0; z-index:10; background:#fff; display:flex; justify-content:center; padding:6px 0; border-bottom:1px solid #f1f1f1;}
-    .logo{height:34px; width:auto; display:block;}
-
-    h2{margin:12px 0 14px; color:var(--magenta); text-align:center; font-size:var(--fs-h2);}
-    .container{padding:12px 16px 20px; max-width:720px; margin:0 auto;}
-
-    .sec{background:var(--card); padding:16px; border-radius:var(--radius); border:1px solid var(--border); box-shadow:0 2px 6px rgba(0,0,0,.05); margin:12px 0;}
-    .metric{margin:14px 0;}
-    .metric label{display:block; margin-bottom:8px; font-weight:700; font-size:var(--fs-label);}
-    .pair{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px;}
-    @media(max-width:420px){ .pair{grid-template-columns:1fr;} }
-
-    input,select{width:100%; max-width:100%; min-width:0; height:var(--control-h); padding:12px; font-size:19px; border:1px solid var(--border); border-radius:12px; background:#fff; color:#111; box-sizing:border-box;}
-    .buttons{margin:18px 0 24px; display:flex; gap:12px; flex-wrap:wrap;}
-    button{flex:1; height:var(--control-h); padding:0 16px; font-size:var(--fs-btn); font-weight:800; letter-spacing:.2px; border:none; border-radius:12px; cursor:pointer;}
-    .back{background:#e9e9e9; color:#333;}
-    .next{background:var(--magenta); color:#fff;}
-    .dark{background:#111; color:#fff;}
-    button:disabled{background:#efefef; color:#9b9b9b; cursor:not-allowed;}
-
-    .kv{display:flex; justify-content:space-between; gap:12px; margin:6px 0;}
-
-    /* Status pills */
-    .status{padding:4px 10px; border-radius:999px; font-size:14px; font-weight:800; display:inline-block}
-    .ok{background:rgba(0,200,0,.14); color:#0a0; border:1px solid rgba(0,200,0,.28)}
-    .warn{background:rgba(255,200,0,.16); color:#a60; border:1px solid rgba(255,200,0,.32)}
-    .bad{background:rgba(255,80,80,.16); color:#a00; border:1px solid rgba(255,80,80,.32)}
-
-    /* Summary grid */
-    .sum-head{margin:2px 0 10px; text-align:center;}
-    .sum-date,.sum-store{font-size:20px; font-weight:800;}
-    .sum-grid{display:grid; grid-template-columns:1fr; gap:12px;}
-    .tile{display:flex; flex-direction:column; justify-content:flex-start;}
-    .tile.tall{min-height:220px;}
-    .tile.short{min-height:190px;}
-    @media(min-width:760px){
-      .container{max-width:1100px;}
-      .sum-grid{grid-template-columns:1fr 1fr; gap:12px;}
+    html,body{height:100%;margin:0;overflow-x:hidden;background:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
+    /* Top brand area */
+    .brand-wrap{
+      position:sticky; top:0;
+      background:#fff; z-index:5;
+      display:flex; align-items:center; justify-content:center;
+      padding:10px 12px 0;
+      border-bottom:1px solid rgba(0,0,0,.04);
+    }
+    .brand{
+      width: min(92vw, 520px);
+      height:auto;
+      max-height: 120px;  /* keeps it from getting too tall */
+      object-fit: contain;
+      display:block;
     }
 
-    /* Print one page */
-    @media print{
-      @page{ size: Letter; margin: 0.5in; }
-      body{ background:#fff; color:#000; zoom:.86; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-      .buttons{ display:none!important; }
-      .sec{ box-shadow:none; border:1px solid #ccc; }
-      .sum-grid{ grid-template-columns:1fr 1fr; gap:10px; }
-      .sum-head .sum-date, .sum-head .sum-store{ font-size:18px; }
-      .status{ font-size:12px; padding:3px 8px; }
-      .topbar{ padding:0 0 6px; }
-      .logo{ height:28px; }
+    main{max-width: 820px; margin: 0 auto; padding: 10px 14px 24px;}
+
+    .title-h1{
+      margin: 10px 0 8px;
+      text-align:center; color:var(--ink);
+      font-weight:800; font-size: 22px;
     }
 
-    .muted{ color:#777; font-size:14px; text-align:center; margin:6px 0; }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px; box-shadow:var(--shadow);
+      padding:18px; margin: 10px auto 16px;
+    }
+
+    h2{
+      margin:0 0 12px; text-align:center;
+      color:var(--magenta); font-size:22px;
+    }
+
+    .row{display:flex; flex-direction:column; gap:10px;}
+
+    select{
+      width:100%; padding:12px; border-radius:10px;
+      border:1px solid var(--border); font-size:16px; background:#fff;
+    }
+    select:disabled{background:#f4f4f4;color:#9a9a9a;}
+
+    .btn{
+      width:100%; padding:14px 16px; border-radius:12px;
+      border:none; font-size:18px; font-weight:800; cursor:pointer;
+      background:var(--magenta); color:#fff;
+    }
+    .btn:disabled{background:#e7e7e7;color:#9a9a9a;cursor:not-allowed;}
+
+    .muted{font-size:13px;color:var(--muted);text-align:center;margin-top:6px;}
   </style>
 </head>
 <body>
-  <div class="topbar"><img class="logo" src="../logo-192.png" alt="Company Logo" /></div>
-  <div id="app" class="container">
-    <h2>Loading…</h2>
-    <div class="muted">Preparing locations and screens…</div>
+
+  <!-- Larger, full-width brand at the very top -->
+  <div class="brand-wrap">
+    <img class="brand" src="../logo-512.png" alt="Connectivity Source" />
   </div>
 
-  <!-- Inline full tree here. You can paste/replace this JSON block with your complete hierarchy -->
-  <script type="application/json" id="tree-data">
-  {
-    "West": {
-      "SOUTHWEST": {
-        "DFW WEST": ["Cleburne","Rufe Snow","Chisholm Trail","28th Street","Clifford","Golden Triangle","Granbury","Stephenville","Weatherford"],
-        "UTAH/CO": ["Draper","Glenwood Springs","Grand Junction","Layton","Lehi","Vernal"]
-      }
-    },
-    "South": {
-      "SOUTH CENTRAL": {
-        "DFW CENTRAL": ["28th Street","Cooper Street","Duncanville","Ennis","Golden Triangle","Red Oak","Rufe Snow"],
-        "SATX NORTH": ["Cibolo","Kerrville","La Cantera","Schertz","Seguin","Thousand Oaks"]
-      },
-      "GULF COAST": {
-        "HOUSTON NORTH": ["Crosby","Huntsville","Louetta","Magnolia","Mont Belvieu","Sawdust","Tomball","Willis"],
-        "HOUSTON SOUTH": ["Angleton","Bay City","Lake Jackson","Mason","River Oaks","Texas City","Waterview"]
-      }
-    },
-    "East": {
-      "NORTHEAST": {
-        "LONG ISLAND": ["Baisley Blvd","Bethpage","Commack","East Islip","Hempstead","Jericho","New York Avenue","Rockaway","West Islip"]
-      }
-    }
-  }
-  </script>
+  <main>
+    <div class="title-h1">Goals &amp; Gaps Tracker</div>
 
-  <!-- OneSignal SDK (Page) -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <div class="card">
+      <h2>Select Your Store</h2>
+      <div class="row">
+        <select id="areaSelect">
+          <option value="">Select Area</option>
+        </select>
+        <select id="regionSelect" disabled>
+          <option value="">Select Region</option>
+        </select>
+        <select id="districtSelect" disabled>
+          <option value="">Select District</option>
+        </select>
+        <select id="storeSelect" disabled>
+          <option value="">Select Store</option>
+        </select>
+
+        <button id="dortBtn" class="btn" disabled>DORT →</button>
+        <div class="muted">Your selections are saved on this device.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- IMPORTANT: app.js must be in the same folder as this file -->
+  <script src="./app.js"></script>
 
   <script>
-    /* ---------- Utilities ---------- */
-    const state = { area:null, region:null, district:null, store:null, cfg:{ p360:60, tlife:70, vaf:19 } };
-    const byId = id => document.getElementById(id);
-    const setScreen = html => { byId('app').innerHTML = html; attachNotifBtns(); };
-    const num = v => parseFloat(v||0) || 0;
-    const int = v => parseInt(v||0) || 0;
-    const money = v => '$' + (num(v).toFixed(2));
-    const pctRound = v => Math.round(num(v));
-    const todayStr = () => new Date().toLocaleDateString();
-
-    const bandPct   = p => (num(p)>=90?'ok':(num(p)>=60?'warn':'bad'));
-    const bandGap   = g => (num(g)<=0?'ok':'bad');
-    const bandScore = s => (num(s)>=9.5?'ok':(num(s)>=9.0?'warn':'bad'));
-    const bandNeeded= n => (num(n)===0?'ok':'bad');
-    const bandMrc   = (m,t) => (num(m)>=num(t)?'ok':((num(t)-num(m))<=1?'warn':'bad'));
-    const fmtGap = v => v>0?`+${v}`:`${v}`;
-
-    // Load DATA_TREE from the inline JSON block
-    function loadTreeInline(){
-      try{
-        const raw = document.getElementById('tree-data').textContent.trim();
-        const json = JSON.parse(raw);
-        if(json && typeof json==='object') return json;
-      }catch(e){ console.warn('Invalid inline tree JSON', e); }
-      // Fallback minimal tree
-      return {
-        "West": { "SOUTHWEST": { "DFW WEST": ["Cleburne","Rufe Snow","Chisholm Trail","28th Street","Clifford","Golden Triangle","Granbury","Stephenville","Weatherford"] } }
-      };
+    // Keep DORT disabled until a store is selected
+    const storeSel = document.getElementById('storeSelect');
+    const dortBtn  = document.getElementById('dortBtn');
+    function refreshDort(){
+      dortBtn.disabled = !storeSel.value;
     }
-    const DATA_TREE = loadTreeInline();
-
-    function controls(){
-      const areaOpts = Object.keys(DATA_TREE);
-      const regionOpts = state.area ? Object.keys(DATA_TREE[state.area]||{}) : [];
-      const districtOpts = (state.area && state.region) ? Object.keys((DATA_TREE[state.area]||{})[state.region]||{}) : [];
-      const storeOpts = (state.area && state.region && state.district) ? (((DATA_TREE[state.area]||{})[state.region]||{})[state.district]||[]) : [];
-
-      return `
-        <div class="sec">
-          <label>Area</label>
-          <select id="areaSel">
-            <option value="">Select Area</option>
-            ${areaOpts.map(a=>`<option ${a===state.area?'selected':''}>${a}</option>`).join('')}
-          </select>
-        </div>
-        <div class="sec">
-          <label>Region</label>
-          <select id="regionSel" ${state.area?'':'disabled'}>
-            <option value="">Select Region</option>
-            ${regionOpts.map(r=>`<option ${r===state.region?'selected':''}>${r}</option>`).join('')}
-          </select>
-        </div>
-        <div class="sec">
-          <label>District</label>
-          <select id="districtSel" ${state.region?'':'disabled'}>
-            <option value="">Select District</option>
-            ${districtOpts.map(d=>`<option ${d===state.district?'selected':''}>${d}</option>`).join('')}
-          </select>
-        </div>
-        <div class="sec">
-          <label>Store</label>
-          <select id="storeSel" ${state.district?'':'disabled'}>
-            <option value="">Select Store</option>
-            ${storeOpts.map(s=>`<option ${s===state.store?'selected':''}>${s}</option>`).join('')}
-          </select>
-        </div>`;
-    }
-
-    function showLocation(){
-      const html = `
-        <h2>Select Location</h2>
-        ${controls()}
-        <div class="buttons">
-          <button class="next" id="toDORT" ${state.store?'':'disabled'}>DORT →</button>
-        </div>
-        <div class="buttons">
-          <button id="enableBtn" class="next">🔔 Enable notifications</button>
-          <button id="skipBtn" class="dark">No thanks</button>
-        </div>
-      `;
-      setScreen(html);
-
-      const todayKey = new Date().toISOString().slice(0,10);
-      if(localStorage.getItem('lastDay')!==todayKey){ localStorage.clear(); localStorage.setItem('lastDay', todayKey); }
-
-      const areaSel=byId('areaSel'), regionSel=byId('regionSel'), districtSel=byId('districtSel'), storeSel=byId('storeSel');
-      areaSel.onchange = e=>{ state.area=e.target.value||null; state.region=state.district=state.store=null; persistSel(); showLocation(); };
-      regionSel.onchange = e=>{ state.region=e.target.value||null; state.district=state.store=null; persistSel(); showLocation(); };
-      districtSel.onchange = e=>{ state.district=e.target.value||null; state.store=null; persistSel(); showLocation(); };
-      storeSel.onchange = e=>{ state.store=e.target.value||null; persistSel(); byId('toDORT').disabled=!state.store; };
-
-      byId('toDORT').onclick = showDORT;
-
-      restoreSel();
-      if(state.store){ byId('toDORT').disabled=false; }
-    }
-
-    function persistSel(){
-      localStorage.setItem('sel_area', state.area||'');
-      localStorage.setItem('sel_region', state.region||'');
-      localStorage.setItem('sel_district', state.district||'');
-      localStorage.setItem('sel_store', state.store||'');
-    }
-    function restoreSel(){
-      state.area    = state.area    || localStorage.getItem('sel_area')    || null;
-      state.region  = state.region  || localStorage.getItem('sel_region')  || null;
-      state.district= state.district|| localStorage.getItem('sel_district')|| null;
-      state.store   = state.store   || localStorage.getItem('sel_store')   || null;
-    }
-
-    const metric = (label,id1,id2,p1='Attainment',p2='Goal') => `
-      <div class="metric">
-        <label>${label}</label>
-        <div class="pair">
-          <input id="${id1}" type="number" placeholder="${p1}" oninput="localStorage.setItem('${id1}',this.value)">
-          <input id="${id2}" type="number" placeholder="${p2}" oninput="localStorage.setItem('${id2}',this.value)">
-        </div>
-      </div>`;
-
-    function showDORT(){
-      setScreen(`
-        <h2>DORT — ${state.store||''}</h2>
-        <div class="sec">
-          ${metric('Voice','d_v_att','d_v_goal')}
-          ${metric('BTS','d_b_att','d_b_goal')}
-          ${metric('TFB','d_t_att','d_t_goal')}
-          ${metric('Accessories','d_a_att','d_a_goal')}
-        </div>
-        <div class="buttons">
-          <button class="back" onclick="showLocation()">← Store</button>
-          <button class="next" onclick="showSORT()">SORT →</button>
-        </div>
-      `);
-    }
-
-    function showSORT(){
-      setScreen(`
-        <h2>SORT — ${state.store||''}</h2>
-        <div class="sec">
-          ${metric('Voice','s_v_att','s_v_goal')}
-          ${metric('BTS','s_b_att','s_b_goal')}
-          ${metric('TFB','s_t_att','s_t_goal')}
-          ${metric('Accessories','s_a_att','s_a_goal')}
-        </div>
-        <div class="buttons">
-          <button class="back" onclick="showDORT()">← DORT</button>
-          <button class="next" onclick="showRevenue()">Revenue →</button>
-        </div>
-      `);
-    }
-
-    function showRevenue(){
-      setScreen(`
-        <h2>Revenue — ${state.store||''}</h2>
-        <div class="sec">
-          ${metric('P360','p_opp','p_pct','Opportunities','Attach %')}
-          ${metric('VAF','v_opp','v_total','Opportunities','Total Revenue')}
-        </div>
-        <div class="buttons">
-          <button class="back" onclick="showSORT()">← SORT</button>
-          <button class="next" onclick="showCSAT()">CSAT →</button>
-        </div>
-      `);
-    }
-
-    function showCSAT(){
-      setScreen(`
-        <h2>CSAT — ${state.store||''}</h2>
-        <div class="sec">
-          ${metric('CSAT','c_score','c_surveys','Current Score (0–10)','Surveys Taken')}
-        </div>
-        <div class="buttons">
-          <button class="back" onclick="showRevenue()">← Revenue</button>
-          <button class="next" onclick="showTL()">T-Life →</button>
-        </div>
-      `);
-    }
-
-    function showTL(){
-      setScreen(`
-        <h2>T-Life — ${state.store||''}</h2>
-        <div class="sec">
-          ${metric('T-Life','t2_att','t2_opp','Attainment %','Opportunities')}
-        </div>
-        <div class="buttons">
-          <button class="back" onclick="showCSAT()">← CSAT</button>
-          <button class="next" onclick="showGoals()">Daily Goals →</button>
-        </div>
-      `);
-    }
-
-    function showGoals(){
-      setScreen(`
-        <h2>Daily Goals — ${state.store||''}</h2>
-        <div class="sec">
-          <div class="metric"><label>Voice</label><input id="g_voice" type="number" placeholder="Voice Goal" value="${localStorage.getItem('g_voice')||''}" oninput="localStorage.setItem('g_voice',this.value)"></div>
-          <div class="metric"><label>BTS</label><input id="g_bts" type="number" placeholder="BTS Goal" value="${localStorage.getItem('g_bts')||''}" oninput="localStorage.setItem('g_bts',this.value)"></div>
-          <div class="metric"><label>Accessories</label><input id="g_acc" type="number" placeholder="Accessories Goal" value="${localStorage.getItem('g_acc')||''}" oninput="localStorage.setItem('g_acc',this.value)"></div>
-          <div class="metric"><label>TFB</label><input id="g_tfb" type="number" placeholder="TFB Goal" value="${localStorage.getItem('g_tfb')||''}" oninput="localStorage.setItem('g_tfb',this.value)"></div>
-        </div>
-        <div class="buttons">
-          <button class="back" onclick="showTL()">← T-Life</button>
-          <button class="next" onclick="showSummary()">Summary →</button>
-        </div>
-      `);
-    }
-
-    function showSummary(){
-      const dateStr = todayStr();
-
-      const comb = (aD,gD,aS,gS) => {
-        const att = int(localStorage.getItem(aD)) + int(localStorage.getItem(aS));
-        const goal= int(localStorage.getItem(gD)) + int(localStorage.getItem(gS));
-        const pct = goal>0 ? Math.round((att/goal)*100) : 0;
-        const gap = goal - att;
-        return {att,goal,pct,gap};
-      };
-      const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
-      const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
-      const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
-      const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
-
-      const pOpp=int(localStorage.getItem('p_opp'));
-      const pPctIn=Math.max(0, Math.min(100, num(localStorage.getItem('p_pct'))));
-      const pAtt=Math.round(pOpp*(pPctIn/100));
-      const tP=(state.cfg.p360)/100;
-      const pNeed=Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
-      const pPctRounded = pctRound(pPctIn);
-
-      const cAvg=num(localStorage.getItem('c_score'));
-      const cN =int(localStorage.getItem('c_surveys'));
-      const cNeed=cAvg>=9.5?0:Math.max(0, Math.ceil(2 * cN * (9.5 - cAvg)));
-
-      const tlPct=Math.max(0, Math.min(100, num(localStorage.getItem('t2_att'))));
-      const tlOpp=int(localStorage.getItem('t2_opp'));
-      const tlSuc=Math.round(tlOpp*(tlPct/100));
-      const tT=(state.cfg.tlife)/100;
-      const tlNeed=Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
-
-      const vOpp=int(localStorage.getItem('v_opp'));
-      const vTot=num(localStorage.getItem('v_total'));
-      const vTarget=state.cfg.vaf;
-      const needTotal=vTarget*vOpp;
-      const vGap=Math.max(0, needTotal - vTot);
-      const mrc=vOpp>0 ? (vTot/vOpp) : 0;
-
-      const gVoice = localStorage.getItem('g_voice') || '—';
-      const gBts   = localStorage.getItem('g_bts')   || '—';
-      const gAcc   = localStorage.getItem('g_acc')   || '—';
-      const gTfb   = localStorage.getItem('g_tfb')   || '—';
-
-      const head = `
-        <div class="sum-head">
-          <div class="sum-date">📅 ${dateStr}</div>
-          <div class="sum-store">📍 ${state.store || '—'}</div>
-        </div>`;
-
-      const cardTopLeft = `<div class="sec tile tall">
-        <div style="font-weight:800; margin-bottom:8px;">DORT + SORT</div>
-        <div class="kv"><span>Voice</span>
-          <span><span class="status ${bandGap(voice.gap)}">Gap: ${fmtGap(voice.gap)}</span> <span class="status ${bandPct(voice.pct)}">${voice.pct}%</span></span>
-        </div>
-        <div class="kv"><span>BTS</span>
-          <span><span class="status ${bandGap(bts.gap)}">Gap: ${fmtGap(bts.gap)}</span> <span class="status ${bandPct(bts.pct)}">${bts.pct}%</span></span>
-        </div>
-        <div class="kv"><span>TFB</span>
-          <span><span class="status ${bandGap(tfb.gap)}">Gap: ${fmtGap(tfb.gap)}</span> <span class="status ${bandPct(tfb.pct)}">${tfb.pct}%</span></span>
-        </div>
-        <div class="kv"><span>Accessories</span>
-          <span><span class="status ${bandGap(acc.gap)}">Gap: ${fmtGap(acc.gap)}</span> <span class="status ${bandPct(acc.pct)}">${acc.pct}%</span></span>
-        </div>
-      </div>`;
-
-      const cardTopRight = `<div class="sec tile tall">
-        <div style="font-weight:800; margin-bottom:8px;">🎯 Daily Goals</div>
-        <div class="kv"><span>Voice</span><span><b>${gVoice}</b></span></div>
-        <div class="kv"><span>BTS</span><span><b>${gBts}</b></span></div>
-        <div class="kv"><span>TFB</span><span><b>${gTfb}</b></span></div>
-        <div class="kv"><span>Accessories</span><span><b>${gAcc}</b></span></div>
-      </div>`;
-
-      const cardP360 = `<div class="sec tile short">
-        <div style="font-weight:800; margin-bottom:8px;">💡 P360</div>
-        <div class="kv"><span>% to Goal</span><span class="status ${bandPct(pPctRounded)}">${pPctRounded}%</span></div>
-        <div class="kv"><span>Target</span><span>${state.cfg.p360}%</span></div>
-        <div class="kv"><span>Needed</span><span class="status ${bandNeeded(pNeed)}">${pNeed} tx</span></div>
-      </div>`;
-
-      const cardCSAT = `<div class="sec tile short">
-        <div style="font-weight:800; margin-bottom:8px;">⭐ CSAT</div>
-        <div class="kv"><span>Score</span><span class="status ${bandScore(cAvg)}">${isNaN(cAvg)?'—':cAvg}</span></div>
-        <div class="kv"><span>Target</span><span>9.5</span></div>
-        <div class="kv"><span>Needed</span><span class="status ${bandNeeded(cNeed)}">${cNeed} perfect 10s</span></div>
-      </div>`;
-
-      const cardTLife = `<div class="sec tile short">
-        <div style="font-weight:800; margin-bottom:8px;">📱 T-Life</div>
-        <div class="kv"><span>Attainment</span><span class="status ${bandPct(tlPct)}">${pctRound(tlPct)}%</span></div>
-        <div class="kv"><span>Target</span><span>${state.cfg.tlife}%</span></div>
-        <div class="kv"><span>Needed</span><span class="status ${bandNeeded(tlNeed)}">${tlNeed} opportunities</span></div>
-      </div>`;
-
-      const cardVAF = `<div class="sec tile short">
-        <div style="font-weight:800; margin-bottom:8px;">💵 VAF</div>
-        <div class="kv"><span>MRC</span><span class="status ${bandMrc(mrc,vTarget)}">${money(mrc)}</span></div>
-        <div class="kv"><span>Target</span><span>${money(vTarget)}/op</span></div>
-        <div class="kv"><span>Gap</span><span class="status ${bandGap(vGap)}">${money(vGap)}</span></div>
-      </div>`;
-
-      const grid = `
-        ${head}
-        <div class="sum-grid">
-          ${cardTopLeft}
-          ${cardTopRight}
-          ${cardP360}
-          ${cardCSAT}
-          ${cardTLife}
-          ${cardVAF}
-        </div>
-        <div class="buttons">
-          <button class="back" onclick="showGoals()">← Daily Goals</button>
-          <button class="back" onclick="window.print()">🖨 Print</button>
-        </div>
-      `;
-      setScreen(grid);
-    }
-
-    /* ---------- Notifications (OneSignal) ---------- */
-    const APP_ID = '5ecaba08-de2f-44b8-a4f0-369508265505';
-    function attachNotifBtns(){
-      const enableBtn = document.getElementById('enableBtn');
-      const skipBtn = document.getElementById('skipBtn');
-      const statusEl = document.getElementById('notifStatus');
-      function setStatus(t){ if(statusEl) statusEl.textContent=t||''; }
-
-      if(skipBtn){
-        skipBtn.onclick = ()=>{
-          localStorage.setItem('notif_opt_out','1');
-          if(enableBtn) enableBtn.textContent='Notifications Off';
-          setStatus('You can enable notifications anytime.');
-        };
-      }
-
-      if(enableBtn){
-        enableBtn.onclick = async ()=>{
-          try {
-            localStorage.removeItem('notif_opt_out');
-            await OneSignal.Slidedown.promptPush();
-            const opted = await OneSignal.User.PushSubscription.optedIn;
-            enableBtn.textContent = opted ? 'Notifications Enabled' : 'Enable notifications';
-          } catch(e){ console.warn(e); }
-        };
-      }
-    }
-
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    window.OneSignalDeferred.push(async function(OneSignal) {
-      try{ await OneSignal.init({ appId: APP_ID, notifyButton:{ enable:false } }); }
-      catch(e){ console.warn('OneSignal init error', e); }
+    storeSel.addEventListener('change', refreshDort);
+    // Navigate to the legacy full app (Summary etc.)
+    dortBtn.addEventListener('click', () => {
+      // If you use a different entry page for the main app, change the path here:
+      location.href = '/index.html';
     });
-
-    // Initial render
-    showLocation();
+    // Initialize once in case app.js restored a selection
+    window.addEventListener('DOMContentLoaded', refreshDort);
   </script>
 </body>
 </html>
