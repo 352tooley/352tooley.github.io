@@ -1,84 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Goals & Gaps Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      text-align: center;
       margin: 0;
       padding: 0;
+      background: #f9f9f9;
+      text-align: center;
     }
     .logo {
-      width: 200px;
-      margin: 20px auto;
-      display: block;
+      width: 100%;
+      max-height: 120px;
+      object-fit: contain;
+      margin: 20px 0;
     }
     .container {
       max-width: 400px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
+      margin: auto;
+      background: #fff;
       padding: 20px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     h1 {
-      color: #000;
       font-size: 22px;
       margin-bottom: 10px;
     }
     h2 {
-      color: #e20074;
       font-size: 20px;
-      margin: 15px 0;
+      color: #d6007d;
+      margin-bottom: 20px;
     }
     select, button {
       width: 100%;
       padding: 10px;
-      margin: 10px 0;
+      margin: 8px 0;
+      border-radius: 6px;
       border: 1px solid #ccc;
-      border-radius: 8px;
       font-size: 16px;
     }
     button {
-      background: #e20074;
-      color: white;
-      font-weight: bold;
+      background-color: #d6007d;
+      color: #fff;
       border: none;
+      font-weight: bold;
       cursor: pointer;
     }
     button:disabled {
-      background: #ddd;
-      color: #999;
+      background-color: #aaa;
+    }
+    .note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <!-- Embedded logo as base64 PNG -->
-  <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAYAAAB5G3Q2AAAABHNCSVQICAgIfAhkiAAABqJJREFUeJzt3cFu2kAQgOHbKjQhC2QJbAkbXQrVYEKr0M8W4rDwCsdjWnZ6dHZ2J17J15Sk6XnD69uvr39/P6dsHxYMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPBZ0/X1+fXwmtmvb+9k5Pf7U8n4ea0E3n6/+z4d2fXmZbtknhXy4nJH/1uPtb3xrp7fYtaFuz3smnHrZ2uCzP5J1GrcpwHxj3qZXu/fVJX7en+9QMz9OP5YV9Vm7n+lKda4l5unb7RbWS+8yivqbfKaXN93pe1JtQ/NdTtReazx4zddH6nyo7OnT9eU/bpqQucZrWo+/7h9zFc+luMT1b5nm4j5pefukrridXhU3qNffb35so/LS8LJ/tk78HytvQffVbjKq7OsnN65r1a+W1+WXHdjN1x0t92jcmW+mv9fkvVqXaYNX1VV8dR8tX2vy4P3ylOjV9ef4n1QnYN9Lr58L/zvWX1zOf2sszSnXaNZfdbE2r+R2rybXiq/Gj9sqbW9vlk8ZXyq3k8/v04fNfT2mJq4fZx1p3qLWc1uzLmfM1+fGP1kG5Vz1tqcrOzeqmLlm7ldmr/dFe1a64i5V8UuVRbNRftUlxE7Fftl5fVxZPabUxgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8P/4CVJrHvMfOZFYAAAAASUVORK5CYII=" alt="Connectivity Source Logo">
-
+  <!-- Inline logo as base64 -->
+  <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAABgCAYAAADoMQ1/AAAACXBIWXMAAAsTAAALEwEAmpwYAAAB3klEQVR4nO3d0W3DMBAF4F0mLkCwQnSEZJQEmSQLEQm8UjAhUOEpUbVhL1JKrKq5XwL/9iZOb+3/++zPjwAAAAAAAAAAAPjbMupNoFh1XfZTcZPcImvZsgPWQxnaA9ZwFbCDDN8xWYW+yXES0qtdEvVmOxtM03udjKwHOZzIdLHuIXY/fQkdaX6vwmljMC04kYszjW0pPwErb47X6uNkqAx++/1NY3C7wF9A68D30OTlgBLd0DG5Ry3wE3f2zK8BbM3Y5l2krFlxloisF6y/z8BtKQ1Ed6qFdZMXeLUFeOxOWojA1nrtN1ISi9ZnOhi9PQZ1NSqN1d2hzH+0yWrfJmD5e1V9IfphFwYuuoqqbCP27RfNv9ONz3Ffuu3GVv52qW0t/f/Xs8Hsz4Pqmh5mvn5UenPV1xvB+znd8+v11u0KjP77DJq7XhxjtjaBa/G8YpR0fA45qM33ERhVqaM95h+9aZoCgAAAAAAAAAAADhK/Afs+yJ7Jsr+cAAAAABJRU5ErkJggg==" alt="Company Logo" />
+  
   <div class="container">
     <h1>Goals & Gaps Tracker</h1>
     <h2>Select Your Store</h2>
+
     <select id="areaSelect">
-      <option>Select Area</option>
+      <option value="">Select Area</option>
     </select>
     <select id="regionSelect" disabled>
-      <option>Select Region</option>
+      <option value="">Select Region</option>
     </select>
     <select id="districtSelect" disabled>
-      <option>Select District</option>
+      <option value="">Select District</option>
     </select>
     <select id="storeSelect" disabled>
-      <option>Select Store</option>
+      <option value="">Select Store</option>
     </select>
+
     <button id="continueBtn" disabled>DORT →</button>
-    <p style="font-size: 12px; color: #555;">Your selections are saved on this device.</p>
+    <div class="note">Your selections are saved on this device.</div>
   </div>
 
-  <script src="./app.js?v=3"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
