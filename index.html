@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Goals & Gaps Tracker</title>
-<link rel="manifest" href="../manifest.json">
+<link rel="manifest" href="/manifest.json">
 <style>
   :root {
     --brand:#e6007e;
@@ -31,7 +31,7 @@
 <body>
   <header class="header">
     <div class="logo-wrap">
-      <img id="siteLogo" class="logo" alt="Connectivity Source" src="../logo-256.png">
+      <img id="siteLogo" class="logo" alt="Connectivity Source" src="/logo-256.png">
     </div>
   </header>
 
@@ -59,21 +59,19 @@
 (async function() {
   const logoImg = document.getElementById('siteLogo');
 
+  // 1) Extract inline logo from app/dort.html and use it as header image (fallback stays /logo-256.png)
   try {
-    // relative path: dort.html is in the same /app folder
-    const res = await fetch('dort.html', {cache: 'no-store'});
+    const res = await fetch('/app/dort.html', {cache: 'no-store'});
     if (res.ok) {
       const text = await res.text();
       const m = text.match(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/);
-      if (m && m[0]) {
-        logoImg.src = m[0];
-      }
+      if (m && m[0]) logoImg.src = m[0];
     }
   } catch (e) {
-    console.warn('Could not extract embedded logo from dort.html:', e);
+    console.warn('Could not extract embedded logo from /app/dort.html:', e);
   }
 
-  // selectors: use relative path to locations.json in /app
+  // DOM references
   const areaSel = document.getElementById('area');
   const regionSel = document.getElementById('region');
   const districtSel = document.getElementById('district');
@@ -81,26 +79,66 @@
   const goBtn = document.getElementById('goBtn');
 
   function uniq(arr) { return [...new Set(arr.filter(Boolean))].sort(); }
-  function pick(obj, keys) { for (const k of keys) { if (k in obj) return obj[k]; } return ''; }
+  function pick(obj, keys) { for (const k of keys) if (k in obj) return obj[k]; return ''; }
 
-  let data = [];
+  // 2) Load locations.json from /app and normalize the data to an array of {area,region,district,store}
+  let raw = null;
   try {
-    const res2 = await fetch('locations.json', { cache: 'no-store' });
+    const res2 = await fetch('/app/locations.json', { cache: 'no-store' });
     if (!res2.ok) throw new Error('HTTP '+res2.status);
-    data = await res2.json();
+    raw = await res2.json();
   } catch (e) {
-    alert('Could not load store list. Please make sure "locations.json" exists in this folder with Area/Region/District/Store fields.');
+    alert('Could not load store list. Please make sure "/app/locations.json" exists with Area/Region/District/Store data.');
     console.error(e);
     return;
   }
 
-  data = data.map(r => ({ 
-    area:  pick(r, ['area','Area','AREA']),
-    region:pick(r, ['region','Region','REGION']),
-    district:pick(r, ['district','District','DISTRICT']),
-    store: pick(r, ['store','Store','STORE','store_name','Store Name'])
-  }));
+  // Normalize:
+  // - If raw is an array of records, use it (attempt to pick common keys).
+  // - If raw is an object (nested map), convert it.
+  let data = [];
+  if (Array.isArray(raw)) {
+    data = raw.map(r => ({
+      area:  pick(r, ['area','Area','AREA']),
+      region:pick(r, ['region','Region','REGION']),
+      district:pick(r, ['district','District','DISTRICT']),
+      store: pick(r, ['store','Store','STORE','store_name','Store Name'])
+    })).filter(row => row.area && row.region && row.district && row.store);
+  } else if (raw && typeof raw === 'object') {
+    // Expecting structure: { AREA: { REGION: { DISTRICT: [ "Store A", "Store B" ] } } }
+    // But some files use AREA -> REGION -> DISTRICT -> [ stores ] (two-level or three-level). We'll handle up to three levels.
+    for (const areaKey of Object.keys(raw)) {
+      const areaVal = raw[areaKey];
+      if (!areaVal || typeof areaVal !== 'object') continue;
+      for (const regionKey of Object.keys(areaVal)) {
+        const regionVal = areaVal[regionKey];
+        if (!regionVal) continue;
+        // regionVal might be an array (direct list of stores) or an object of districts -> arrays
+        if (Array.isArray(regionVal)) {
+          // no district level present, use regionKey as district too
+          for (const storeName of regionVal) {
+            data.push({ area: areaKey, region: regionKey, district: regionKey, store: String(storeName) });
+          }
+        } else if (typeof regionVal === 'object') {
+          for (const districtKey of Object.keys(regionVal)) {
+            const stores = regionVal[districtKey];
+            if (!Array.isArray(stores)) continue;
+            for (const storeName of stores) {
+              data.push({ area: areaKey, region: regionKey, district: districtKey, store: String(storeName) });
+            }
+          }
+        }
+      }
+    }
+  }
 
+  if (!data.length) {
+    alert('No valid store entries found in /app/locations.json after normalization.');
+    console.error('normalized locations:', data, 'raw:', raw);
+    return;
+  }
+
+  // Populate area select
   uniq(data.map(r => r.area)).forEach(a => {
     const o = document.createElement('option'); o.value=o.textContent=a; areaSel.appendChild(o);
   });
@@ -148,8 +186,7 @@
     const sel = { area: areaSel.value, region: regionSel.value, district: districtSel.value, store: storeSel.value };
     try { localStorage.setItem('ggt_selection', JSON.stringify(sel)); } catch(e) {}
     try { localStorage.setItem('ggt.area', sel.area); localStorage.setItem('ggt.region', sel.region); localStorage.setItem('ggt.district', sel.district); localStorage.setItem('ggt.store', sel.store); } catch(e) {}
-    // redirect to the app dort page in same folder
-    location.href = 'dort.html';
+    location.href = '/app/dort.html';
   });
 })();
 </script>
