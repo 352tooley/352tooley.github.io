@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Summary — Print</title>
+  <title>Summary — Print (Portrait)</title>
   <style>
     :root{
       --brand:#e6007e; --muted:#6b7280; --accent:#111827;
@@ -11,10 +11,10 @@
       --card-bg:#fff;
     }
     html,body{height:100%;margin:0;padding:0;background:#fff;color:var(--accent);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
-    /* page container sized for a landscape page (will be scaled to match printer) */
+    /* Page container sized for a portrait page (A4 portrait by default) */
     .page {
-      width: 297mm;      /* A4 width in mm - landscape */
-      height: 210mm;     /* A4 height in mm */
+      width: 210mm;      /* A4 width in mm - portrait */
+      height: 297mm;     /* A4 height in mm */
       padding: 12mm;
       box-sizing: border-box;
       margin: 0 auto;
@@ -22,18 +22,17 @@
     }
 
     header { text-align:center; margin-bottom:8px; }
-    .logo { max-height:78px; display:block; margin: 0 auto 8px; object-fit:contain; }
-    .meta { display:flex; justify-content:center; gap:18px; color:var(--muted); font-size:12px; margin-bottom:6px; }
-    .meta div { min-width:120px; text-align:center; }
+    .logo { max-height:78px; display:block; margin: 0 auto 6px; object-fit:contain; }
+    .meta { display:flex; justify-content:center; gap:18px; color:var(--muted); font-size:12px; margin-bottom:6px; flex-wrap:wrap; }
+    .meta div { min-width:110px; text-align:center; }
 
-    /* compact grid for print */
+    /* portrait-friendly compact grid */
     .grid {
       display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap:8px;
     }
-    /* Make DORT and Revenue span two rows so (right column) stacked items match height */
-    .span-2 { grid-row: span 2; }
+    .span-2 { grid-column: 1 / -1; } /* for full-width rows */
 
     .card {
       background:var(--card-bg);
@@ -42,14 +41,12 @@
       border:1px solid #eceff2;
       display:flex;
       flex-direction:column;
-      justify-content:flex-start;
       gap:8px;
     }
     .card-head{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
     .card-emoji{font-size:18px}
     .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 
-    /* compact stat tile */
     .stat {
       background:linear-gradient(#fff,#fbfdff);
       border-radius:8px;
@@ -71,15 +68,11 @@
     .pbar-lightgreen{background:linear-gradient(90deg,#86efac,#baf4cb)}
     .pbar-brightgreen{background:linear-gradient(90deg,#16a34a,#4cd46f)}
 
-    /* Daily goals row spans full width at bottom */
     .full-row { grid-column: 1 / -1; }
 
-    /* print-only small tweaks */
     @media print {
       body, .page { background: #fff; color: #000; }
-      /* force colors to print */
       * { -webkit-print-color-adjust: exact; color-adjust: exact; }
-      /* remove any shadows */
       .card { box-shadow: none; }
     }
   </style>
@@ -104,14 +97,14 @@
 
 <script>
 (function(){
-  // helpers
-  const mmToPx = 3.7795275591; // approx px per mm at 96dpi
+  // mm->px approximate at 96dpi
+  const mmToPx = 3.7795275591;
+
   function n(v){ const x=parseFloat(v); return isNaN(x)?0:x; }
   function i(v){ const x=parseInt(v); return isNaN(x)?0:x; }
   function money(v){ return '$' + Number(n(v)).toFixed(2); }
   function getOr(k, def){ const v = localStorage.getItem(k); return v===null ? def : v; }
 
-  // try to get store name similar to app
   function getStoreName(){
     const s1 = localStorage.getItem('ggt.store'); if (s1) return s1;
     const raw = localStorage.getItem('ggt_selection');
@@ -121,7 +114,7 @@
     return localStorage.getItem('store') || localStorage.getItem('store_name') || 'Unknown store';
   }
 
-  // try to reuse logo from dort.html if it contains embedded base64
+  // reuse embedded logo if present
   (async function tryLogo(){
     const logo = document.getElementById('siteLogo');
     try {
@@ -134,7 +127,7 @@
     } catch(e){}
   })();
 
-  // compute metrics (same logic as summary)
+  // compute metrics (same logic)
   function comb(ad, gd, as, gs){
     const att = i(getOr(ad,0)) + i(getOr(as,0));
     const goal= i(getOr(gd,0)) + i(getOr(gs,0));
@@ -184,7 +177,6 @@
     };
   }
 
-  // small DOM helpers
   function el(tag, props, children){
     const e = document.createElement(tag);
     props = props||{};
@@ -197,7 +189,6 @@
     return e;
   }
 
-  // progress color
   function progressClassFor(pct){
     if (pct < 80) return 'pbar-red';
     if (pct >= 80 && pct <= 99) return 'pbar-yellow';
@@ -205,13 +196,13 @@
     return 'pbar-brightgreen';
   }
 
-  // render the compact print layout
   function render(){
     const out = computeAll();
     const grid = document.getElementById('cardsGrid');
+    grid.innerHTML = '';
 
-    // DORT + SORT (span 2 rows)
-    const ds = el('section',{class:'card span-2'});
+    // DORT + SORT (left)
+    const ds = el('section',{class:'card'});
     const head = el('div',{class:'card-head'});
     head.appendChild(el('div',{class:'card-emoji',text:'📊'}));
     head.appendChild(el('div',{class:'card-title',text:'DORT + SORT'}));
@@ -241,13 +232,12 @@
     mg.appendChild(tile('Voice', `${v.att} / ${v.goal} (${v.pct}%)`, '', v.pct, v.gap));
     mg.appendChild(tile('BTS', `${b.att} / ${b.goal} (${b.pct}%)`, '', b.pct, b.gap));
     mg.appendChild(tile('TFB', `${t.att} / ${t.goal} (${t.pct}%)`, '', t.pct, t.gap));
-    // accessories show currency
     mg.appendChild(tile('Accessories', `${money(a.att)} / ${money(a.goal)} (${a.pct}%)`, '', a.pct, a.gap, {currencyGap:true}));
     ds.appendChild(mg);
     grid.appendChild(ds);
 
-    // Revenue (span 2 rows)
-    const rev = el('section',{class:'card span-2'});
+    // Revenue (right of DORT)
+    const rev = el('section',{class:'card'});
     const rhead = el('div',{class:'card-head'});
     rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
     rhead.appendChild(el('div',{class:'card-title',text:'Revenue'}));
@@ -257,17 +247,14 @@
     const vPercent = out.vaf.vTarget > 0 ? Math.round((out.vaf.mrc / out.vaf.vTarget) * 100) : 0;
     revGrid.appendChild(tile('VAF', money(out.vaf.mrc), `Target: ${money(out.vaf.vTarget)} • Opp: ${out.vaf.vOpp}`, vPercent, out.vaf.vGap, {currencyGap:true}));
 
-    // VAF Gap (no progress)
     const vGapTile = el('div',{class:'stat'});
     vGapTile.appendChild(el('div',{class:'label',text:'VAF Gap'}));
     vGapTile.appendChild(el('div',{class:'value',text:money(out.vaf.vGap)}));
-    vGapTile.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On or above target' : 'Behind target'}));
+    vGapTile.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On/above target' : 'Behind target'}));
     revGrid.appendChild(vGapTile);
 
-    // P360 percent
     revGrid.appendChild(tile('P360 — Current %', `${out.p360.pPctIn}%`, `Attained: ${out.p360.pAtt} / ${out.p360.pOpp}`, out.p360.pPctIn));
 
-    // P360 Adds (no progress)
     const pAddTile = el('div',{class:'stat'});
     pAddTile.appendChild(el('div',{class:'label',text:`P360 — Adds Needed to ${out.p360.pTargetPct}%`}));
     pAddTile.appendChild(el('div',{class:'value',text: out.p360.pNeed}));
@@ -277,8 +264,8 @@
     rev.appendChild(revGrid);
     grid.appendChild(rev);
 
-    // CSAT (top right)
-    const cs = el('section',{class:'card'});
+    // CSAT (full-width row below)
+    const cs = el('section',{class:'card span-2'});
     const csHead = el('div',{class:'card-head'});
     csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
     csHead.appendChild(el('div',{class:'card-title',text:'CSAT'}));
@@ -297,8 +284,8 @@
     cs.appendChild(csGrid);
     grid.appendChild(cs);
 
-    // T-Life (bottom right)
-    const tl = el('section',{class:'card'});
+    // T-Life (two-column below CSAT)
+    const tl = el('section',{class:'card span-2'});
     const tlHead = el('div',{class:'card-head'});
     tlHead.appendChild(el('div',{class:'card-emoji',text:'📱'}));
     tlHead.appendChild(el('div',{class:'card-title',text:'T‑Life'}));
@@ -312,10 +299,8 @@
         const pr = el('div',{class:'progress'}), bar = el('i');
         const val = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
         bar.style.width = val + '%';
-        // rule: green if at/above target, else red
         if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) bar.classList.add('pbar-brightgreen'); else bar.classList.add('pbar-red');
-        pr.appendChild(bar);
-        return pr;
+        pr.appendChild(bar); return pr;
       })()
     ]));
     tlGrid.appendChild(el('div',{class:'stat'}, [
@@ -326,8 +311,8 @@
     tl.appendChild(tlGrid);
     grid.appendChild(tl);
 
-    // Daily Goals (full width)
-    const goals = el('section',{class:'card full-row'});
+    // Daily Goals (bottom full width)
+    const goals = el('section',{class:'card span-2'});
     const gh = el('div',{class:'card-head'});
     gh.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
     gh.appendChild(el('div',{class:'card-title',text:'Daily Goals'}));
@@ -348,7 +333,7 @@
     grid.appendChild(goals);
   }
 
-  // meta updates (date/time/store)
+  // meta updates
   function updateMeta(){
     const now = new Date();
     document.getElementById('metaDate').textContent = now.toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'});
@@ -356,22 +341,20 @@
     document.getElementById('metaStore').textContent = getStoreName();
   }
 
-  // scale-to-fit logic for A4 landscape printable area and then print
+  // scale-to-fit logic for portrait A4 printable area, then print
   function computeScaleToFit(){
-    // A4 landscape printable area in mm, subtract margins (we match CSS page padding)
-    const paperWmm = 297, paperHmm = 210, marginMm = 12; // matches .page padding
+    const paperWmm = 210, paperHmm = 297, marginMm = 12;
     const availW = (paperWmm - 2*marginMm) * mmToPx;
     const availH = (paperHmm - 2*marginMm) * mmToPx;
 
     const pageEl = document.querySelector('.page');
-    // content size
     const contentW = pageEl.scrollWidth;
     const contentH = pageEl.scrollHeight;
 
     const scaleW = availW / contentW;
     const scaleH = availH / contentH;
     let scale = Math.min(scaleW, scaleH, 1);
-    if (scale < 0.45) scale = 0.45; // don't go too small
+    if (scale < 0.45) scale = 0.45;
     return scale;
   }
 
@@ -379,7 +362,6 @@
     const pageEl = document.querySelector('.page');
     pageEl.style.transformOrigin = 'top left';
     pageEl.style.transform = 'scale(' + scale + ')';
-    // keep body width enough so scaled content doesn't wrap
     document.body.style.width = (100 / scale) + '%';
     document.body.style.height = (100 / scale) + '%';
   }
@@ -388,24 +370,17 @@
   updateMeta();
   render();
 
-  // compute small delay so fonts/images render before measuring
+  // allow fonts/images to load, then auto-scale and print
   setTimeout(() => {
     updateMeta();
     const scale = computeScaleToFit();
     applyScale(scale);
-    // allow paint, then call print. If window was opened by summary page, it can close itself afterward.
     setTimeout(() => {
-      try {
-        window.print();
-      } catch(e){
-        console.error(e);
-      }
-      // try to close after printing (may be blocked if user didn't open pop-up)
-      setTimeout(()=> {
-        try { window.close(); } catch(e) {}
-      }, 800);
+      try { window.print(); } catch(e){ console.error(e); }
+      // attempt to close if opened by summary page
+      setTimeout(()=> { try { window.close(); } catch(e){} }, 800);
     }, 300);
-  }, 220);
+  }, 240);
 
 })();
 </script>
