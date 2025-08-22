@@ -48,21 +48,20 @@
     .top-actions{display:flex;gap:10px;justify-content:flex-end;margin:6px 0 12px}
     .btn{background:var(--brand);color:#fff;border:none;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
     .btn.secondary{background:#111;color:#fff}
-    /* Main cards grid:
-       - 3 equal columns
-       - make DORT + Revenue span 2 rows so CSAT + T-Life (stacked) combine to same height
-    */
+
+    /* Main grid: 3 columns desktop, DORT and Revenue span 2 rows so the right column stacks */
     .grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:14px;
       margin-top:6px;
-      grid-auto-rows: minmax(160px, auto);
+      grid-auto-rows: minmax(140px, auto);
       align-items:start;
     }
     @media (max-width:1100px){ .grid{grid-template-columns:repeat(2,1fr);} }
     @media (max-width:640px){ .grid{grid-template-columns:1fr;} .logo{max-height:64px} }
     .span-2 { grid-row: span 2; }
+
     .card{
       background:var(--card-bg);
       border-radius:14px;
@@ -77,7 +76,8 @@
     .card-head{display:flex;align-items:center;gap:10px}
     .card-emoji{font-size:26px}
     .card-title{font-weight:800;font-size:16px}
-    /* Uniform small-tile grid used by DORT, Revenue, CSAT, T-Life, Daily Goals */
+
+    /* Uniform tile grid and tiles */
     .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;align-items:stretch}
     @media (max-width:640px){ .metric-grid{grid-template-columns:1fr} }
 
@@ -108,17 +108,56 @@
 
     .small{font-size:12px;color:var(--muted);margin-top:6px}
     .section-full{grid-column:1/-1}
-    @media print{
-      *{-webkit-print-color-adjust:exact;color-adjust:exact;}
-      body{background:#fff}
-      .card{box-shadow:none;border:1px solid #eee}
-      header{display:block}
-      .top-actions{display:none}
-    }
     .state-pill{margin-left:auto;padding:6px 10px;border-radius:999px;color:#fff;font-weight:800;font-size:13px}
     .state-good{background:var(--good)}
     .state-bad{background:var(--red)}
     .state-neutral{background:var(--muted)}
+
+    /* ---------------- PRINT RULES - aim to fit single page ---------------- */
+    @page {
+      size: A4 landscape;
+      margin: 8mm;
+    }
+
+    @media print {
+      html, body {
+        background: white;
+        color: black;
+      }
+
+      header { position:fixed; top:0; left:0; right:0; box-shadow:none; border:none; padding-bottom:6px; background:#fff; }
+      main { margin-top:120px; } /* leave space for header when printing */
+
+      /* Hide UI controls */
+      .top-actions, .btn { display:none !important; }
+
+      /* Reduce spacing and sizes */
+      .grid { gap:6px; grid-auto-rows: minmax(120px, auto); }
+      .card { padding:8px; border-width:1px; box-shadow:none; }
+      .metric-grid { gap:6px; }
+      .stat { padding:8px; min-height:72px; }
+      .stat .label { font-size:11px; }
+      .stat .value { font-size:15px; }
+      .small { font-size:11px; }
+
+      /* Make CSAT + T-Life stacked and shorter so combined height matches other columns */
+      /* On print, maintain the desktop 3-column layout but compress heights */
+      .span-2 { grid-row: span 2; }
+
+      /* Reduce margins around meta */
+      .meta { padding:0 12px 8px; font-size:12px; }
+
+      /* ensure tiles and cards don't break across pages */
+      .card, .stat { page-break-inside: avoid; -webkit-column-break-inside: avoid; break-inside: avoid; }
+
+      /* Reduce font-weight and compact everything slightly more for print */
+      .card-title { font-size:15px; }
+      .stat.goal .value { font-size:34px; }
+
+      /* Force colors in print */
+      * {-webkit-print-color-adjust: exact; color-adjust: exact; }
+    }
+
   </style>
 </head>
 <body>
@@ -144,7 +183,7 @@
 
 <script>
 (async function(){
-  // logo extraction (same as other pages)
+  // Try to reuse embedded logo if available
   const logoImg = document.getElementById('siteLogo');
   try {
     const r = await fetch('/app/dort.html', {cache:'no-store'});
@@ -155,17 +194,16 @@
     }
   } catch(e){ /* ignore */ }
 
-  // --- Meta: date, time and store name ---
+  // Meta elements
   const metaDate = document.getElementById('metaDate');
   const metaTime = document.getElementById('metaTime');
   const metaStore = document.getElementById('metaStore');
 
   function getStoreName() {
-    // try the keys the app uses; fallback to common alternatives
     return localStorage.getItem('ggt.store') ||
-           localStorage.getItem('ggt_selection') && (() => {
+           (function(){
              try {
-               const s = JSON.parse(localStorage.getItem('ggt_selection'));
+               const s = JSON.parse(localStorage.getItem('ggt_selection') || 'null');
                return s && (s.store || s.store_name || s.storeName);
              } catch(e){ return null; }
            })() ||
@@ -243,7 +281,6 @@
     };
   }
 
-  // progress color rules
   function progressClassFor(pct){
     if (pct < 80) return 'pbar-red';
     if (pct >= 80 && pct <= 99) return 'pbar-yellow';
@@ -317,7 +354,6 @@
     rhead.appendChild(el('div',{class:'card-title',text:'Revenue'}));
     rev.appendChild(rhead);
 
-    // revenue grid uses same .metric-grid as DORT to ensure matching subtile sizes/positioning
     const revGrid = el('div',{class:'metric-grid'});
 
     // VAF tile
@@ -361,7 +397,6 @@
     grid.appendChild(rev);
 
     // Right column: CSAT (top) and T-Life (bottom) stacked; together they match left/center height
-    // CSAT (row 1, col 3)
     const cs = el('section',{class:'card'});
     const csHead = el('div',{class:'card-head'});
     csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
@@ -384,7 +419,7 @@
     cs.appendChild(csInner);
     grid.appendChild(cs);
 
-    // T-Life (row 2, col 3)
+    // T-Life
     const tl = el('section',{class:'card'});
     const tlH = el('div',{class:'card-head'});
     tlH.appendChild(el('div',{class:'card-emoji',text:'📱'}));
@@ -399,7 +434,6 @@
     const t1p = el('div',{class:'progress'});
     const t1bar = el('i'); const tPctVal = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
     t1bar.style.width = tPctVal + '%';
-    // T-Life rule: green when at/above target, red when below
     if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) { t1bar.classList.add('pbar-brightgreen'); } else { t1bar.classList.add('pbar-red'); }
     t1p.appendChild(t1bar); t1.appendChild(t1p);
     tlInner.appendChild(t1);
@@ -413,7 +447,7 @@
     tl.appendChild(tlInner);
     grid.appendChild(tl);
 
-    // Daily goals (full width below) - same sub-tiles with emojis
+    // Daily goals (full width below)
     const goalsCard = el('section',{class:'card section-full'});
     const ghead = el('div',{class:'card-head'});
     ghead.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
@@ -435,11 +469,10 @@
     gGrid.appendChild(goalTile('BTS','⌚', gg.bts));
     gGrid.appendChild(goalTile('TFB','💼', gg.tfb));
     gGrid.appendChild(goalTile('Accessories','🎧', gg.acc));
-
     goalsCard.appendChild(gGrid);
     grid.appendChild(goalsCard);
 
-    // color gap labels where present
+    // color numeric gap labels
     document.querySelectorAll('.gap').forEach(g => {
       const num = parseFloat(String(g.textContent).replace(/[^0-9.-]/g,''));
       if (isNaN(num)) return;
@@ -447,11 +480,45 @@
     });
   }
 
-  // initial render and re-render on storage events
+  // Render initially and on storage changes
   try { render(); } catch(e){ console.error('Summary render failed', e); document.getElementById('cards').textContent = 'An error occurred while rendering the summary. See console.'; }
   window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
-  // interaction controls
+  // Print scaling: try to scale content slightly to better fit a single printed page in landscape.
+  // We do this only for print-preview and printing using onbeforeprint/onafterprint.
+  function applyPrintScale() {
+    // measure content height and available printable height (approx)
+    const main = document.querySelector('main');
+    if (!main) return;
+    // use viewport height as a baseline for printable area; browsers vary; using 1000px baseline
+    const contentHeight = main.scrollHeight;
+    // Estimate available height in px for A4 landscape at 96dpi: 842px (11.69in * 72dpi ≈ 842) — this varies by browser/printer.
+    // We'll use window.innerHeight as practical viewport for preview, and cap scale to 1.
+    const avail = window.innerHeight - 140; // header + margins estimate
+    let scale = 1;
+    if (contentHeight > avail && avail > 0) scale = Math.max(0.6, avail / contentHeight);
+    document.body.style.transformOrigin = 'top left';
+    document.body.style.transform = 'scale(' + scale + ')';
+    // To prevent clipping during print layout, add a small bottom padding
+    document.body.style.paddingBottom = '20px';
+  }
+  function resetPrintScale(){
+    document.body.style.transform = '';
+    document.body.style.paddingBottom = '';
+  }
+
+  // Modern browsers support matchMedia('print'), and the print dialog triggers onbeforeprint/onafterprint.
+  if (window.matchMedia) {
+    const m = window.matchMedia('print');
+    m.addListener((evt) => {
+      if (evt.matches) applyPrintScale();
+      else resetPrintScale();
+    });
+  }
+  window.addEventListener('beforeprint', applyPrintScale);
+  window.addEventListener('afterprint', resetPrintScale);
+
+  // UI controls
   document.getElementById('printBtn').addEventListener('click', () => window.print());
   document.getElementById('backBtn').addEventListener('click', () => location.href = 'goals.html');
 
