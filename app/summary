@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Summary</title>
+  <style>
+    :root {
+      --brand: #b8006b;
+      --card: #ffffff;
+      --bg: #f8f9fa;
+      --border:#e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: #111;
+      text-align: center;
+    }
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 0;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .logo {
+      display: block;
+      max-height: 120px;
+      width: auto;
+      margin: 0 auto;
+    }
+    h1 { margin: 12px 0 8px; font-size: 22px; color: var(--brand); }
+
+    .metric { 
+      width: min(92vw, 540px);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      margin: 12px auto;
+      padding: 14px;
+      text-align: left;
+    }
+    .metric h2 { 
+      margin: 0 0 10px; 
+      font-size: 18px; 
+      border-bottom: 2px solid #f0f0f0; 
+      padding-bottom: 6px; 
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+    }
+    @media (max-width: 360px) {
+      .row { grid-template-columns: 1fr; }
+    }
+    .field label { display:block; font-size: 13px; color:#555; margin-bottom:4px; }
+    .field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #dcdcdc;
+      border-radius: 10px;
+      font-size: 16px;
+      text-align: center;
+      background: #fff;
+    }
+    .nav {
+      display:flex; gap:12px; justify-content:center; margin: 18px 0 28px;
+    }
+    .btn {
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn.secondary { background: #222; }
+    @media print {
+      .nav { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATkAAABkCAYAAAD9hkdsAAChQElEQVR4nOz92ZMlSXbmif1U1Xa7+72+h3usuVUlqgoNoArVjQLQ6JkWdlNIEc6Qwn4YPvV/wDf+CfNISr+MSMuIUDgNDhokBw0[...]">
+  </header>
+  <h1>Summary</h1>
+  
+  <section class="metric" style="text-align:center">
+    <h2>Summary</h2>
+    <div id="summaryContent" style="line-height:1.6"></div>
+    <div class="nav" style="justify-content:center; margin-top:16px">
+      <button class="btn" onclick="window.print()">🖨 Print</button>
+    </div>
+  </section>
+
+  <script>
+    // Small helpers
+    function n(v){ const x = parseFloat(v); return isNaN(x)?0:x; }
+    function i(v){ const x = parseInt(v);   return isNaN(x)?0:x; }
+    function money(v){ return '$' + (n(v).toFixed(2)); }
+    function pct(v){ return Math.round(n(v)); }
+    function fetchLS(k){ const v = localStorage.getItem(k); return v===null?0:v; }
+
+    // Combines district + store values; returns an object
+    function comb(ad, gd, as, gs){
+      const att = i(fetchLS(ad)) + i(fetchLS(as));
+      const goal= i(fetchLS(gd)) + i(fetchLS(gs));
+      const pctv = goal>0 ? Math.round((att/goal)*100) : 0;
+      const gap = goal - att; // positive = behind
+      return { att: att, goal: goal, pct: pctv, gap: gap };
+    }
+
+    try {
+      const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
+      const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
+      const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
+      const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
+
+      const pOpp = i(fetchLS('p_opp'));
+      const pPctIn = Math.max(0, Math.min(100, n(fetchLS('p_pct'))));
+      const pAtt = Math.round(pOpp*(pPctIn/100));
+      const pTargetPct = 60;
+      const tP = pTargetPct/100;
+      const pNeed = Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
+
+      const vOpp = i(fetchLS('v_opp'));
+      const vTot = n(fetchLS('v_total'));
+      const vTarget = 19;
+      const needTotal = vTarget * vOpp;
+      const vGap = Math.max(0, needTotal - vTot);
+      const mrc = vOpp>0 ? (vTot/vOpp) : 0;
+
+      const cAvg = n(fetchLS('c_score'));
+      const cN = i(fetchLS('c_surveys'));
+      const cNeed = cAvg>=9.5 ? 0 : Math.max(0, Math.ceil(2 * cN * (9.5 - cAvg)));
+
+      const tlPct = Math.max(0, Math.min(100, n(fetchLS('t2_att'))));
+      const tlOpp = i(fetchLS('t2_opp'));
+      const tlSuc = Math.round(tlOpp*(tlPct/100));
+      const tlTarget = 70;
+      const tT = tlTarget/100;
+      const tlNeed = Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
+
+      const gVoice = localStorage.getItem('g_voice') || '—';
+      const gBts   = localStorage.getItem('g_bts')   || '—';
+      const gAcc   = localStorage.getItem('g_acc')   || '—';
+      const gTfb   = localStorage.getItem('g_tfb')   || '—';
+
+      const lines = [
+        '<b>DORT + SORT</b>',
+        'Voice — Gap: ' + (voice.gap>0?'-'+voice.gap:'+'+Math.abs(voice.gap)) + ' | ' + voice.pct + '%',
+        'BTS — Gap: ' + (bts.gap>0?'-'+bts.gap:'+'+Math.abs(bts.gap)) + ' | ' + bts.pct + '%',
+        'TFB — Gap: ' + (tfb.gap>0?'-'+tfb.gap:'+'+Math.abs(tfb.gap)) + ' | ' + tfb.pct + '%',
+        'Accessories — Gap: ' + (acc.gap>0?'-'+acc.gap:'+'+Math.abs(acc.gap)) + ' | ' + acc.pct + '%',
+        '',
+        '<b>P360</b>',
+        '% to Goal: ' + pct(pPctIn) + '%, Needed adds: ' + pNeed,
+        '',
+        '<b>VAF</b>',
+        'MRC: ' + money(mrc) + ' | Target: ' + money(vTarget) + '/op | Gap: ' + money(vGap),
+        '',
+        '<b>CSAT</b>',
+        'Score: ' + (isNaN(cAvg)?'—':cAvg) + ' | Target: 9.5 | Needed: ' + cNeed + ' perfect 10s',
+        '',
+        '<b>T-Life</b>',
+        'Attainment: ' + pct(tlPct) + '% | Target: ' + tlTarget + '% | Needed: ' + tlNeed + ' opportunities',
+        '',
+        '<b>Daily Goals</b>',
+        'Voice: ' + gVoice + ', BTS: ' + gBts + ', TFB: ' + gTfb + ', Accessories: ' + gAcc
+      ];
+
+      document.getElementById('summaryContent').innerHTML = lines.map(l => '<div>'+l+'</div>').join('');
+    } catch (err) {
+      console.error('Summary page error:', err);
+      document.getElementById('summaryContent').innerHTML = '<div style="color:crimson;">An error occurred while calculating the summary. Check the console for details.</div>';
+    }
+  </script>
+
+  <div class="nav"><button class="btn secondary" onclick="location.href='goals.html'">← Back</button></div>
+</body>
+</html>
