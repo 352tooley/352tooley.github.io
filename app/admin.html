@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Upload Daily & Monthly Goals</title>
+  <style>
+    :root{
+      --brand:#e6007e; --muted:#6b7280; --bg:#f7f8fa; --card:#fff;
+    }
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);margin:0;color:#111}
+    header{background:var(--card);padding:14px;border-bottom:1px solid #e6e7ea;display:flex;align-items:center;gap:14px}
+    h1{margin:0;font-size:18px;color:var(--brand)}
+    main{max-width:980px;margin:18px auto;padding:18px}
+    .card{background:var(--card);border-radius:8px;padding:12px;border:1px solid #e6e7ea;margin-bottom:12px}
+    label{display:block;font-weight:700;margin-bottom:6px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1;min-width:180px}
+    input[type="number"], input[type="month"], input[type="text"]{width:100%;padding:8px;border:1px solid #e6e7ea;border-radius:6px}
+    input[type=file]{display:block}
+    .btn{display:inline-block;padding:8px 12px;border-radius:8px;background:var(--brand);color:white;text-decoration:none;cursor:pointer;border:none}
+    .btn.secondary{background:#374151}
+    .small{font-size:13px;color:var(--muted)}
+    pre{background:#fbfdff;border:1px dashed #e6eef9;padding:8px;border-radius:6px;overflow:auto;max-height:220px}
+    .success{color:#0b9d4a}
+    .error{color:#b91c1c}
+    footer{max-width:980px;margin:0 auto 40px;padding:0 18px;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .meta-note{font-size:13px;color:var(--muted);margin-top:6px}
+    code {background:#f3f4f6;padding:2px 4px;border-radius:4px;font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <img src="/logo-256.png" alt="logo" style="height:44px;object-fit:contain">
+    <h1>Admin — Upload Daily & Monthly Goals</h1>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="goalsHeader">
+      <h2 id="goalsHeader" style="margin-top:0">Global Goals (editable)</h2>
+      <div class="row" style="margin-bottom:8px">
+        <div class="col">
+          <label for="vafInput">VAF target ($ / op)</label>
+          <input id="vafInput" type="number" step="0.01" placeholder="19.00" value="19.00" />
+          <div class="meta-note">Default used if monthly/meta file does not supply per-store overrides.</div>
+        </div>
+
+        <div class="col">
+          <label for="tlifeInput">T‑Life attainment (%)</label>
+          <input id="tlifeInput" type="number" step="1" min="0" max="100" placeholder="70" value="70" />
+        </div>
+
+        <div class="col">
+          <label for="p360Input">P360 target (%)</label>
+          <input id="p360Input" type="number" step="1" min="0" max="100" placeholder="60" value="60" />
+        </div>
+      </div>
+
+      <div class="small">
+        These values will be saved as part of the monthly meta and used by the summary page until changed again.
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="dailyHeader">
+      <h2 id="dailyHeader" style="margin-top:0">Daily goals (one file for entire month)</h2>
+      <div class="small" style="margin-bottom:8px">
+        Upload the daily goals spreadsheet. The parser is permissive with column names; based on your sample it will:
+        - extract store code (the portion before ":" in the Store/Location cell) as the canonical store_id,
+        - parse the day from columns that contain "day" or "date",
+        - compute BTS as (any BTS columns found) and specifically will sum the two BTS components if both exist,
+        - round all numeric goals UP to the nearest whole number (Math.ceil),
+        - remove any metric that rounds to 0 but keep the day if at least one metric > 0 (your Option B).
+      </div>
+
+      <div class="row" style="align-items:end;margin-bottom:8px">
+        <div class="col">
+          <label for="monthDaily">Target month</label>
+          <input id="monthDaily" type="month" />
+        </div>
+        <div class="col">
+          <label for="dailyFile">Choose daily file (.xlsx, .xls, .csv, .json)</label>
+          <input id="dailyFile" type="file" accept=".xlsx,.xls,.csv,.json" />
+        </div>
+      </div>
+
+      <div class="controls" style="margin-bottom:8px">
+        <button id="loadDailyBtn" class="btn secondary">Load Daily</button>
+        <button id="downloadDailyBtn" class="btn" disabled>Download daily JSON</button>
+        <button id="saveDailyLocalBtn" class="btn" disabled>Save daily → local</button>
+      </div>
+
+      <div id="dailyStatus" style="margin-top:10px"></div>
+
+      <div id="dailyPreviewWrap" style="margin-top:12px;display:none">
+        <label class="small" style="margin-bottom:6px;display:block">Daily preview (first rows)</label>
+        <pre id="dailyPreview">—</pre>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="monthlyHeader">
+      <h2 id="monthlyHeader" style="margin-top:0">Monthly / meta file (overrides & meta)</h2>
+      <div class="small" style="margin-bottom:8px">
+        Upload a monthly file (if you use one) that contains global values or per-store overrides (VAF, T‑Life, P360). If a store-specific override is present it will replace the global value for that store.
+      </div>
+
+      <div class="row" style="align-items:end;margin-bottom:8px">
+        <div class="col">
+          <label for="monthMeta">Target month</label>
+          <input id="monthMeta" type="month" />
+        </div>
+        <div class="col">
+          <label for="metaFile">Choose monthly/meta file (.xlsx, .xls, .csv, .json)</label>
+          <input id="metaFile" type="file" accept=".xlsx,.xls,.csv,.json" />
+        </div>
+      </div>
+
+      <div class="controls" style="margin-bottom:8px">
+        <button id="loadMetaBtn" class="btn secondary">Load Monthly</button>
+        <button id="downloadMetaBtn" class="btn" disabled>Download meta JSON</button>
+        <button id="saveMetaLocalBtn" class="btn" disabled>Save meta → local</button>
+      </div>
+
+      <div id="metaStatus" style="margin-top:10px"></div>
+
+      <div id="metaPreviewWrap" style="margin-top:12px;display:none">
+        <label class="small" style="margin-bottom:6px;display:block">Meta preview (first rows)</label>
+        <pre id="metaPreview">—</pre>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="publishHeader">
+      <h2 id="publishHeader" style="margin-top:0">Publish (optional)</h2>
+      <div class="small" style="margin-bottom:8px">
+        You can download the generated JSON files and commit them to your site manually, or use the Publish feature to push both files into a GitHub repo path (requires a PAT with repo:contents).
+      </div>
+
+      <div style="margin-bottom:8px" class="row">
+        <div class="col">
+          <label for="repoInput">Repository (owner/repo)</label>
+          <input id="repoInput" placeholder="owner/repo (e.g. 352tooley/352tooley.github.io)" />
+        </div>
+        <div class="col">
+          <label for="pathInput">Target folder (within repo)</label>
+          <input id="pathInput" placeholder="e.g. data/goals/2025-08/" />
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px">
+        <label for="pat">GitHub Personal Access Token (optional)</label>
+        <input id="pat" type="password" placeholder="Paste PAT here (repo:contents)" style="width:100%" />
+      </div>
+
+      <div class="controls">
+        <button id="publishBothBtn" class="btn" disabled>Publish both JSONs</button>
+      </div>
+
+      <div id="publishResult" style="margin-top:10px"></div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-top:0">Notes / Integration</h2>
+      <div class="small">
+        - Saved JSON keys in localStorage:
+        <ul>
+          <li><code>monthly_goals:YYYY-MM</code> → daily JSON</li>
+          <li><code>monthly_meta:YYYY-MM</code> → meta JSON</li>
+          <li><code>monthly_goals:current</code> → points to the current monthly_goals key</li>
+          <li><code>global_goals</code> → object { vaf, tlife, p360 }</li>
+        </ul>
+        - Summary page should fetch these JSONs (or read localStorage) and for each store use the canonical store_code (portion before ":" in the store cell) to match.
+        - Rounding: all numeric figures are rounded UP (Math.ceil) and any metric that becomes 0 after rounding is omitted for that day (Option B). A day is kept if at least one metric > 0.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Tip: After "Save to local", open a store summary and refresh — the summary should read the stored files for the selected month. You can also download the JSONs and commit them to your site's data folder.
+  </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+/*
+  Updated admin:
+  - Canonical store id = code portion before ":" in the store/location field (e.g. "2ESP: Dacula" -> "2ESP")
+  - Numeric rounding: round UP (Math.ceil) for voice, bts, tfb, accessories
+  - BTS = sum of any fields whose header contains 'bts' (commonly two columns) then rounded up
+  - Remove any metric that rounds to 0 (Option B). Keep day entry if at least one metric remains.
+  - Save daily JSON to localStorage key: monthly_goals:YYYY-MM
+  - Save meta JSON to localStorage key: monthly_meta:YYYY-MM and global_goals shorthand
+*/
+
+function $(id){ return document.getElementById(id); }
+
+const vafInput = $('vafInput');
+const tlifeInput = $('tlifeInput');
+const p360Input = $('p360Input');
+
+const monthDaily = $('monthDaily');
+const dailyFile = $('dailyFile');
+const loadDailyBtn = $('loadDailyBtn');
+const downloadDailyBtn = $('downloadDailyBtn');
+const saveDailyLocalBtn = $('saveDailyLocalBtn');
+const dailyStatus = $('dailyStatus');
+const dailyPreviewWrap = $('dailyPreviewWrap');
+const dailyPreview = $('dailyPreview');
+
+const monthMeta = $('monthMeta');
+const metaFile = $('metaFile');
+const loadMetaBtn = $('loadMetaBtn');
+const downloadMetaBtn = $('downloadMetaBtn');
+const saveMetaLocalBtn = $('saveMetaLocalBtn');
+const metaStatus = $('metaStatus');
+const metaPreviewWrap = $('metaPreviewWrap');
+const metaPreview = $('metaPreview');
+
+const repoInput = $('repoInput');
+const pathInput = $('pathInput');
+const patInput = $('pat');
+const publishBothBtn = $('publishBothBtn');
+const publishResult = $('publishResult');
+
+let dailyJson = null;
+let metaJson = null;
+
+function show(el, msg, cls) {
+  el.innerHTML = '<div class="' + (cls||'') + '">' + msg + '</div>';
+}
+
+function readFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const name = file.name.toLowerCase();
+    const fr = new FileReader();
+    fr.onerror = () => reject(new Error('Failed reading file'));
+    if (name.endsWith('.json')) {
+      fr.onload = e => resolve(JSON.parse(e.target.result));
+      fr.readAsText(file);
+    } else if (name.endsWith('.csv')) {
+      fr.onload = e => {
+        try {
+          const wb = XLSX.read(e.target.result, {type:'string'});
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:null, raw:false});
+          resolve(rows);
+        } catch (err) { reject(err); }
+      };
+      fr.readAsText(file);
+    } else {
+      // excel
+      fr.onload = e => {
+        try {
+          const ab = e.target.result;
+          const wb = XLSX.read(ab, {type:'array'});
+          const rowsAll = [];
+          wb.SheetNames.forEach(n => {
+            const ws = wb.Sheets[n];
+            const rows = XLSX.utils.sheet_to_json(ws, {defval:null, raw:false});
+            rows.forEach(r => rowsAll.push(r));
+          });
+          resolve(rowsAll);
+        } catch (err) { reject(err); }
+      };
+      fr.readAsArrayBuffer(file);
+    }
+  });
+}
+
+function parseNumberRaw(v) {
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number') return v;
+  const s = String(v).trim();
+  // remove $ , parentheses etc
+  const cleaned = s.replace(/\((.*)\)/, '-$1').replace(/[^0-9.\-]/g, '');
+  const num = parseFloat(cleaned);
+  return isNaN(num) ? 0 : num;
+}
+
+function ceilOrZero(v) {
+  const n = parseNumberRaw(v);
+  // If parsed numeric is 0 or < 1 then ceil will return 0 or 1 depending on value.
+  // We use Math.ceil so any fractional becomes next whole, zero stays zero.
+  return Math.ceil(n);
+}
+
+function extractStoreCode(full) {
+  if (!full && full !== 0) return '';
+  const s = String(full).trim();
+  // If there is a colon, take the portion before colon
+  const idx = s.indexOf(':');
+  if (idx > -1) return s.slice(0, idx).trim();
+  // else maybe store code is the first token before space
+  const parts = s.split(/\s+/);
+  return parts[0] || s;
+}
+
+function extractStoreName(full) {
+  if (!full && full !== 0) return '';
+  const s = String(full).trim();
+  const idx = s.indexOf(':');
+  if (idx > -1) return s.slice(idx + 1).trim();
+  // fallback: remove code-like prefix if looks like code
+  const parts = s.split(/\s+/);
+  if (parts.length > 1) return parts.slice(1).join(' ');
+  return s;
+}
+
+function classifyHeaders(sampleRow) {
+  // Input is an object with original headers keys -> sample values.
+  // We'll build a map of headerKey -> role
+  const map = {};
+  const btsKeys = [];
+  Object.keys(sampleRow).forEach(k => {
+    const key = String(k).trim();
+    const lk = key.toLowerCase();
+    if (lk.includes('area')) map.area = key;
+    else if (lk.includes('region')) map.region = key;
+    else if (lk.includes('district')) map.district = key;
+    else if (lk.includes('store') || lk.includes('location') || lk.includes('store_sap')) map.store = key;
+    else if (lk.includes('day') || lk.includes('date')) map.day = key;
+    else if (lk.includes('accessor') || lk.includes('accessories') || lk.includes('accessory') || lk.includes('gp target')) map.accessories = key;
+    else if (lk.includes('vaf')) map.vaf = key;
+    else if (lk.includes('tlife') || lk.includes('t-life') || lk.includes('t life') || lk.includes('t life')) map.tlife = key;
+    else if (lk.includes('p360') || lk.includes('p 360') || lk.includes('p-360')) map.p360 = key;
+    else if (lk.includes('bts')) btsKeys.push(key);
+    else if (lk.includes('voice') && !lk.includes('bts')) map.voice = key;
+  });
+  if (btsKeys.length) map.btsParts = btsKeys;
+  return map;
+}
+
+function normalizeDailyRows(rows) {
+  const stores = {};
+  if (!rows || !rows.length) return stores;
+  const headerMap = classifyHeaders(rows[0]);
+
+  rows.forEach(r => {
+    // normalize keys to original header strings since classify returned actual keys
+    const row = {};
+    Object.keys(r).forEach(k => row[k.trim()] = r[k]);
+
+    // get store cell via headerMap.store or fallback scanning
+    let storeCell = null;
+    if (headerMap.store && row[headerMap.store] !== undefined) storeCell = row[headerMap.store];
+    else {
+      // fallback: find any key with 'store' or 'location'
+      for (const k of Object.keys(row)) {
+        const lk = k.toLowerCase();
+        if (lk.includes('store') || lk.includes('location') || lk.includes('store_sap')) { storeCell = row[k]; break; }
+      }
+    }
+    if (!storeCell) return; // skip rows without store
+
+    const storeCode = extractStoreCode(storeCell);
+    const storeName = extractStoreName(storeCell);
+
+    // parse area/region/district if available
+    const area = headerMap.area ? row[headerMap.area] : (row['Area'] || row['area'] || '');
+    const region = headerMap.region ? row[headerMap.region] : (row['Region'] || row['region'] || '');
+    const district = headerMap.district ? row[headerMap.district] : (row['District'] || row['district'] || '');
+
+    // parse day (accept either day-of-month or full date)
+    let dayVal = null;
+    if (headerMap.day && row[headerMap.day] !== undefined) {
+      const raw = row[headerMap.day];
+      if (raw === null || raw === '') { return; }
+      // if raw looks like a date string parse it
+      const maybe = new Date(raw);
+      if (!isNaN(maybe) && (String(raw).includes('/') || String(raw).includes('-'))) {
+        dayVal = maybe.getDate();
+      } else {
+        dayVal = parseInt(String(raw).trim(), 10);
+      }
+    } else {
+      // fallback: try to find any header that looks like date/day
+      for (const k of Object.keys(row)) {
+        const lk = k.toLowerCase();
+        if (lk.includes('day') || lk.includes('date') || lk.includes('target day')) {
+          const raw = row[k];
+          const maybe = new Date(raw);
+          if (!isNaN(maybe) && (String(raw).includes('/') || String(raw).includes('-'))) {
+            dayVal = maybe.getDate();
+          } else {
+            dayVal = parseInt(String(raw).trim(), 10);
+          }
+          break;
+        }
+      }
+    }
+    if (!dayVal || dayVal < 1 || dayVal > 31) return;
+
+    // voice
+    let voiceRaw = 0;
+    if (headerMap.voice && row[headerMap.voice] !== undefined) voiceRaw = row[headerMap.voice];
+    else {
+      // fallback: find any header with 'voice' that isn't 'bts'
+      for (const k of Object.keys(row)) {
+        const lk = k.toLowerCase();
+        if (lk.includes('voice') && !lk.includes('bts')) { voiceRaw = row[k]; break; }
+      }
+    }
+
+    // BTS parts: sum any header containing 'bts'
+    let btsSum = 0;
+    if (headerMap.btsParts && headerMap.btsParts.length) {
+      headerMap.btsParts.forEach(k => {
+        if (row[k] !== undefined) btsSum += parseNumberRaw(row[k]);
+      });
+    } else {
+      // fallback: scan all headers for 'bts'
+      for (const k of Object.keys(row)) {
+        if (k.toLowerCase().includes('bts')) btsSum += parseNumberRaw(row[k]);
+      }
+    }
+
+    // accessories
+    let accessoriesRaw = 0;
+    if (headerMap.accessories && row[headerMap.accessories] !== undefined) accessoriesRaw = row[headerMap.accessories];
+    else {
+      for (const k of Object.keys(row)) {
+        const lk = k.toLowerCase();
+        if (lk.includes('accessor') || lk.includes('accessories') || lk.includes('accessory') || lk.includes('gp target')) { accessoriesRaw = row[k]; break; }
+      }
+    }
+
+    // Optionally, parse TFB column if present (some sheets may have TFB separate)
+    let tfbRaw = 0;
+    for (const k of Object.keys(row)) {
+      const lk = k.toLowerCase();
+      if (lk.includes('tfb') && !lk.includes('voice') && !lk.includes('bts')) { tfbRaw = row[k]; break; }
+    }
+
+    // Apply rounding UP (Math.ceil) per your instruction
+    const voice = Math.ceil(parseNumberRaw(voiceRaw));
+    const bts = Math.ceil(btsSum);
+    const tfb = Math.ceil(parseNumberRaw(tfbRaw));
+    const accessories = Math.ceil(parseNumberRaw(accessoriesRaw));
+
+    // Build metric object but omit any metric that is 0 (Option B)
+    const metrics = {};
+    if (voice > 0) metrics.voice = voice;
+    if (bts > 0) metrics.bts = bts;
+    if (tfb > 0) metrics.tfb = tfb;
+    if (accessories > 0) metrics.accessories = accessories;
+
+    // If all metrics are zero, skip this day (Option B)
+    if (Object.keys(metrics).length === 0) return;
+
+    if (!stores[storeCode]) stores[storeCode] = {
+      store_code: storeCode,
+      store_name: storeName || storeCode,
+      area: area || '',
+      region: region || '',
+      district: district || '',
+      daily: {}
+    };
+
+    stores[storeCode].daily[String(dayVal)] = metrics;
+  });
+
+  return stores;
+}
+
+loadDailyBtn.addEventListener('click', async () => {
+  dailyStatus.textContent = 'Loading daily file...';
+  dailyPreviewWrap.style.display = 'none';
+  dailyJson = null;
+  try {
+    const f = dailyFile.files[0];
+    const monthVal = monthDaily.value;
+    if (!monthVal) { show(dailyStatus, 'Select target month (YYYY-MM)', 'error'); return; }
+    if (!f) { show(dailyStatus, 'Choose a daily file first', 'error'); return; }
+
+    const rows = await readFile(f);
+    const stores = normalizeDailyRows(rows);
+    dailyJson = { month: monthVal, generated_at: (new Date()).toISOString(), stores };
+    dailyPreview.textContent = JSON.stringify(Object.fromEntries(Object.entries(stores).slice(0,8)), null, 2);
+    dailyPreviewWrap.style.display = 'block';
+    show(dailyStatus, 'Loaded daily file — ' + Object.keys(stores).length + ' stores', 'success');
+    downloadDailyBtn.disabled = false;
+    saveDailyLocalBtn.disabled = false;
+    maybeEnablePublish();
+  } catch (err) {
+    console.error(err);
+    show(dailyStatus, 'Error reading daily file: ' + (err.message || err), 'error');
+  }
+});
+
+downloadDailyBtn.addEventListener('click', () => {
+  if (!dailyJson) { show(dailyStatus, 'Nothing to download', 'error'); return; }
+  const blob = new Blob([JSON.stringify(dailyJson, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `daily-${dailyJson.month}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  show(dailyStatus, 'Download started', 'success');
+});
+
+saveDailyLocalBtn.addEventListener('click', () => {
+  if (!dailyJson) { show(dailyStatus, 'Nothing to save', 'error'); return; }
+  try {
+    const key = 'monthly_goals:' + dailyJson.month;
+    localStorage.setItem(key, JSON.stringify(dailyJson));
+    localStorage.setItem('monthly_goals:current', key);
+    show(dailyStatus, 'Saved to localStorage under key: ' + key, 'success');
+  } catch (err) {
+    show(dailyStatus, 'Save failed: ' + err.message, 'error');
+  }
+});
+
+/* ---------- Meta / monthly handlers ---------- */
+
+function normalizeMetaRows(rows) {
+  // rows may be an array (sheet rows) or an object (already JSON)
+  const result = {
+    month: null,
+    generated_at: (new Date()).toISOString(),
+    global_goals: { vaf: null, tlife: null, p360: null },
+    per_store_overrides: {}
+  };
+  if (!rows) return result;
+
+  if (!Array.isArray(rows) && typeof rows === 'object') {
+    // already meta JSON: copy through but ensure structure
+    result.month = rows.month || result.month;
+    result.global_goals = rows.global_goals || result.global_goals;
+    result.per_store_overrides = rows.per_store_overrides || {};
+    return result;
+  }
+
+  // If array: try to detect if first row contains global keys, and/or rows include per-store overrides
+  const first = rows[0] || {};
+  // normalize keys
+  const lowerFirst = {};
+  Object.keys(first).forEach(k => lowerFirst[k.trim().toLowerCase()] = first[k]);
+
+  const hasGlobal = ('vaf' in lowerFirst) || ('tlife' in lowerFirst) || ('p360' in lowerFirst);
+  // detect if rows have store_id column
+  const hasStoreId = rows.some(r => {
+    const lk = Object.keys(r).map(x => x.toLowerCase());
+    return lk.some(k => k.includes('store_id') || k.includes('store') || k.includes('location'));
+  });
+
+  if (!hasStoreId && hasGlobal) {
+    // treat first row as global
+    result.global_goals.vaf = lowerFirst['vaf'] !== undefined ? Number(lowerFirst['vaf']) : null;
+    result.global_goals.tlife = lowerFirst['tlife'] !== undefined ? Number(lowerFirst['tlife']) : null;
+    result.global_goals.p360 = lowerFirst['p360'] !== undefined ? Number(lowerFirst['p360']) : null;
+    return result;
+  }
+
+  if (hasStoreId) {
+    // build per-store overrides
+    rows.forEach(r => {
+      const lower = {};
+      Object.keys(r).forEach(k => lower[k.trim().toLowerCase()] = r[k]);
+      const idRaw = lower['store_id'] || lower['store'] || lower['location'] || '';
+      const id = extractStoreCode(idRaw);
+      if (!id) return;
+      const vaf = lower['vaf'] !== undefined ? Number(lower['vaf']) : null;
+      const tl = (lower['tlife'] !== undefined ? Number(lower['tlife']) : (lower['t-life'] !== undefined ? Number(lower['t-life']) : null));
+      const p360 = lower['p360'] !== undefined ? Number(lower['p360']) : null;
+      result.per_store_overrides[id] = { vaf: vaf, tlife: tl, p360: p360 };
+    });
+    return result;
+  }
+
+  // fallback: return empty meta
+  return result;
+}
+
+loadMetaBtn.addEventListener('click', async () => {
+  metaStatus.textContent = 'Loading meta file...';
+  metaPreviewWrap.style.display = 'none';
+  metaJson = null;
+  try {
+    const f = metaFile.files[0];
+    const monthVal = monthMeta.value;
+    if (!monthVal) { show(metaStatus, 'Select target month (YYYY-MM)', 'error'); return; }
+    // if no file is provided, build meta from the global inputs
+    if (!f) {
+      metaJson = {
+        month: monthVal,
+        generated_at: (new Date()).toISOString(),
+        global_goals: {
+          vaf: vafInput.value ? Number(vafInput.value) : null,
+          tlife: tlifeInput.value ? Number(tlifeInput.value) : null,
+          p360: p360Input.value ? Number(p360Input.value) : null
+        },
+        per_store_overrides: {}
+      };
+      metaPreview.textContent = JSON.stringify(metaJson, null, 2);
+      metaPreviewWrap.style.display = 'block';
+      show(metaStatus, 'Built meta JSON from global inputs', 'success');
+      downloadMetaBtn.disabled = false;
+      saveMetaLocalBtn.disabled = false;
+      maybeEnablePublish();
+      return;
+    }
+
+    // parse provided file
+    const rows = await readFile(f);
+    const normalized = normalizeMetaRows(rows);
+    normalized.month = monthVal;
+    normalized.generated_at = (new Date()).toISOString();
+    // fill any missing global values from the inputs
+    normalized.global_goals.vaf = (normalized.global_goals.vaf !== null && normalized.global_goals.vaf !== undefined) ? normalized.global_goals.vaf : (vafInput.value ? Number(vafInput.value) : null);
+    normalized.global_goals.tlife = (normalized.global_goals.tlife !== null && normalized.global_goals.tlife !== undefined) ? normalized.global_goals.tlife : (tlifeInput.value ? Number(tlifeInput.value) : null);
+    normalized.global_goals.p360 = (normalized.global_goals.p360 !== null && normalized.global_goals.p360 !== undefined) ? normalized.global_goals.p360 : (p360Input.value ? Number(p360Input.value) : null);
+
+    metaJson = normalized;
+    metaPreview.textContent = JSON.stringify(metaJson, null, 2);
+    metaPreviewWrap.style.display = 'block';
+    show(metaStatus, 'Loaded meta file', 'success');
+    downloadMetaBtn.disabled = false;
+    saveMetaLocalBtn.disabled = false;
+    maybeEnablePublish();
+  } catch (err) {
+    console.error(err);
+    show(metaStatus, 'Error reading meta file: ' + (err.message || err), 'error');
+  }
+});
+
+downloadMetaBtn.addEventListener('click', () => {
+  if (!metaJson) { show(metaStatus, 'Nothing to download', 'error'); return; }
+  const blob = new Blob([JSON.stringify(metaJson, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `meta-${metaJson.month}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  show(metaStatus, 'Download started', 'success');
+});
+
+saveMetaLocalBtn.addEventListener('click', () => {
+  if (!metaJson) { show(metaStatus, 'Nothing to save', 'error'); return; }
+  try {
+    const key = 'monthly_meta:' + metaJson.month;
+    localStorage.setItem(key, JSON.stringify(metaJson));
+    localStorage.setItem('monthly_meta:current', key);
+    // also write global_goals shorthand
+    localStorage.setItem('global_goals', JSON.stringify(metaJson.global_goals));
+    if (metaJson.global_goals) {
+      if (metaJson.global_goals.tlife !== null && metaJson.global_goals.tlife !== undefined) localStorage.setItem('global_tlife', String(metaJson.global_goals.tlife));
+      if (metaJson.global_goals.vaf !== null && metaJson.global_goals.vaf !== undefined) localStorage.setItem('global_vaf', String(metaJson.global_goals.vaf));
+      if (metaJson.global_goals.p360 !== null && metaJson.global_goals.p360 !== undefined) localStorage.setItem('global_p360', String(metaJson.global_goals.p360));
+    }
+    show(metaStatus, 'Saved to localStorage under key: ' + key, 'success');
+  } catch (err) {
+    show(metaStatus, 'Save failed: ' + err.message, 'error');
+  }
+});
+
+/* ---------- Publish both to GitHub (optional) ---------- */
+
+function maybeEnablePublish(){
+  publishBothBtn.disabled = !(dailyJson && metaJson);
+}
+
+async function publishFileToGitHub(ownerRepo, targetPath, filename, contentBase64, pat) {
+  const [owner, repo] = ownerRepo.split('/');
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(targetPath + filename)}`;
+  const headers = { Authorization: 'token ' + pat, Accept: 'application/vnd.github.v3+json' };
+  // check if exists for sha
+  let sha = null;
+  const exists = await fetch(url, { headers });
+  if (exists.status === 200) {
+    const j = await exists.json();
+    sha = j.sha;
+  }
+  const body = {
+    message: `Add/update ${filename} (${targetPath})`,
+    content: contentBase64,
+    committer: { name: "admin", email: "admin@example.com" }
+  };
+  if (sha) body.sha = sha;
+  const resp = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(body)
+  });
+  return resp.json();
+}
+
+publishBothBtn.addEventListener('click', async () => {
+  publishResult.innerHTML = '';
+  try {
+    if (!dailyJson || !metaJson) { publishResult.textContent = 'Convert/load both files first.'; return; }
+    const repo = repoInput.value.trim();
+    const path = pathInput.value.trim();
+    const pat = patInput.value.trim();
+    if (!repo || !path || !pat) { publishResult.textContent = 'Fill repo, path and PAT to publish.'; return; }
+    const targetPath = path.endsWith('/') ? path : (path + '/');
+    const month = dailyJson.month;
+    const dailyName = `daily-${month}.json`;
+    const metaName = `meta-${month}.json`;
+    const dailyB64 = btoa(unescape(encodeURIComponent(JSON.stringify(dailyJson, null, 2))));
+    const metaB64 = btoa(unescape(encodeURIComponent(JSON.stringify(metaJson, null, 2))));
+    publishResult.textContent = 'Publishing daily...';
+    const dailyResp = await publishFileToGitHub(repo, targetPath, dailyName, dailyB64, pat);
+    publishResult.textContent = 'Publishing meta...';
+    const metaResp = await publishFileToGitHub(repo, targetPath, metaName, metaB64, pat);
+    publishResult.innerHTML = '<div class="success">Published both files.</div>'
+      + '<div class="small">daily: ' + (dailyResp.content ? dailyResp.content.path : JSON.stringify(dailyResp)) + '</div>'
+      + '<div class="small">meta: ' + (metaResp.content ? metaResp.content.path : JSON.stringify(metaResp)) + '</div>';
+  } catch (err) {
+    console.error(err);
+    publishResult.innerHTML = '<div class="error">Publish error: ' + (err.message || err) + '</div>';
+  }
+});
+
+/* Prefill global inputs from existing localStorage if present */
+(function prefillFromLocal(){
+  try {
+    const g = localStorage.getItem('global_goals');
+    if (g) {
+      const o = JSON.parse(g);
+      if (o.tlife !== null && o.tlife !== undefined) tlifeInput.value = o.tlife;
+      if (o.vaf !== null && o.vaf !== undefined) vafInput.value = o.vaf;
+      if (o.p360 !== null && o.p360 !== undefined) p360Input.value = o.p360;
+    }
+    const curDaily = localStorage.getItem('monthly_goals:current');
+    if (curDaily) {
+      const parts = curDaily.split(':');
+      if (parts.length === 2 && /^\d{4}-\d{2}$/.test(parts[1])) monthDaily.value = parts[1];
+    }
+    const curMeta = localStorage.getItem('monthly_meta:current');
+    if (curMeta) {
+      const parts = curMeta.split(':');
+      if (parts.length === 2 && /^\d{4}-\d{2}$/.test(parts[1])) monthMeta.value = parts[1];
+    }
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
