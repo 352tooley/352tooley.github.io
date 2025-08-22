@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Goals & Gaps Tracker</title>
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="../manifest.json">
 <style>
   :root {
     --brand:#e6007e;
@@ -31,7 +31,7 @@
 <body>
   <header class="header">
     <div class="logo-wrap">
-      <img class="logo" alt="Connectivity Source" src="/logo-256.png" onerror="this.onerror=null;this.src='logo-256.png';" />
+      <img id="siteLogo" class="logo" alt="Connectivity Source" src="../logo-256.png">
     </div>
   </header>
 
@@ -57,6 +57,23 @@
 
 <script>
 (async function() {
+  const logoImg = document.getElementById('siteLogo');
+
+  try {
+    // relative path: dort.html is in the same /app folder
+    const res = await fetch('dort.html', {cache: 'no-store'});
+    if (res.ok) {
+      const text = await res.text();
+      const m = text.match(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/);
+      if (m && m[0]) {
+        logoImg.src = m[0];
+      }
+    }
+  } catch (e) {
+    console.warn('Could not extract embedded logo from dort.html:', e);
+  }
+
+  // selectors: use relative path to locations.json in /app
   const areaSel = document.getElementById('area');
   const regionSel = document.getElementById('region');
   const districtSel = document.getElementById('district');
@@ -64,26 +81,19 @@
   const goBtn = document.getElementById('goBtn');
 
   function uniq(arr) { return [...new Set(arr.filter(Boolean))].sort(); }
-  function normKey(k) { return String(k||'').trim().toLowerCase(); }
-
-  function pick(obj, keys) {
-    for (const k of keys) { if (k in obj) return obj[k]; }
-    return '';
-  }
+  function pick(obj, keys) { for (const k of keys) { if (k in obj) return obj[k]; } return ''; }
 
   let data = [];
   try {
-    // Always fetch from /app/locations.json so root page works
-    const res = await fetch('/app/locations.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    data = await res.json();
+    const res2 = await fetch('locations.json', { cache: 'no-store' });
+    if (!res2.ok) throw new Error('HTTP '+res2.status);
+    data = await res2.json();
   } catch (e) {
-    alert('Could not load store list. Please make sure "locations.json" exists in /app or / with Area/Region/District/Store fields.');
+    alert('Could not load store list. Please make sure "locations.json" exists in this folder with Area/Region/District/Store fields.');
     console.error(e);
     return;
   }
 
-  // Normalize records to common keys
   data = data.map(r => ({ 
     area:  pick(r, ['area','Area','AREA']),
     region:pick(r, ['region','Region','REGION']),
@@ -91,7 +101,6 @@
     store: pick(r, ['store','Store','STORE','store_name','Store Name'])
   }));
 
-  // Populate Area list
   uniq(data.map(r => r.area)).forEach(a => {
     const o = document.createElement('option'); o.value=o.textContent=a; areaSel.appendChild(o);
   });
@@ -136,13 +145,11 @@
 
   goBtn.addEventListener('click', () => {
     if (!storeSel.value) return;
-    // Persist the selection for other pages to read
-    localStorage.setItem('ggt.area', areaSel.value);
-    localStorage.setItem('ggt.region', regionSel.value);
-    localStorage.setItem('ggt.district', districtSel.value);
-    localStorage.setItem('ggt.store', storeSel.value);
-    // Go to the existing DORT page in /app/
-    location.href = '/app/dort.html';
+    const sel = { area: areaSel.value, region: regionSel.value, district: districtSel.value, store: storeSel.value };
+    try { localStorage.setItem('ggt_selection', JSON.stringify(sel)); } catch(e) {}
+    try { localStorage.setItem('ggt.area', sel.area); localStorage.setItem('ggt.region', sel.region); localStorage.setItem('ggt.district', sel.district); localStorage.setItem('ggt.store', sel.store); } catch(e) {}
+    // redirect to the app dort page in same folder
+    location.href = 'dort.html';
   });
 })();
 </script>
