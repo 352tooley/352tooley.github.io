@@ -1,463 +1,194 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Summary</title>
+  <title>Store Summary</title>
+
+  <!-- PWA manifest + meta (baked in) -->
+  <link rel="manifest" href="/app/manifest.json">
+  <meta name="theme-color" content="#e6007e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="/app/icons/apple-touch-icon.png">
+
   <style>
-    :root{
-      --brand: #e6007e;
-      --card-bg: #ffffff;
-      --page-bg: #f5f6f8;
-      --muted: #6b7280;
-      --good: #16a34a;
-      --bad: #dc2626;
-      --accent: #111827;
-      --yellow: #eab308;
-      --light-green: #86efac;
-      --bright-green: #16a34a;
-      --red: #ef4444;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;padding:0;background:var(--page-bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,sans-serif;color:var(--accent);}
-    header{
-      background: #fff;
-      border-bottom:1px solid #e8e8ed;
-      padding:12px 16px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      position:sticky;
-      top:0;
-      z-index:20;
-    }
-    .logo{max-height:84px;width:auto;display:block;object-fit:contain;margin-bottom:8px;}
-    .meta {
-      width:100%;
-      max-width:980px;
-      display:flex;
-      justify-content:center;
-      gap:18px;
-      align-items:center;
-      color:var(--muted);
-      font-size:13px;
-      padding:0 16px 12px;
-    }
-    main{max-width:980px;margin:18px auto;padding:0 16px 48px;}
-    h1{font-size:20px;margin:6px 0;color:var(--brand);text-align:left}
-    .top-actions{display:flex;gap:10px;justify-content:flex-end;margin:6px 0 12px}
-    .btn{background:var(--brand);color:#fff;border:none;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
-    .btn.secondary{background:#111;color:#fff}
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:14px;
-      margin-top:6px;
-      grid-auto-rows: minmax(140px, auto);
-      align-items:start;
-    }
-    @media (max-width:1100px){ .grid{grid-template-columns:repeat(2,1fr);} }
-    @media (max-width:640px){ .grid{grid-template-columns:1fr;} .logo{max-height:64px} }
-    .span-2 { grid-row: span 2; }
-
-    .card{
-      background:var(--card-bg);
-      border-radius:14px;
-      padding:12px;
-      box-shadow:0 8px 20px rgba(17,24,39,0.06);
-      border:1px solid rgba(16,24,40,0.04);
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      height:100%;
-    }
-    .card-head{display:flex;align-items:center;gap:10px}
-    .card-emoji{font-size:26px}
-    .card-title{font-weight:800;font-size:16px}
-
-    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;align-items:stretch}
-    @media (max-width:640px){ .metric-grid{grid-template-columns:1fr} }
-
-    .stat{
-      background:linear-gradient(180deg,#fff,#fbfdff);
-      border-radius:10px;padding:12px;border:1px solid #f0f3f7;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;
-      height:100%;
-      min-height:86px;
-    }
-    .stat .label{font-size:13px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px}
-    .stat .label .emoji { font-size:16px; }
-    .stat .value{font-weight:900;margin-top:0;font-size:18px;color:var(--accent)}
-    .gap{font-weight:800;margin-top:6px}
-    .gap.good{color:var(--good)}
-    .gap.bad{color:var(--bad)}
-    .progress{
-      height:10px;border-radius:999px;background:#eef2f7;overflow:hidden;margin-top:10px;width:100%;
-    }
-    .progress > i{display:block;height:100%;width:0%;border-radius:999px;transition:width .6s ease, background-color .3s ease}
-    .pbar-red{ background: linear-gradient(90deg, rgba(239,68,68,1), rgba(239,68,68,0.85)); }
-    .pbar-yellow{ background: linear-gradient(90deg, rgba(234,179,8,1), rgba(234,179,8,0.9)); }
-    .pbar-lightgreen{ background: linear-gradient(90deg, rgba(134,239,172,1), rgba(134,239,172,0.9)); }
-    .pbar-brightgreen{ background: linear-gradient(90deg, rgba(22,163,74,1), rgba(22,163,74,0.9)); }
-
-    .stat.goal{ display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; }
-    .stat.goal .value{ font-size:40px; line-height:1; margin:0; }
-
-    .small{font-size:12px;color:var(--muted);margin-top:6px}
-    .section-full{grid-column:1/-1}
-    @media print{
-      *{-webkit-print-color-adjust:exact;color-adjust:exact;}
-      body{background:#fff}
-      .card{box-shadow:none;border:1px solid #eee}
-      header{display:block}
-      .top-actions{display:none}
-    }
-    .state-pill{margin-left:auto;padding:6px 10px;border-radius:999px;color:#fff;font-weight:800;font-size:13px}
-    .state-good{background:var(--good)}
-    .state-bad{background:var(--red)}
-    .state-neutral{background:var(--muted)}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:#fff;margin:0;color:#111}
+    header{background:#f7f8fa;padding:12px;border-bottom:1px solid #e6e7ea}
+    main{max-width:980px;margin:18px auto;padding:18px}
+    .card{background:#fff;border:1px solid #e6e7ea;border-radius:8px;padding:14px;margin-bottom:12px}
+    label{display:block;font-weight:700;margin-bottom:6px}
+    input[type="text"]{padding:8px;width:220px;border:1px solid #e6e7ea;border-radius:6px}
+    .muted{color:#6b7280;font-size:13px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid #eef0f3;text-align:left}
   </style>
 </head>
 <body>
   <header>
-    <img id="siteLogo" class="logo" src="/logo-256.png" alt="Company logo">
-    <div class="meta" id="metaBar" aria-hidden="false">
-      <div id="metaDate">—</div>
-      <div id="metaTime">—</div>
-      <div id="metaStore">—</div>
-    </div>
+    <h1 style="margin:0;color:#e6007e">Store Summary</h1>
   </header>
 
   <main>
-    <div class="top-actions">
-      <!-- Print now opens the dedicated print page which auto-scales and prints -->
-      <button class="btn" id="printBtn">🖨 Print</button>
-      <button class="btn secondary" id="backBtn">← Back</button>
-    </div>
+    <section class="card">
+      <label>Test a store</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input id="storeInput" type="text" placeholder="Enter store code (e.g. 2ESP)" />
+        <input id="dateInput" type="date" />
+        <button id="loadBtn" style="background:#e6007e;color:#fff;padding:8px 12px;border-radius:6px;border:none;cursor:pointer">Load</button>
+      </div>
+      <div class="muted" style="margin-top:8px">This example uses monthly goals from your site (public JSON under /data/goals/<YYYY-MM>/daily-YYYY-MM.json and meta-YYYY-MM.json) or falls back to localStorage keys.</div>
+    </section>
 
-    <div id="cards" class="grid" aria-live="polite">
-      <!-- Cards will be injected here -->
-    </div>
+    <section class="card">
+      <h3>Applied goals</h3>
+      <table>
+        <tbody>
+          <tr><th>Store</th><td id="outStore">—</td></tr>
+          <tr><th>Date</th><td id="outDate">—</td></tr>
+          <tr><th>Voice</th><td id="outVoice">—</td></tr>
+          <tr><th>BTS</th><td id="outBts">—</td></tr>
+          <tr><th>TFB</th><td id="outTfb">—</td></tr>
+          <tr><th>Accessories</th><td id="outAccessories">—</td></tr>
+          <tr><th>VAF target</th><td id="outVaf">—</td></tr>
+          <tr><th>T-Life target</th><td id="outTlife">—</td></tr>
+          <tr><th>P360 target</th><td id="outP360">—</td></tr>
+        </tbody>
+      </table>
+    </section>
   </main>
 
 <script>
-(async function(){
-  // extract embedded logo from /app/dort.html if present (same approach used on index)
-  const logoImg = document.getElementById('siteLogo');
+/*
+  Summary example integration (baked in PWA):
+  - Attempts to fetch published JSON at /data/goals/<YYYY-MM>/daily-<YYYY-MM>.json and meta-<YYYY-MM>.json
+  - If fetch fails, falls back to localStorage keys monthly_goals:YYYY-MM and monthly_meta:YYYY-MM
+  - Matches the store using canonical store_code (the code portion before ':'), e.g., "2ESP"
+  - Applies daily metrics (voice, bts, tfb, accessories) and meta (global or per-store overrides)
+*/
+
+function canonicalStoreCode(full) {
+  if (!full && full !== 0) return '';
+  const s = String(full).trim();
+  const idx = s.indexOf(':');
+  if (idx > -1) return s.slice(0, idx).trim();
+  const parts = s.split(/\s+/);
+  return parts[0] || s;
+}
+
+async function fetchJson(url) {
   try {
-    const r = await fetch('/app/dort.html', {cache:'no-store'});
-    if (r.ok) {
-      const t = await r.text();
-      const m = t.match(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/);
-      if (m && m[0]) logoImg.src = m[0];
+    const r = await fetch(url, {cache: 'no-cache'});
+    if (!r.ok) throw new Error('not-found');
+    return await r.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+async function loadMonthlyDataForMonth(monthStr) {
+  // Try site-hosted files first
+  const dailyUrl = `/data/goals/${monthStr}/daily-${monthStr}.json`;
+  const metaUrl = `/data/goals/${monthStr}/meta-${monthStr}.json`;
+
+  const [dailyRemote, metaRemote] = await Promise.all([fetchJson(dailyUrl), fetchJson(metaUrl)]);
+  if (dailyRemote || metaRemote) {
+    return { daily: dailyRemote, meta: metaRemote };
+  }
+
+  // Fallback to localStorage
+  const dailyKey = 'monthly_goals:' + monthStr;
+  const metaKey = 'monthly_meta:' + monthStr;
+  const dailyStr = localStorage.getItem(dailyKey);
+  const metaStr = localStorage.getItem(metaKey);
+  const daily = dailyStr ? JSON.parse(dailyStr) : null;
+  const meta = metaStr ? JSON.parse(metaStr) : null;
+  return { daily, meta };
+}
+
+function applyToUI(storeCode, dateObj, monthly) {
+  document.getElementById('outStore').textContent = storeCode;
+  document.getElementById('outDate').textContent = dateObj.toISOString().slice(0,10);
+
+  // defaults
+  let voice = '—', bts = '—', tfb = '—', accessories = '—';
+  let vaf = '—', tlife = '—', p360 = '—';
+
+  if (monthly && monthly.daily && monthly.daily.stores) {
+    const store = monthly.daily.stores[storeCode];
+    const day = String(dateObj.getDate());
+    if (store && store.daily && store.daily[day]) {
+      const metrics = store.daily[day];
+      if (metrics.voice !== undefined) voice = metrics.voice;
+      if (metrics.bts !== undefined) bts = metrics.bts;
+      if (metrics.tfb !== undefined) tfb = metrics.tfb;
+      if (metrics.accessories !== undefined) accessories = metrics.accessories;
+    } else {
+      // no daily row for this store/day
     }
-  } catch(e){ /* ignore */ }
-
-  // meta: date/time/store
-  const metaDate = document.getElementById('metaDate');
-  const metaTime = document.getElementById('metaTime');
-  const metaStore = document.getElementById('metaStore');
-
-  function getStoreName() {
-    return localStorage.getItem('ggt.store') ||
-           (function(){
-             try {
-               const s = JSON.parse(localStorage.getItem('ggt_selection') || 'null');
-               return s && (s.store || s.store_name || s.storeName);
-             } catch(e){ return null; }
-           })() ||
-           localStorage.getItem('store') || localStorage.getItem('store_name') || 'Unknown store';
   }
 
-  function updateMeta() {
-    const now = new Date();
-    metaDate.textContent = now.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
-    metaTime.textContent = now.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit', second:'2-digit' });
-    metaStore.textContent = getStoreName();
+  // apply meta global/per-store overrides
+  if (monthly && monthly.meta && monthly.meta.global_goals) {
+    vaf = monthly.meta.global_goals.vaf !== null ? monthly.meta.global_goals.vaf : vaf;
+    tlife = monthly.meta.global_goals.tlife !== null ? monthly.meta.global_goals.tlife : tlife;
+    p360 = monthly.meta.global_goals.p360 !== null ? monthly.meta.global_goals.p360 : p360;
   }
-  updateMeta();
-  setInterval(updateMeta, 1000);
-
-  // helpers
-  function n(v){ const x = parseFloat(v); return isNaN(x)?0:x; }
-  function i(v){ const x = parseInt(v); return isNaN(x)?0:x; }
-  function money(v){ return '$' + Number(n(v)).toFixed(2); }
-  function pct(v){ return Math.round(n(v)); }
-  function ls(k){ return localStorage.getItem(k); }
-  function getOr(k, def){ const v = ls(k); return v===null ? def : v; }
-
-  function comb(ad, gd, as, gs){
-    const att = i(getOr(ad,0)) + i(getOr(as,0));
-    const goal= i(getOr(gd,0)) + i(getOr(gs,0));
-    const pctv = goal>0 ? Math.round((att/goal)*100) : 0;
-    const gap = goal - att;
-    return { att: att, goal: goal, pct: pctv, gap: gap };
+  // apply per-store override if present
+  if (monthly && monthly.meta && monthly.meta.per_store_overrides && monthly.meta.per_store_overrides[storeCode]) {
+    const o = monthly.meta.per_store_overrides[storeCode];
+    if (o.vaf !== undefined && o.vaf !== null) vaf = o.vaf;
+    if (o.tlife !== undefined && o.tlife !== null) tlife = o.tlife;
+    if (o.p360 !== undefined && o.p360 !== null) p360 = o.p360;
   }
 
-  function computeAll(){
-    const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
-    const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
-    const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
-    const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
+  document.getElementById('outVoice').textContent = voice;
+  document.getElementById('outBts').textContent = bts;
+  document.getElementById('outTfb').textContent = tfb;
+  document.getElementById('outAccessories').textContent = accessories;
+  document.getElementById('outVaf').textContent = vaf;
+  document.getElementById('outTlife').textContent = tlife;
+  document.getElementById('outP360').textContent = p360;
+}
 
-    const pOpp = i(getOr('p_opp',0));
-    const pPctIn = Math.max(0, Math.min(100, n(getOr('p_pct',0))));
-    const pAtt = Math.round(pOpp*(pPctIn/100));
-    const pTargetPct = 60;
-    const tP = pTargetPct/100;
-    const pNeed = Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
-
-    const vOpp = i(getOr('v_opp',0));
-    const vTot = n(getOr('v_total',0));
-    const vTarget = 19;
-    const needTotal = vTarget * vOpp;
-    const vGap = Math.max(0, needTotal - vTot);
-    const mrc = vOpp>0 ? (vTot/vOpp) : 0;
-
-    const cAvg = n(getOr('c_score',0));
-    const cN = i(getOr('c_surveys',0));
-    const cNeed = cAvg>=9.5 ? 0 : Math.max(0, Math.ceil(2 * cN * (9.5 - cAvg)));
-
-    const tlPct = Math.max(0, Math.min(100, n(getOr('t2_att',0))));
-    const tlOpp = i(getOr('t2_opp',0));
-    const tlSuc = Math.round(tlOpp*(tlPct/100));
-    const tlTarget = 70;
-    const tT = tlTarget/100;
-    const tlNeed = Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
-
-    const gVoice = getOr('g_voice','—');
-    const gBts   = getOr('g_bts','—');
-    const gAcc   = getOr('g_acc','—');
-    const gTfb   = getOr('g_tfb','—');
-
-    return {
-      dortsort: { voice, bts, tfb, acc },
-      p360: { pOpp, pPctIn, pAtt, pNeed, pTargetPct },
-      vaf: { vOpp, vTot, vTarget, needTotal, vGap, mrc },
-      csat: { cAvg, cN, cNeed },
-      tlife: { tlPct, tlOpp, tlSuc, tlTarget, tlNeed },
-      goals: { voice: gVoice, bts: gBts, acc: gAcc, tfb: gTfb }
-    };
+document.getElementById('loadBtn').addEventListener('click', async () => {
+  const storeCodeRaw = document.getElementById('storeInput').value.trim();
+  const dateVal = document.getElementById('dateInput').value;
+  if (!storeCodeRaw || !dateVal) {
+    alert('Enter store code (e.g. 2ESP) and a date.');
+    return;
   }
-
-  function progressClassFor(pct){
-    if (pct < 80) return 'pbar-red';
-    if (pct >= 80 && pct <= 99) return 'pbar-yellow';
-    if (pct >= 100 && pct <= 124) return 'pbar-lightgreen';
-    return 'pbar-brightgreen';
+  const storeCode = canonicalStoreCode(storeCodeRaw);
+  const dateObj = new Date(dateVal);
+  const monthStr = dateObj.toISOString().slice(0,7);
+  // load monthly data (site published preferred, fallback local)
+  const monthly = await loadMonthlyDataForMonth(monthStr);
+  // monthly: { daily: {...}, meta: {...} }
+  // if daily is remote but meta is null, try fallback meta key in localStorage
+  if (!monthly.meta) {
+    const metaKey = 'monthly_meta:' + monthStr;
+    const metaStr = localStorage.getItem(metaKey);
+    if (metaStr) monthly.meta = JSON.parse(metaStr);
   }
+  applyToUI(storeCode, dateObj, monthly);
+});
 
-  function el(tag, attrs={}, children=[]){
-    const e = document.createElement(tag);
-    for (const k in attrs){
-      if (k === 'class') e.className = attrs[k];
-      else if (k === 'text') e.textContent = attrs[k];
-      else e.setAttribute(k, attrs[k]);
-    }
-    if (!Array.isArray(children)) children = [children];
-    children.forEach(c => { if (typeof c === 'string') e.insertAdjacentHTML('beforeend', c); else if (c) e.appendChild(c); });
-    return e;
-  }
-
-  // build DORT-like subtiles (used in multiple cards)
-  function statBlock(label, att, goal, pct, gap, opts){
-    opts = opts || {};
-    const s = el('div',{class:'stat'});
-    const lbl = el('div',{class:'label'});
-    lbl.innerHTML = label;
-    s.appendChild(lbl);
-
-    const valText = opts.currency ? (money(att) + ' / ' + money(goal) + ' (' + pct + '%)') : (att + ' / ' + goal + ' (' + pct + '%)');
-    s.appendChild(el('div',{class:'value',text: valText}));
-
-    const gText = opts.currency ? money(gap) : (gap<=0?('+'+Math.abs(gap)):('-'+gap));
-    const g = el('div',{class:'gap ' + (gap<=0 ? 'good' : 'bad'), text: gText});
-    s.appendChild(g);
-
-    const p = el('div',{class:'progress'}); const i = el('i');
-    p.appendChild(i);
-    s.appendChild(p);
-    const pctNum = Number(pct) || 0;
-    i.style.width = Math.min(200, Math.max(0, pctNum)) + '%';
-    i.classList.add(progressClassFor(pctNum));
-    return { node: s, bar: i };
-  }
-
-  function render(){
-    const out = computeAll();
-    const grid = document.getElementById('cards');
-    grid.innerHTML = '';
-
-    // DORT + SORT tile (left)
-    const ds = el('section',{class:'card span-2'});
-    const head = el('div',{class:'card-head'});
-    head.appendChild(el('div',{class:'card-emoji',text:'📊'}));
-    head.appendChild(el('div',{class:'card-title',text:'DORT + SORT'}));
-    const anyGap = out.dortsort.voice.gap + out.dortsort.bts.gap + out.dortsort.tfb.gap + out.dortsort.acc.gap;
-    head.appendChild(el('div',{class:'state-pill '+(anyGap<=0 ? 'state-good' : 'state-bad'), text: anyGap <= 0 ? 'On Track' : 'Gaps'}));
-    ds.appendChild(head);
-
-    const mg = el('div',{class:'metric-grid'});
-    const v = out.dortsort.voice, b = out.dortsort.bts, t = out.dortsort.tfb, a = out.dortsort.acc;
-    const sv = statBlock('Voice', v.att, v.goal, v.pct, v.gap);
-    const sb = statBlock('BTS', b.att, b.goal, b.pct, b.gap);
-    const st = statBlock('TFB', t.att, t.goal, t.pct, t.gap);
-    const sa = statBlock('Accessories', a.att, a.goal, a.pct, a.gap, {currency: true});
-    mg.appendChild(sv.node); mg.appendChild(sb.node); mg.appendChild(st.node); mg.appendChild(sa.node);
-    ds.appendChild(mg);
-    grid.appendChild(ds);
-
-    // Revenue tile (center)
-    const rev = el('section',{class:'card span-2'});
-    const rhead = el('div',{class:'card-head'});
-    rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
-    rhead.appendChild(el('div',{class:'card-title',text:'Revenue'}));
-    rev.appendChild(rhead);
-
-    const revGrid = el('div',{class:'metric-grid'});
-    const vPercent = out.vaf.vTarget > 0 ? Math.round((out.vaf.mrc / out.vaf.vTarget) * 100) : 0;
-    const vafTile = el('div',{class:'stat'});
-    vafTile.appendChild(el('div',{class:'label',text:'VAF'}));
-    vafTile.appendChild(el('div',{class:'value',text: money(out.vaf.mrc)}));
-    vafTile.appendChild(el('div',{class:'small',text: 'Target: ' + money(out.vaf.vTarget) + ' /op • Opp: ' + out.vaf.vOpp}));
-    const vafProgress = el('div',{class:'progress'});
-    const vafBar = el('i');
-    vafBar.style.width = Math.min(200, Math.max(0, vPercent)) + '%';
-    vafBar.classList.add(progressClassFor(vPercent));
-    vafProgress.appendChild(vafBar);
-    vafTile.appendChild(vafProgress);
-    revGrid.appendChild(vafTile);
-
-    const vafGap = el('div',{class:'stat'});
-    vafGap.appendChild(el('div',{class:'label',text:'VAF Gap'}));
-    vafGap.appendChild(el('div',{class:'value',text: money(out.vaf.vGap)}));
-    vafGap.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On or above target' : 'Behind target'}));
-    revGrid.appendChild(vafGap);
-
-    const pPct = el('div',{class:'stat'});
-    pPct.appendChild(el('div',{class:'label',text:'P360 — Current %'}));
-    pPct.appendChild(el('div',{class:'value',text: (out.p360.pPctIn || 0) + '%'}));
-    pPct.appendChild(el('div',{class:'small',text: 'Attained: ' + out.p360.pAtt + ' / ' + out.p360.pOpp}));
-    const pPctProgress = el('div',{class:'progress'});
-    const pPctBar = el('i');
-    const pPctVal = Math.min(200, Math.max(0, out.p360.pPctIn || 0));
-    pPctBar.style.width = pPctVal + '%';
-    pPctBar.classList.add(progressClassFor(pPctVal));
-    pPctProgress.appendChild(pPctBar);
-    pPct.appendChild(pPctProgress);
-    revGrid.appendChild(pPct);
-
-    const pNeed = el('div',{class:'stat'});
-    pNeed.appendChild(el('div',{class:'label',text:'P360 — Adds Needed to ' + out.p360.pTargetPct + '%'}));
-    pNeed.appendChild(el('div',{class:'value',text: out.p360.pNeed}));
-    pNeed.appendChild(el('div',{class:'small',text: out.p360.pNeed > 0 ? 'Work to do' : 'On target'}));
-    revGrid.appendChild(pNeed);
-
-    rev.appendChild(revGrid);
-    grid.appendChild(rev);
-
-    // CSAT (top-right)
-    const cs = el('section',{class:'card'});
-    const csHead = el('div',{class:'card-head'});
-    csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
-    csHead.appendChild(el('div',{class:'card-title',text:'CSAT'}));
-    cs.appendChild(csHead);
-
-    const csInner = el('div',{class:'metric-grid'});
-    const csStat = el('div',{class:'stat'});
-    csStat.appendChild(el('div',{class:'label',text:'Average Score'}));
-    csStat.appendChild(el('div',{class:'value',text: (out.csat.cAvg || 0).toFixed(1) + ' / 10'}));
-    csStat.appendChild(el('div',{class:'small',text:'Surveys: '+ (out.csat.cN || 0)}));
-    csInner.appendChild(csStat);
-
-    const csNeed = el('div',{class:'stat'});
-    csNeed.appendChild(el('div',{class:'label',text:'Needed Perfect 10s'}));
-    csNeed.appendChild(el('div',{class:'value',text: out.csat.cNeed}));
-    csNeed.appendChild(el('div',{class:'small',text:'Target: 9.5'}));
-    csInner.appendChild(csNeed);
-
-    cs.appendChild(csInner);
-    grid.appendChild(cs);
-
-    // T-Life (bottom-right)
-    const tl = el('section',{class:'card'});
-    const tlH = el('div',{class:'card-head'});
-    tlH.appendChild(el('div',{class:'card-emoji',text:'📱'}));
-    tlH.appendChild(el('div',{class:'card-title',text:'T‑Life'}));
-    tl.appendChild(tlH);
-
-    const tlInner = el('div',{class:'metric-grid'});
-    const t1 = el('div',{class:'stat'});
-    t1.appendChild(el('div',{class:'label',text:'Attainment'}));
-    t1.appendChild(el('div',{class:'value',text: out.tlife.tlPct + '%'}));
-    t1.appendChild(el('div',{class:'small',text:'Target: ' + out.tlife.tlTarget + '%'}));
-    const t1p = el('div',{class:'progress'});
-    const t1bar = el('i');
-    const tPctVal = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
-    t1bar.style.width = tPctVal + '%';
-    if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) { t1bar.classList.add('pbar-brightgreen'); } else { t1bar.classList.add('pbar-red'); }
-    t1p.appendChild(t1bar); t1.appendChild(t1p);
-    tlInner.appendChild(t1);
-
-    const t2 = el('div',{class:'stat'});
-    t2.appendChild(el('div',{class:'label',text:'Needed Opportunities'}));
-    t2.appendChild(el('div',{class:'value',text: out.tlife.tlNeed}));
-    t2.appendChild(el('div',{class:'small',text: 'Opportunities: ' + out.tlife.tlOpp}));
-    tlInner.appendChild(t2);
-
-    tl.appendChild(tlInner);
-    grid.appendChild(tl);
-
-    // Daily goals (full width)
-    const goalsCard = el('section',{class:'card section-full'});
-    const ghead = el('div',{class:'card-head'});
-    ghead.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
-    ghead.appendChild(el('div',{class:'card-title',text:'Daily Goals'}));
-    goalsCard.appendChild(ghead);
-
-    const gGrid = el('div',{class:'metric-grid'});
-    const gg = out.goals;
-    function goalTile(name, emoji, value){
-      const t = el('div',{class:'stat goal'});
-      const lbl = el('div',{class:'label'});
-      lbl.innerHTML = '<span class="emoji">' + emoji + '</span> ' + name;
-      t.appendChild(lbl);
-      const displayVal = (name === 'Accessories') ? money(value) : value;
-      t.appendChild(el('div',{class:'value',text: displayVal }));
-      return t;
-    }
-
-    gGrid.appendChild(goalTile('Voice','📞', gg.voice));
-    gGrid.appendChild(goalTile('BTS','⌚', gg.bts));
-    gGrid.appendChild(goalTile('TFB','💼', gg.tfb));
-    gGrid.appendChild(goalTile('Accessories','🎧', gg.acc));
-
-    goalsCard.appendChild(gGrid);
-    grid.appendChild(goalsCard);
-
-    // color numeric gap labels where present
-    document.querySelectorAll('.gap').forEach(g => {
-      const num = parseFloat(String(g.textContent).replace(/[^0-9.-]/g,''));
-      if (isNaN(num)) return;
-      if (String(g.textContent).trim().startsWith('+')) g.classList.add('good'); else g.classList.add('bad');
-    });
-  }
-
-  // initial render
-  try { render(); } catch(e){ console.error('Summary render failed', e); document.getElementById('cards').textContent = 'An error occurred while rendering the summary. See console.'; }
-
-  // controls
-  // Open the dedicated print page in a new tab/window; that page will auto-scale and print itself
-  document.getElementById('printBtn').addEventListener('click', () => {
-    // open in a new tab/window; the print page auto-closes itself after printing where possible
-    window.open('/app/summary-print.html', '_blank');
-  });
-  document.getElementById('backBtn').addEventListener('click', () => location.href = 'goals.html');
-
-  // re-render when storage changes in other tabs
-  window.addEventListener('storage', () => { try { render(); } catch(e){} });
-
+// Pre-fill date input to today and register service worker
+(function init() {
+  const today = new Date();
+  document.getElementById('dateInput').value = today.toISOString().slice(0,10);
 })();
+
+// Register service worker (baked in)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/app/sw.js').catch(err => {
+    console.warn('ServiceWorker registration failed:', err);
+  });
+}
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.deferredPWAPrompt = e;
+});
 </script>
 </body>
 </html>
