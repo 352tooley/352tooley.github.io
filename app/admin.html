@@ -4,10 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin — Upload Daily & Monthly Goals</title>
+
+  <!-- PWA manifest + meta (baked in) -->
+  <link rel="manifest" href="/app/manifest.json">
+  <meta name="theme-color" content="#e6007e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" href="/app/icons/apple-touch-icon.png">
+
   <style>
-    :root{
-      --brand:#e6007e; --muted:#6b7280; --bg:#f7f8fa; --card:#fff;
-    }
+    :root{ --brand:#e6007e; --muted:#6b7280; --bg:#f7f8fa; --card:#fff; }
     body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);margin:0;color:#111}
     header{background:var(--card);padding:14px;border-bottom:1px solid #e6e7ea;display:flex;align-items:center;gap:14px}
     h1{margin:0;font-size:18px;color:var(--brand)}
@@ -65,12 +71,12 @@
     <section class="card" aria-labelledby="dailyHeader">
       <h2 id="dailyHeader" style="margin-top:0">Daily goals (one file for entire month)</h2>
       <div class="small" style="margin-bottom:8px">
-        Upload the daily goals spreadsheet. The parser is permissive with column names; based on your sample it will:
-        - extract store code (the portion before ":" in the Store/Location cell) as the canonical store_id,
+        Upload the daily goals spreadsheet. The parser will:
+        - extract store code (portion before ":" in the Store/Location cell) as canonical store_id,
         - parse the day from columns that contain "day" or "date",
-        - compute BTS as (any BTS columns found) and specifically will sum the two BTS components if both exist,
+        - compute BTS as the sum of any BTS columns (commonly two columns),
         - round all numeric goals UP to the nearest whole number (Math.ceil),
-        - remove any metric that rounds to 0 but keep the day if at least one metric > 0 (your Option B).
+        - remove any metric that rounds to 0 but keep the day if at least one metric > 0.
       </div>
 
       <div class="row" style="align-items:end;margin-bottom:8px">
@@ -169,7 +175,7 @@
           <li><code>global_goals</code> → object { vaf, tlife, p360 }</li>
         </ul>
         - Summary page should fetch these JSONs (or read localStorage) and for each store use the canonical store_code (portion before ":" in the store cell) to match.
-        - Rounding: all numeric figures are rounded UP (Math.ceil) and any metric that becomes 0 after rounding is omitted for that day (Option B). A day is kept if at least one metric > 0.
+        - Rounding: all numeric figures are rounded UP (Math.ceil) and any metric that becomes 0 after rounding is omitted for that day (Option B).
       </div>
     </section>
   </main>
@@ -179,16 +185,11 @@
   </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- Admin logic (unchanged) -->
 <script>
-/*
-  Updated admin:
-  - Canonical store id = code portion before ":" in the store/location field (e.g. "2ESP: Dacula" -> "2ESP")
-  - Numeric rounding: round UP (Math.ceil) for voice, bts, tfb, accessories
-  - BTS = sum of any fields whose header contains 'bts' (commonly two columns) then rounded up
-  - Remove any metric that rounds to 0 (Option B). Keep day entry if at least one metric remains.
-  - Save daily JSON to localStorage key: monthly_goals:YYYY-MM
-  - Save meta JSON to localStorage key: monthly_meta:YYYY-MM and global_goals shorthand
-*/
+/* Full admin script (parsing, preview, save, publish) — unchanged logic from previous admin version.
+   The script below includes the complete file-reading/parsing/publish behavior and works with the baked-in PWA. */
 
 function $(id){ return document.getElementById(id); }
 
@@ -269,7 +270,6 @@ function parseNumberRaw(v) {
   if (v === null || v === undefined || v === '') return 0;
   if (typeof v === 'number') return v;
   const s = String(v).trim();
-  // remove $ , parentheses etc
   const cleaned = s.replace(/\((.*)\)/, '-$1').replace(/[^0-9.\-]/g, '');
   const num = parseFloat(cleaned);
   return isNaN(num) ? 0 : num;
@@ -277,18 +277,14 @@ function parseNumberRaw(v) {
 
 function ceilOrZero(v) {
   const n = parseNumberRaw(v);
-  // If parsed numeric is 0 or < 1 then ceil will return 0 or 1 depending on value.
-  // We use Math.ceil so any fractional becomes next whole, zero stays zero.
   return Math.ceil(n);
 }
 
 function extractStoreCode(full) {
   if (!full && full !== 0) return '';
   const s = String(full).trim();
-  // If there is a colon, take the portion before colon
   const idx = s.indexOf(':');
   if (idx > -1) return s.slice(0, idx).trim();
-  // else maybe store code is the first token before space
   const parts = s.split(/\s+/);
   return parts[0] || s;
 }
@@ -298,15 +294,12 @@ function extractStoreName(full) {
   const s = String(full).trim();
   const idx = s.indexOf(':');
   if (idx > -1) return s.slice(idx + 1).trim();
-  // fallback: remove code-like prefix if looks like code
   const parts = s.split(/\s+/);
   if (parts.length > 1) return parts.slice(1).join(' ');
   return s;
 }
 
 function classifyHeaders(sampleRow) {
-  // Input is an object with original headers keys -> sample values.
-  // We'll build a map of headerKey -> role
   const map = {};
   const btsKeys = [];
   Object.keys(sampleRow).forEach(k => {
@@ -334,36 +327,30 @@ function normalizeDailyRows(rows) {
   const headerMap = classifyHeaders(rows[0]);
 
   rows.forEach(r => {
-    // normalize keys to original header strings since classify returned actual keys
     const row = {};
     Object.keys(r).forEach(k => row[k.trim()] = r[k]);
 
-    // get store cell via headerMap.store or fallback scanning
     let storeCell = null;
     if (headerMap.store && row[headerMap.store] !== undefined) storeCell = row[headerMap.store];
     else {
-      // fallback: find any key with 'store' or 'location'
       for (const k of Object.keys(row)) {
         const lk = k.toLowerCase();
         if (lk.includes('store') || lk.includes('location') || lk.includes('store_sap')) { storeCell = row[k]; break; }
       }
     }
-    if (!storeCell) return; // skip rows without store
+    if (!storeCell) return;
 
     const storeCode = extractStoreCode(storeCell);
     const storeName = extractStoreName(storeCell);
 
-    // parse area/region/district if available
     const area = headerMap.area ? row[headerMap.area] : (row['Area'] || row['area'] || '');
     const region = headerMap.region ? row[headerMap.region] : (row['Region'] || row['region'] || '');
     const district = headerMap.district ? row[headerMap.district] : (row['District'] || row['district'] || '');
 
-    // parse day (accept either day-of-month or full date)
     let dayVal = null;
     if (headerMap.day && row[headerMap.day] !== undefined) {
       const raw = row[headerMap.day];
       if (raw === null || raw === '') { return; }
-      // if raw looks like a date string parse it
       const maybe = new Date(raw);
       if (!isNaN(maybe) && (String(raw).includes('/') || String(raw).includes('-'))) {
         dayVal = maybe.getDate();
@@ -371,7 +358,6 @@ function normalizeDailyRows(rows) {
         dayVal = parseInt(String(raw).trim(), 10);
       }
     } else {
-      // fallback: try to find any header that looks like date/day
       for (const k of Object.keys(row)) {
         const lk = k.toLowerCase();
         if (lk.includes('day') || lk.includes('date') || lk.includes('target day')) {
@@ -388,31 +374,26 @@ function normalizeDailyRows(rows) {
     }
     if (!dayVal || dayVal < 1 || dayVal > 31) return;
 
-    // voice
     let voiceRaw = 0;
     if (headerMap.voice && row[headerMap.voice] !== undefined) voiceRaw = row[headerMap.voice];
     else {
-      // fallback: find any header with 'voice' that isn't 'bts'
       for (const k of Object.keys(row)) {
         const lk = k.toLowerCase();
         if (lk.includes('voice') && !lk.includes('bts')) { voiceRaw = row[k]; break; }
       }
     }
 
-    // BTS parts: sum any header containing 'bts'
     let btsSum = 0;
     if (headerMap.btsParts && headerMap.btsParts.length) {
       headerMap.btsParts.forEach(k => {
         if (row[k] !== undefined) btsSum += parseNumberRaw(row[k]);
       });
     } else {
-      // fallback: scan all headers for 'bts'
       for (const k of Object.keys(row)) {
         if (k.toLowerCase().includes('bts')) btsSum += parseNumberRaw(row[k]);
       }
     }
 
-    // accessories
     let accessoriesRaw = 0;
     if (headerMap.accessories && row[headerMap.accessories] !== undefined) accessoriesRaw = row[headerMap.accessories];
     else {
@@ -422,27 +403,22 @@ function normalizeDailyRows(rows) {
       }
     }
 
-    // Optionally, parse TFB column if present (some sheets may have TFB separate)
     let tfbRaw = 0;
     for (const k of Object.keys(row)) {
       const lk = k.toLowerCase();
       if (lk.includes('tfb') && !lk.includes('voice') && !lk.includes('bts')) { tfbRaw = row[k]; break; }
     }
 
-    // Apply rounding UP (Math.ceil) per your instruction
     const voice = Math.ceil(parseNumberRaw(voiceRaw));
     const bts = Math.ceil(btsSum);
     const tfb = Math.ceil(parseNumberRaw(tfbRaw));
     const accessories = Math.ceil(parseNumberRaw(accessoriesRaw));
 
-    // Build metric object but omit any metric that is 0 (Option B)
     const metrics = {};
     if (voice > 0) metrics.voice = voice;
     if (bts > 0) metrics.bts = bts;
     if (tfb > 0) metrics.tfb = tfb;
     if (accessories > 0) metrics.accessories = accessories;
-
-    // If all metrics are zero, skip this day (Option B)
     if (Object.keys(metrics).length === 0) return;
 
     if (!stores[storeCode]) stores[storeCode] = {
@@ -509,7 +485,6 @@ saveDailyLocalBtn.addEventListener('click', () => {
 /* ---------- Meta / monthly handlers ---------- */
 
 function normalizeMetaRows(rows) {
-  // rows may be an array (sheet rows) or an object (already JSON)
   const result = {
     month: null,
     generated_at: (new Date()).toISOString(),
@@ -519,28 +494,23 @@ function normalizeMetaRows(rows) {
   if (!rows) return result;
 
   if (!Array.isArray(rows) && typeof rows === 'object') {
-    // already meta JSON: copy through but ensure structure
     result.month = rows.month || result.month;
     result.global_goals = rows.global_goals || result.global_goals;
     result.per_store_overrides = rows.per_store_overrides || {};
     return result;
   }
 
-  // If array: try to detect if first row contains global keys, and/or rows include per-store overrides
   const first = rows[0] || {};
-  // normalize keys
   const lowerFirst = {};
   Object.keys(first).forEach(k => lowerFirst[k.trim().toLowerCase()] = first[k]);
 
   const hasGlobal = ('vaf' in lowerFirst) || ('tlife' in lowerFirst) || ('p360' in lowerFirst);
-  // detect if rows have store_id column
   const hasStoreId = rows.some(r => {
     const lk = Object.keys(r).map(x => x.toLowerCase());
     return lk.some(k => k.includes('store_id') || k.includes('store') || k.includes('location'));
   });
 
   if (!hasStoreId && hasGlobal) {
-    // treat first row as global
     result.global_goals.vaf = lowerFirst['vaf'] !== undefined ? Number(lowerFirst['vaf']) : null;
     result.global_goals.tlife = lowerFirst['tlife'] !== undefined ? Number(lowerFirst['tlife']) : null;
     result.global_goals.p360 = lowerFirst['p360'] !== undefined ? Number(lowerFirst['p360']) : null;
@@ -548,7 +518,6 @@ function normalizeMetaRows(rows) {
   }
 
   if (hasStoreId) {
-    // build per-store overrides
     rows.forEach(r => {
       const lower = {};
       Object.keys(r).forEach(k => lower[k.trim().toLowerCase()] = r[k]);
@@ -563,7 +532,6 @@ function normalizeMetaRows(rows) {
     return result;
   }
 
-  // fallback: return empty meta
   return result;
 }
 
@@ -575,7 +543,6 @@ loadMetaBtn.addEventListener('click', async () => {
     const f = metaFile.files[0];
     const monthVal = monthMeta.value;
     if (!monthVal) { show(metaStatus, 'Select target month (YYYY-MM)', 'error'); return; }
-    // if no file is provided, build meta from the global inputs
     if (!f) {
       metaJson = {
         month: monthVal,
@@ -596,12 +563,10 @@ loadMetaBtn.addEventListener('click', async () => {
       return;
     }
 
-    // parse provided file
     const rows = await readFile(f);
     const normalized = normalizeMetaRows(rows);
     normalized.month = monthVal;
     normalized.generated_at = (new Date()).toISOString();
-    // fill any missing global values from the inputs
     normalized.global_goals.vaf = (normalized.global_goals.vaf !== null && normalized.global_goals.vaf !== undefined) ? normalized.global_goals.vaf : (vafInput.value ? Number(vafInput.value) : null);
     normalized.global_goals.tlife = (normalized.global_goals.tlife !== null && normalized.global_goals.tlife !== undefined) ? normalized.global_goals.tlife : (tlifeInput.value ? Number(tlifeInput.value) : null);
     normalized.global_goals.p360 = (normalized.global_goals.p360 !== null && normalized.global_goals.p360 !== undefined) ? normalized.global_goals.p360 : (p360Input.value ? Number(p360Input.value) : null);
@@ -634,7 +599,6 @@ saveMetaLocalBtn.addEventListener('click', () => {
     const key = 'monthly_meta:' + metaJson.month;
     localStorage.setItem(key, JSON.stringify(metaJson));
     localStorage.setItem('monthly_meta:current', key);
-    // also write global_goals shorthand
     localStorage.setItem('global_goals', JSON.stringify(metaJson.global_goals));
     if (metaJson.global_goals) {
       if (metaJson.global_goals.tlife !== null && metaJson.global_goals.tlife !== undefined) localStorage.setItem('global_tlife', String(metaJson.global_goals.tlife));
@@ -657,7 +621,6 @@ async function publishFileToGitHub(ownerRepo, targetPath, filename, contentBase6
   const [owner, repo] = ownerRepo.split('/');
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(targetPath + filename)}`;
   const headers = { Authorization: 'token ' + pat, Accept: 'application/vnd.github.v3+json' };
-  // check if exists for sha
   let sha = null;
   const exists = await fetch(url, { headers });
   if (exists.status === 200) {
@@ -727,6 +690,19 @@ publishBothBtn.addEventListener('click', async () => {
     }
   } catch(e){}
 })();
+</script>
+
+<!-- Register service worker (baked in) -->
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/app/sw.js').catch(err => {
+      console.warn('ServiceWorker registration failed:', err);
+    });
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPWAPrompt = e;
+  });
 </script>
 </body>
 </html>
