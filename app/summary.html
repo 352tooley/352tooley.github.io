@@ -14,6 +14,10 @@
       --bad: #dc2626;    /* red */
       --neutral: #64748b;/* slate */
       --accent: #111827;
+      --yellow: #eab308;
+      --light-green: #86efac;
+      --bright-green: #16a34a;
+      --red: #ef4444;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;padding:0;background:var(--page-bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,sans-serif;color:var(--accent);}
@@ -56,22 +60,37 @@
     .card-head{display:flex;align-items:center;gap:10px}
     .card-emoji{font-size:26px}
     .card-title{font-weight:800;font-size:16px}
-    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+    /* Use the same metric-grid everywhere so sub-tiles match; stretch tiles to equal heights */
+    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;align-items:stretch}
+    @media (max-width:640px){ .metric-grid{grid-template-columns:1fr} }
+
+    /* unified stat tile used by all small tiles */
     .stat{
       background:linear-gradient(180deg,#fff,#fbfdff);
-      border-radius:10px;padding:12px;border:1px solid #f0f3f7;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+      border-radius:10px;padding:12px;border:1px solid #f0f3f7;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;
+      height:100%;
       min-height:86px;
     }
-    .stat .label{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .stat .label{font-size:13px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .stat .label .emoji { font-size:16px; }
     .stat .value{font-weight:900;margin-top:0;font-size:18px;color:var(--accent)}
     .gap{font-weight:800;margin-top:6px}
     .gap.good{color:var(--good)}
     .gap.bad{color:var(--bad)}
     .progress{
-      height:10px;border-radius:999px;background:#eef2f7;overflow:hidden;margin-top:8px;width:100%;
+      height:10px;border-radius:999px;background:#eef2f7;overflow:hidden;margin-top:10px;width:100%;
     }
-    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#ff6ba8);width:0%;border-radius:999px}
-    .small{font-size:12px;color:var(--muted)}
+    .progress > i{display:block;height:100%;width:0%;border-radius:999px;transition:width .6s ease, background-color .3s ease}
+    .pbar-red{ background: linear-gradient(90deg, rgba(239,68,68,1), rgba(239,68,68,0.85)); }
+    .pbar-yellow{ background: linear-gradient(90deg, rgba(234,179,8,1), rgba(234,179,8,0.9)); }
+    .pbar-lightgreen{ background: linear-gradient(90deg, rgba(134,239,172,1), rgba(134,239,172,0.9)); }
+    .pbar-brightgreen{ background: linear-gradient(90deg, rgba(22,163,74,1), rgba(22,163,74,0.9)); }
+
+    /* goal tile specific: center content and enlarge number */
+    .stat.goal{ display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; }
+    .stat.goal .value{ font-size:40px; line-height:1; margin:0; }
+
+    .small{font-size:12px;color:var(--muted);margin-top:6px}
     .section-full{grid-column:1/-1}
     /* print colors */
     @media print{
@@ -85,7 +104,7 @@
     .state-good{background:var(--good)}
     .state-bad{background:var(--bad)}
     .state-neutral{background:var(--neutral)}
-    .footer-note{color:var(--muted);font-size:13px;text-align:center;margin-top:12px}
+    .footer-note{color:var(--muted);font-size:13px;text-align:center;margin-top:12px; display:none;} /* hidden per request */
   </style>
 </head>
 <body>
@@ -98,14 +117,11 @@
     <div class="top-actions">
       <button class="btn" id="printBtn">🖨 Print</button>
       <button class="btn secondary" id="backBtn">← Back</button>
-      <button class="btn secondary" id="sampleBtn">⚙️ Use Sample Data</button>
     </div>
 
     <div id="cards" class="grid" aria-live="polite">
       <!-- Cards will be injected here -->
     </div>
-
-    <div class="footer-note">Values are calculated from the data saved in this browser. Missing values are treated as 0.</div>
   </main>
 
 <script>
@@ -183,6 +199,15 @@
     };
   }
 
+  // progress color class mapping per requested thresholds
+  function progressClassFor(pct){
+    if (pct < 80) return 'pbar-red';
+    if (pct >= 80 && pct <= 99) return 'pbar-yellow';
+    if (pct >= 100 && pct <= 124) return 'pbar-lightgreen';
+    return 'pbar-brightgreen';
+  }
+
+  // create element helper
   function el(tag, attrs={}, children=[]){
     const e = document.createElement(tag);
     for (const k in attrs){
@@ -193,6 +218,32 @@
     if (!Array.isArray(children)) children = [children];
     children.forEach(c => { if (typeof c === 'string') e.insertAdjacentHTML('beforeend', c); else if (c) e.appendChild(c); });
     return e;
+  }
+
+  // unified statBlock builder (for DORT+SORT subtiles)
+  // supports currency formatting when opts.currency === true
+  function statBlock(label, att, goal, pct, gap, opts){
+    opts = opts || {};
+    const s = el('div',{class:'stat'});
+    const lbl = el('div',{class:'label'});
+    lbl.innerHTML = label;
+    s.appendChild(lbl);
+
+    const valText = opts.currency ? (money(att) + ' / ' + money(goal) + ' (' + pct + '%)') : (att + ' / ' + goal + ' (' + pct + '%)');
+    s.appendChild(el('div',{class:'value',text: valText}));
+
+    const gText = opts.currency ? money(gap) : (gap<=0?('+'+Math.abs(gap)):('-'+gap));
+    const g = el('div',{class:'gap ' + (gap<=0 ? 'good' : 'bad'), text: gText});
+    s.appendChild(g);
+
+    // progress
+    const p = el('div',{class:'progress'}); const i = el('i');
+    p.appendChild(i);
+    s.appendChild(p);
+    const pctNum = Number(pct) || 0;
+    i.style.width = Math.min(200, Math.max(0, pctNum)) + '%';
+    i.classList.add(progressClassFor(pctNum));
+    return { node: s, bar: i };
   }
 
   function render(){
@@ -210,33 +261,17 @@
     ds.appendChild(head);
 
     const mg = el('div',{class:'metric-grid'});
-    function statBlock(label, att, goal, pct, gap){
-      const s = el('div',{class:'stat'});
-      s.appendChild(el('div',{class:'label',text:label}));
-      s.appendChild(el('div',{class:'value',text: att + ' / ' + goal + ' (' + pct + '%)'}));
-      const g = el('div',{class:'gap '+(gap<=0 ? 'good' : 'bad'), text:(gap<=0?('+'+Math.abs(gap)):('-'+gap))});
-      s.appendChild(g);
-      const p = el('div',{class:'progress'}); const i = el('i'); p.appendChild(i);
-      s.appendChild(p);
-      return { node: s, bar: i };
-    }
-
     const v = out.dortsort.voice, b = out.dortsort.bts, t = out.dortsort.tfb, a = out.dortsort.acc;
     const sv = statBlock('Voice', v.att, v.goal, v.pct, v.gap);
     const sb = statBlock('BTS', b.att, b.goal, b.pct, b.gap);
     const st = statBlock('TFB', t.att, t.goal, t.pct, t.gap);
-    const sa = statBlock('Accessories', a.att, a.goal, a.pct, a.gap);
-
-    mg.appendChild(sv.node); mg.appendChild(sb.node);
-    mg.appendChild(st.node); mg.appendChild(sa.node);
+    // Accessories should always show $ prefix
+    const sa = statBlock('Accessories', a.att, a.goal, a.pct, a.gap, {currency: true});
+    mg.appendChild(sv.node); mg.appendChild(sb.node); mg.appendChild(st.node); mg.appendChild(sa.node);
     ds.appendChild(mg);
-    sv.bar.style.width = Math.min(100, Math.max(0, v.pct)) + '%';
-    sb.bar.style.width = Math.min(100, Math.max(0, b.pct)) + '%';
-    st.bar.style.width = Math.min(100, Math.max(0, t.pct)) + '%';
-    sa.bar.style.width = Math.min(100, Math.max(0, a.pct)) + '%';
     grid.appendChild(ds);
 
-    // Revenue card: four sub cards matching .stat styling (same size as dort+sort sub cards)
+    // Revenue card: four uniform subtiles (same .stat tiles). Removed progress bars on VAF Gap and P360 Adds as requested.
     const rev = el('section',{class:'card'});
     const rhead = el('div',{class:'card-head'});
     rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
@@ -245,19 +280,27 @@
 
     const revGrid = el('div',{class:'metric-grid'});
 
-    // VAF value tile
+    // VAF tile: percent to target = (mrc / vTarget) * 100
+    const vPercent = out.vaf.vTarget > 0 ? Math.round((out.vaf.mrc / out.vaf.vTarget) * 100) : 0;
     const vafTile = el('div',{class:'stat'});
-    vafTile.appendChild(el('div',{class:'label',text:'VAF'}));
+    const vafLabel = el('div',{class:'label'});
+    vafLabel.innerHTML = 'VAF';
+    vafTile.appendChild(vafLabel);
     vafTile.appendChild(el('div',{class:'value',text: money(out.vaf.mrc)}));
     vafTile.appendChild(el('div',{class:'small',text: 'Target: ' + money(out.vaf.vTarget) + ' /op • Opp: ' + out.vaf.vOpp}));
+    const vafProgress = el('div',{class:'progress'});
+    const vafBar = el('i');
+    vafBar.style.width = Math.min(200, Math.max(0, vPercent)) + '%';
+    vafBar.classList.add(progressClassFor(vPercent));
+    vafProgress.appendChild(vafBar);
+    vafTile.appendChild(vafProgress);
     revGrid.appendChild(vafTile);
 
-    // VAF gap tile
+    // VAF Gap tile: NO progress bar per request
     const vafGap = el('div',{class:'stat'});
     vafGap.appendChild(el('div',{class:'label',text:'VAF Gap'}));
     vafGap.appendChild(el('div',{class:'value',text: money(out.vaf.vGap)}));
     vafGap.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On or above target' : 'Behind target'}));
-    if (out.vaf.vGap <= 0) vafGap.querySelector('.value').classList.add('good'); else vafGap.querySelector('.value').classList.add('bad');
     revGrid.appendChild(vafGap);
 
     // P360 percent tile
@@ -265,9 +308,16 @@
     pPct.appendChild(el('div',{class:'label',text:'P360 — Current %'}));
     pPct.appendChild(el('div',{class:'value',text: (out.p360.pPctIn || 0) + '%'}));
     pPct.appendChild(el('div',{class:'small',text: 'Attained: ' + out.p360.pAtt + ' / ' + out.p360.pOpp}));
+    const pPctProgress = el('div',{class:'progress'});
+    const pPctBar = el('i');
+    const pPctVal = Math.min(200, Math.max(0, out.p360.pPctIn || 0));
+    pPctBar.style.width = pPctVal + '%';
+    pPctBar.classList.add(progressClassFor(pPctVal));
+    pPctProgress.appendChild(pPctBar);
+    pPct.appendChild(pPctProgress);
     revGrid.appendChild(pPct);
 
-    // P360 adds needed tile
+    // P360 adds-needed tile: NO progress bar per request
     const pNeed = el('div',{class:'stat'});
     pNeed.appendChild(el('div',{class:'label',text:'P360 — Adds Needed to ' + out.p360.pTargetPct + '%'}));
     pNeed.appendChild(el('div',{class:'value',text: out.p360.pNeed}));
@@ -277,7 +327,7 @@
     rev.appendChild(revGrid);
     grid.appendChild(rev);
 
-    // CSAT card
+    // CSAT card (tiles will stretch to match T-Life tiles because metric-grid align-items:stretch)
     const cs = el('section',{class:'card'});
     const csHead = el('div',{class:'card-head'});
     csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
@@ -300,7 +350,7 @@
     cs.appendChild(csInner);
     grid.appendChild(cs);
 
-    // T-Life card
+    // T-Life card with special progress color rule: if at target = green, if below = red
     const tl = el('section',{class:'card'});
     const tlH = el('div',{class:'card-head'});
     tlH.appendChild(el('div',{class:'card-emoji',text:'📱'}));
@@ -312,6 +362,18 @@
     t1.appendChild(el('div',{class:'label',text:'Attainment'}));
     t1.appendChild(el('div',{class:'value',text: out.tlife.tlPct + '%'}));
     t1.appendChild(el('div',{class:'small',text:'Target: ' + out.tlife.tlTarget + '%'}));
+    // T-Life progress: green only if at-or-above target, red if below
+    const t1p = el('div',{class:'progress'});
+    const t1bar = el('i');
+    const tPctVal = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
+    t1bar.style.width = tPctVal + '%';
+    if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) {
+      t1bar.classList.add('pbar-brightgreen');
+    } else {
+      t1bar.classList.add('pbar-red');
+    }
+    t1p.appendChild(t1bar);
+    t1.appendChild(t1p);
     tlInner.appendChild(t1);
 
     const t2 = el('div',{class:'stat'});
@@ -323,7 +385,7 @@
     tl.appendChild(tlInner);
     grid.appendChild(tl);
 
-    // Daily goals card (now split into sub-cards matching .stat)
+    // Daily goals card (split into sub-cards matching .stat) with emojis and centered large numbers
     const goalsCard = el('section',{class:'card'});
     goalsCard.classList.add('section-full');
     const ghead = el('div',{class:'card-head'});
@@ -334,26 +396,29 @@
     const gGrid = el('div',{class:'metric-grid'});
     const gg = out.goals;
 
-    function goalTile(name, value){
-      const t = el('div',{class:'stat'});
-      t.appendChild(el('div',{class:'label',text:name}));
-      t.appendChild(el('div',{class:'value',text: value }));
+    function goalTile(name, emoji, value){
+      const t = el('div',{class:'stat goal'});
+      const lbl = el('div',{class:'label'});
+      lbl.innerHTML = '<span class="emoji">' + emoji + '</span> ' + name;
+      t.appendChild(lbl);
+      const displayVal = (name === 'Accessories') ? money(value) : value;
+      t.appendChild(el('div',{class:'value',text: displayVal }));
       return t;
     }
 
-    gGrid.appendChild(goalTile('Voice', gg.voice));
-    gGrid.appendChild(goalTile('BTS', gg.bts));
-    gGrid.appendChild(goalTile('TFB', gg.tfb));
-    gGrid.appendChild(goalTile('Accessories', gg.acc));
+    gGrid.appendChild(goalTile('Voice','📞', gg.voice));
+    gGrid.appendChild(goalTile('BTS','⌚', gg.bts));
+    gGrid.appendChild(goalTile('TFB','💼', gg.tfb));
+    gGrid.appendChild(goalTile('Accessories','🎧', gg.acc));
 
     goalsCard.appendChild(gGrid);
     grid.appendChild(goalsCard);
 
     // color numeric gap labels where present
     document.querySelectorAll('.gap').forEach(g => {
-      const num = parseFloat(g.textContent.replace(/[+,]/g,''));
+      const num = parseFloat(String(g.textContent).replace(/[^0-9.-]/g,''));
       if (isNaN(num)) return;
-      if (g.textContent.trim().startsWith('+')) g.classList.add('good'); else g.classList.add('bad');
+      if (String(g.textContent).trim().startsWith('+')) g.classList.add('good'); else g.classList.add('bad');
     });
   }
 
@@ -363,22 +428,8 @@
   // controls
   document.getElementById('printBtn').addEventListener('click', () => window.print());
   document.getElementById('backBtn').addEventListener('click', () => location.href = 'goals.html');
-  document.getElementById('sampleBtn').addEventListener('click', () => {
-    try {
-      localStorage.setItem('d_v_att','10'); localStorage.setItem('d_v_goal','15'); localStorage.setItem('s_v_att','3'); localStorage.setItem('s_v_goal','5');
-      localStorage.setItem('d_b_att','4'); localStorage.setItem('d_b_goal','6'); localStorage.setItem('s_b_att','1'); localStorage.setItem('s_b_goal','2');
-      localStorage.setItem('d_t_att','8'); localStorage.setItem('d_t_goal','10'); localStorage.setItem('s_t_att','2'); localStorage.setItem('s_t_goal','3');
-      localStorage.setItem('d_a_att','5'); localStorage.setItem('d_a_goal','6'); localStorage.setItem('s_a_att','1'); localStorage.setItem('s_a_goal','1');
-      localStorage.setItem('p_opp','20'); localStorage.setItem('p_pct','45');
-      localStorage.setItem('v_opp','30'); localStorage.setItem('v_total','350');
-      localStorage.setItem('c_score','9.2'); localStorage.setItem('c_surveys','8');
-      localStorage.setItem('t2_att','55'); localStorage.setItem('t2_opp','50');
-      localStorage.setItem('g_voice','5'); localStorage.setItem('g_bts','3'); localStorage.setItem('g_acc','4'); localStorage.setItem('g_tfb','2');
-      render();
-      alert('Sample data applied — the summary has been updated.');
-    } catch(e){ console.warn('sample data set failed', e); }
-  });
 
+  // re-render on storage events from other tabs
   window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
 })();
