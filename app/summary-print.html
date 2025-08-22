@@ -10,21 +10,53 @@
       --good:#16a34a; --bad:#ef4444; --yellow:#eab308;
       --card-bg:#fff;
     }
-    html,body{height:100%;margin:0;padding:0;background:#fff;color:var(--accent);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
-    /* Page container sized for a portrait page (A4 portrait by default) */
+
+    /* Important: set page to portrait A4 and zero margins so content uses the full sheet.
+       Most browsers will still add their own headers/footers unless the user disables them
+       in the print dialog. */
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      padding:0;
+      background:#fff;
+      color:var(--accent);
+      font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    }
+
+    /* Page container sized for portrait paper; we set padding to simulate a safe margin */
     .page {
-      width: 210mm;      /* A4 width in mm - portrait */
-      height: 297mm;     /* A4 height in mm */
-      padding: 12mm;
+      width: 210mm;      /* A4 portrait */
+      height: 297mm;
+      /* use a small internal padding — this is printed area padding, not browser header */
+      padding: 8mm;
       box-sizing: border-box;
       margin: 0 auto;
       background: #fff;
     }
 
-    header { text-align:center; margin-bottom:8px; }
-    .logo { max-height:78px; display:block; margin: 0 auto 6px; object-fit:contain; }
-    .meta { display:flex; justify-content:center; gap:18px; color:var(--muted); font-size:12px; margin-bottom:6px; flex-wrap:wrap; }
-    .meta div { min-width:110px; text-align:center; }
+    /* on-screen reminder to disable headers/footers; hide in print */
+    .print-reminder {
+      background: #fff8e1;
+      border: 1px solid #f0d58c;
+      color: #5a4b00;
+      padding: 10px;
+      border-radius: 6px;
+      font-size:13px;
+      max-width:980px;
+      margin: 8px auto;
+      text-align:center;
+    }
+    @media print { .print-reminder { display:none !important; } }
+
+    header { text-align:center; margin-bottom:6px; }
+    .logo { max-height:68px; display:block; margin: 0 auto 6px; object-fit:contain; }
+    .meta { display:flex; justify-content:center; gap:18px; color:var(--muted); font-size:11px; margin-bottom:6px; flex-wrap:wrap; }
+    .meta div { min-width:100px; text-align:center; }
 
     /* portrait-friendly compact grid */
     .grid {
@@ -32,16 +64,16 @@
       grid-template-columns: 1fr 1fr;
       gap:8px;
     }
-    .span-2 { grid-column: 1 / -1; } /* for full-width rows */
+    .span-2 { grid-column: 1 / -1; }
 
     .card {
       background:var(--card-bg);
-      border-radius:8px;
+      border-radius:6px;
       padding:8px;
       border:1px solid #eceff2;
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:6px;
     }
     .card-head{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
     .card-emoji{font-size:18px}
@@ -49,13 +81,13 @@
 
     .stat {
       background:linear-gradient(#fff,#fbfdff);
-      border-radius:8px;
+      border-radius:6px;
       padding:8px;
       border:1px solid #f1f5f9;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
-      min-height:64px;
+      min-height:60px;
     }
     .label{font-size:11px;color:var(--muted); margin-bottom:6px}
     .value{font-weight:800;font-size:13px}
@@ -70,14 +102,23 @@
 
     .full-row { grid-column: 1 / -1; }
 
+    /* Force color output in supported browsers */
     @media print {
-      body, .page { background: #fff; color: #000; }
       * { -webkit-print-color-adjust: exact; color-adjust: exact; }
+      body, .page { background: #fff; color: #000; }
       .card { box-shadow: none; }
+      /* make sure the page uses the full paper width in print */
+      html,body { width: 100%; height: 100%; }
     }
   </style>
 </head>
 <body>
+  <!-- On-screen instruction (NOT printed) -->
+  <div class="print-reminder" id="printReminder" role="status" aria-live="polite">
+    Heads-up: Some browsers add page headers/footers (URL, date, page numbers). To remove them, open the print dialog and turn off "Headers and footers" (often under "More settings").
+    <div style="margin-top:6px;font-size:12px;color:#333;">Quick steps: Chrome/Edge — Print → More settings → uncheck "Headers and footers". Firefox — Print → Page Setup → Margins & Header/Footer → set all header/footer fields to "—".</div>
+  </div>
+
   <div class="page" id="printPage">
     <header>
       <img id="siteLogo" class="logo" src="/logo-256.png" alt="Company logo">
@@ -97,9 +138,8 @@
 
 <script>
 (function(){
-  // mm->px approximate at 96dpi
+  // small helpers
   const mmToPx = 3.7795275591;
-
   function n(v){ const x=parseFloat(v); return isNaN(x)?0:x; }
   function i(v){ const x=parseInt(v); return isNaN(x)?0:x; }
   function money(v){ return '$' + Number(n(v)).toFixed(2); }
@@ -114,7 +154,7 @@
     return localStorage.getItem('store') || localStorage.getItem('store_name') || 'Unknown store';
   }
 
-  // reuse embedded logo if present
+  // attempt to reuse embedded logo if present
   (async function tryLogo(){
     const logo = document.getElementById('siteLogo');
     try {
@@ -236,7 +276,7 @@
     ds.appendChild(mg);
     grid.appendChild(ds);
 
-    // Revenue (right of DORT)
+    // Revenue (right)
     const rev = el('section',{class:'card'});
     const rhead = el('div',{class:'card-head'});
     rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
@@ -333,7 +373,7 @@
     grid.appendChild(goals);
   }
 
-  // meta updates
+  // meta updates (date/time/store)
   function updateMeta(){
     const now = new Date();
     document.getElementById('metaDate').textContent = now.toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'});
@@ -341,9 +381,9 @@
     document.getElementById('metaStore').textContent = getStoreName();
   }
 
-  // scale-to-fit logic for portrait A4 printable area, then print
+  // compute scale for portrait A4 printable area and apply
   function computeScaleToFit(){
-    const paperWmm = 210, paperHmm = 297, marginMm = 12;
+    const paperWmm = 210, paperHmm = 297, marginMm = 8; // internal padding used above
     const availW = (paperWmm - 2*marginMm) * mmToPx;
     const availH = (paperHmm - 2*marginMm) * mmToPx;
 
@@ -370,15 +410,17 @@
   updateMeta();
   render();
 
-  // allow fonts/images to load, then auto-scale and print
+  // Wait briefly for fonts/images, then scale and call print dialog
   setTimeout(() => {
     updateMeta();
     const scale = computeScaleToFit();
     applyScale(scale);
+
+    // show only if running in interactive window (when user opened summary and clicked print)
     setTimeout(() => {
       try { window.print(); } catch(e){ console.error(e); }
-      // attempt to close if opened by summary page
-      setTimeout(()=> { try { window.close(); } catch(e){} }, 800);
+      // try to close the print window if it was opened by the summary page
+      setTimeout(()=> { try { window.close(); } catch(e){} }, 900);
     }, 300);
   }, 240);
 
