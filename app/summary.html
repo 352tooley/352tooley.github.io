@@ -10,9 +10,8 @@
       --card-bg: #ffffff;
       --page-bg: #f5f6f8;
       --muted: #6b7280;
-      --good: #16a34a;   /* green */
-      --bad: #dc2626;    /* red */
-      --neutral: #64748b;/* slate */
+      --good: #16a34a;
+      --bad: #dc2626;
       --accent: #111827;
       --yellow: #eab308;
       --light-green: #86efac;
@@ -26,45 +25,62 @@
       border-bottom:1px solid #e8e8ed;
       padding:12px 16px;
       display:flex;
+      flex-direction:column;
       align-items:center;
-      justify-content:center;
       position:sticky;
       top:0;
       z-index:20;
     }
-    .logo{max-height:84px;width:auto;display:block;object-fit:contain;}
+    .logo{max-height:84px;width:auto;display:block;object-fit:contain;margin-bottom:8px;}
+    .meta {
+      width:100%;
+      max-width:980px;
+      display:flex;
+      justify-content:center;
+      gap:18px;
+      align-items:center;
+      color:var(--muted);
+      font-size:13px;
+      padding:0 16px 12px;
+    }
     main{max-width:980px;margin:18px auto;padding:0 16px 48px;}
-    h1{font-size:20px;margin:12px 0 6px;color:var(--brand);text-align:center}
-    .top-actions{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
-    .btn{background:var(--brand);color:#fff;border:none;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}
+    h1{font-size:20px;margin:6px 0;color:var(--brand);text-align:left}
+    .top-actions{display:flex;gap:10px;justify-content:flex-end;margin:6px 0 12px}
+    .btn{background:var(--brand);color:#fff;border:none;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
     .btn.secondary{background:#111;color:#fff}
+    /* Main cards grid:
+       - 3 equal columns
+       - make DORT + Revenue span 2 rows so CSAT + T-Life (stacked) combine to same height
+    */
     .grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
       gap:14px;
       margin-top:6px;
+      grid-auto-rows: minmax(160px, auto);
+      align-items:start;
     }
-    @media (max-width:940px){ .grid{grid-template-columns:repeat(2,1fr);} }
+    @media (max-width:1100px){ .grid{grid-template-columns:repeat(2,1fr);} }
     @media (max-width:640px){ .grid{grid-template-columns:1fr;} .logo{max-height:64px} }
+    .span-2 { grid-row: span 2; }
     .card{
       background:var(--card-bg);
       border-radius:14px;
       padding:12px;
       box-shadow:0 8px 20px rgba(17,24,39,0.06);
       border:1px solid rgba(16,24,40,0.04);
-      min-height:120px;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
+      height:100%;
     }
     .card-head{display:flex;align-items:center;gap:10px}
     .card-emoji{font-size:26px}
     .card-title{font-weight:800;font-size:16px}
-    /* Use the same metric-grid everywhere so sub-tiles match; stretch tiles to equal heights */
+    /* Uniform small-tile grid used by DORT, Revenue, CSAT, T-Life, Daily Goals */
     .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;align-items:stretch}
     @media (max-width:640px){ .metric-grid{grid-template-columns:1fr} }
 
-    /* unified stat tile used by all small tiles */
     .stat{
       background:linear-gradient(180deg,#fff,#fbfdff);
       border-radius:10px;padding:12px;border:1px solid #f0f3f7;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;
@@ -92,7 +108,6 @@
 
     .small{font-size:12px;color:var(--muted);margin-top:6px}
     .section-full{grid-column:1/-1}
-    /* print colors */
     @media print{
       *{-webkit-print-color-adjust:exact;color-adjust:exact;}
       body{background:#fff}
@@ -102,31 +117,34 @@
     }
     .state-pill{margin-left:auto;padding:6px 10px;border-radius:999px;color:#fff;font-weight:800;font-size:13px}
     .state-good{background:var(--good)}
-    .state-bad{background:var(--bad)}
-    .state-neutral{background:var(--neutral)}
-    .footer-note{color:var(--muted);font-size:13px;text-align:center;margin-top:12px; display:none;} /* hidden per request */
+    .state-bad{background:var(--red)}
+    .state-neutral{background:var(--muted)}
   </style>
 </head>
 <body>
   <header>
     <img id="siteLogo" class="logo" src="/logo-256.png" alt="Company logo">
+    <div class="meta" id="metaBar" aria-hidden="false">
+      <div id="metaDate">—</div>
+      <div id="metaTime">—</div>
+      <div id="metaStore">—</div>
+    </div>
   </header>
 
   <main>
-    <h1>Summary</h1>
     <div class="top-actions">
       <button class="btn" id="printBtn">🖨 Print</button>
       <button class="btn secondary" id="backBtn">← Back</button>
     </div>
 
     <div id="cards" class="grid" aria-live="polite">
-      <!-- Cards will be injected here -->
+      <!-- Cards injected by JS -->
     </div>
   </main>
 
 <script>
 (async function(){
-  // extract embedded logo from /app/dort.html if present
+  // logo extraction (same as other pages)
   const logoImg = document.getElementById('siteLogo');
   try {
     const r = await fetch('/app/dort.html', {cache:'no-store'});
@@ -136,6 +154,32 @@
       if (m && m[0]) logoImg.src = m[0];
     }
   } catch(e){ /* ignore */ }
+
+  // --- Meta: date, time and store name ---
+  const metaDate = document.getElementById('metaDate');
+  const metaTime = document.getElementById('metaTime');
+  const metaStore = document.getElementById('metaStore');
+
+  function getStoreName() {
+    // try the keys the app uses; fallback to common alternatives
+    return localStorage.getItem('ggt.store') ||
+           localStorage.getItem('ggt_selection') && (() => {
+             try {
+               const s = JSON.parse(localStorage.getItem('ggt_selection'));
+               return s && (s.store || s.store_name || s.storeName);
+             } catch(e){ return null; }
+           })() ||
+           localStorage.getItem('store') || localStorage.getItem('store_name') || 'Unknown store';
+  }
+
+  function updateMeta() {
+    const now = new Date();
+    metaDate.textContent = now.toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+    metaTime.textContent = now.toLocaleTimeString(undefined, { hour:'numeric', minute:'2-digit', second:'2-digit' });
+    metaStore.textContent = getStoreName();
+  }
+  updateMeta();
+  setInterval(updateMeta, 1000);
 
   // helpers
   function n(v){ const x = parseFloat(v); return isNaN(x)?0:x; }
@@ -199,7 +243,7 @@
     };
   }
 
-  // progress color class mapping per requested thresholds
+  // progress color rules
   function progressClassFor(pct){
     if (pct < 80) return 'pbar-red';
     if (pct >= 80 && pct <= 99) return 'pbar-yellow';
@@ -207,7 +251,6 @@
     return 'pbar-brightgreen';
   }
 
-  // create element helper
   function el(tag, attrs={}, children=[]){
     const e = document.createElement(tag);
     for (const k in attrs){
@@ -220,8 +263,6 @@
     return e;
   }
 
-  // unified statBlock builder (for DORT+SORT subtiles)
-  // supports currency formatting when opts.currency === true
   function statBlock(label, att, goal, pct, gap, opts){
     opts = opts || {};
     const s = el('div',{class:'stat'});
@@ -236,7 +277,6 @@
     const g = el('div',{class:'gap ' + (gap<=0 ? 'good' : 'bad'), text: gText});
     s.appendChild(g);
 
-    // progress
     const p = el('div',{class:'progress'}); const i = el('i');
     p.appendChild(i);
     s.appendChild(p);
@@ -251,8 +291,8 @@
     const grid = document.getElementById('cards');
     grid.innerHTML = '';
 
-    // DORT + SORT card
-    const ds = el('section',{class:'card'});
+    // DORT + SORT (left column) - span 2 rows to match stacked right column
+    const ds = el('section',{class:'card span-2'});
     const head = el('div',{class:'card-head'});
     head.appendChild(el('div',{class:'card-emoji',text:'📊'}));
     head.appendChild(el('div',{class:'card-title',text:'DORT + SORT'}));
@@ -265,59 +305,52 @@
     const sv = statBlock('Voice', v.att, v.goal, v.pct, v.gap);
     const sb = statBlock('BTS', b.att, b.goal, b.pct, b.gap);
     const st = statBlock('TFB', t.att, t.goal, t.pct, t.gap);
-    // Accessories should always show $ prefix
     const sa = statBlock('Accessories', a.att, a.goal, a.pct, a.gap, {currency: true});
     mg.appendChild(sv.node); mg.appendChild(sb.node); mg.appendChild(st.node); mg.appendChild(sa.node);
     ds.appendChild(mg);
     grid.appendChild(ds);
 
-    // Revenue card: four uniform subtiles (same .stat tiles). Removed progress bars on VAF Gap and P360 Adds as requested.
-    const rev = el('section',{class:'card'});
+    // Revenue (center column) - span 2 rows to match left column
+    const rev = el('section',{class:'card span-2'});
     const rhead = el('div',{class:'card-head'});
     rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
     rhead.appendChild(el('div',{class:'card-title',text:'Revenue'}));
     rev.appendChild(rhead);
 
+    // revenue grid uses same .metric-grid as DORT to ensure matching subtile sizes/positioning
     const revGrid = el('div',{class:'metric-grid'});
 
-    // VAF tile: percent to target = (mrc / vTarget) * 100
+    // VAF tile
     const vPercent = out.vaf.vTarget > 0 ? Math.round((out.vaf.mrc / out.vaf.vTarget) * 100) : 0;
     const vafTile = el('div',{class:'stat'});
-    const vafLabel = el('div',{class:'label'});
-    vafLabel.innerHTML = 'VAF';
-    vafTile.appendChild(vafLabel);
+    vafTile.appendChild(el('div',{class:'label',text:'VAF'}));
     vafTile.appendChild(el('div',{class:'value',text: money(out.vaf.mrc)}));
     vafTile.appendChild(el('div',{class:'small',text: 'Target: ' + money(out.vaf.vTarget) + ' /op • Opp: ' + out.vaf.vOpp}));
     const vafProgress = el('div',{class:'progress'});
-    const vafBar = el('i');
-    vafBar.style.width = Math.min(200, Math.max(0, vPercent)) + '%';
-    vafBar.classList.add(progressClassFor(vPercent));
+    const vafBar = el('i'); vafBar.style.width = Math.min(200, Math.max(0, vPercent)) + '%'; vafBar.classList.add(progressClassFor(vPercent));
     vafProgress.appendChild(vafBar);
     vafTile.appendChild(vafProgress);
     revGrid.appendChild(vafTile);
 
-    // VAF Gap tile: NO progress bar per request
+    // VAF Gap (no progress)
     const vafGap = el('div',{class:'stat'});
     vafGap.appendChild(el('div',{class:'label',text:'VAF Gap'}));
     vafGap.appendChild(el('div',{class:'value',text: money(out.vaf.vGap)}));
     vafGap.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On or above target' : 'Behind target'}));
     revGrid.appendChild(vafGap);
 
-    // P360 percent tile
+    // P360 percent
     const pPct = el('div',{class:'stat'});
     pPct.appendChild(el('div',{class:'label',text:'P360 — Current %'}));
     pPct.appendChild(el('div',{class:'value',text: (out.p360.pPctIn || 0) + '%'}));
     pPct.appendChild(el('div',{class:'small',text: 'Attained: ' + out.p360.pAtt + ' / ' + out.p360.pOpp}));
     const pPctProgress = el('div',{class:'progress'});
-    const pPctBar = el('i');
-    const pPctVal = Math.min(200, Math.max(0, out.p360.pPctIn || 0));
-    pPctBar.style.width = pPctVal + '%';
-    pPctBar.classList.add(progressClassFor(pPctVal));
-    pPctProgress.appendChild(pPctBar);
-    pPct.appendChild(pPctProgress);
+    const pPctBar = el('i'); const pPctVal = Math.min(200, Math.max(0, out.p360.pPctIn || 0));
+    pPctBar.style.width = pPctVal + '%'; pPctBar.classList.add(progressClassFor(pPctVal));
+    pPctProgress.appendChild(pPctBar); pPct.appendChild(pPctProgress);
     revGrid.appendChild(pPct);
 
-    // P360 adds-needed tile: NO progress bar per request
+    // P360 adds needed (no progress)
     const pNeed = el('div',{class:'stat'});
     pNeed.appendChild(el('div',{class:'label',text:'P360 — Adds Needed to ' + out.p360.pTargetPct + '%'}));
     pNeed.appendChild(el('div',{class:'value',text: out.p360.pNeed}));
@@ -327,7 +360,8 @@
     rev.appendChild(revGrid);
     grid.appendChild(rev);
 
-    // CSAT card (tiles will stretch to match T-Life tiles because metric-grid align-items:stretch)
+    // Right column: CSAT (top) and T-Life (bottom) stacked; together they match left/center height
+    // CSAT (row 1, col 3)
     const cs = el('section',{class:'card'});
     const csHead = el('div',{class:'card-head'});
     csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
@@ -350,7 +384,7 @@
     cs.appendChild(csInner);
     grid.appendChild(cs);
 
-    // T-Life card with special progress color rule: if at target = green, if below = red
+    // T-Life (row 2, col 3)
     const tl = el('section',{class:'card'});
     const tlH = el('div',{class:'card-head'});
     tlH.appendChild(el('div',{class:'card-emoji',text:'📱'}));
@@ -362,18 +396,12 @@
     t1.appendChild(el('div',{class:'label',text:'Attainment'}));
     t1.appendChild(el('div',{class:'value',text: out.tlife.tlPct + '%'}));
     t1.appendChild(el('div',{class:'small',text:'Target: ' + out.tlife.tlTarget + '%'}));
-    // T-Life progress: green only if at-or-above target, red if below
     const t1p = el('div',{class:'progress'});
-    const t1bar = el('i');
-    const tPctVal = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
+    const t1bar = el('i'); const tPctVal = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
     t1bar.style.width = tPctVal + '%';
-    if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) {
-      t1bar.classList.add('pbar-brightgreen');
-    } else {
-      t1bar.classList.add('pbar-red');
-    }
-    t1p.appendChild(t1bar);
-    t1.appendChild(t1p);
+    // T-Life rule: green when at/above target, red when below
+    if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) { t1bar.classList.add('pbar-brightgreen'); } else { t1bar.classList.add('pbar-red'); }
+    t1p.appendChild(t1bar); t1.appendChild(t1p);
     tlInner.appendChild(t1);
 
     const t2 = el('div',{class:'stat'});
@@ -385,9 +413,8 @@
     tl.appendChild(tlInner);
     grid.appendChild(tl);
 
-    // Daily goals card (split into sub-cards matching .stat) with emojis and centered large numbers
-    const goalsCard = el('section',{class:'card'});
-    goalsCard.classList.add('section-full');
+    // Daily goals (full width below) - same sub-tiles with emojis
+    const goalsCard = el('section',{class:'card section-full'});
     const ghead = el('div',{class:'card-head'});
     ghead.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
     ghead.appendChild(el('div',{class:'card-title',text:'Daily Goals'}));
@@ -395,7 +422,6 @@
 
     const gGrid = el('div',{class:'metric-grid'});
     const gg = out.goals;
-
     function goalTile(name, emoji, value){
       const t = el('div',{class:'stat goal'});
       const lbl = el('div',{class:'label'});
@@ -405,7 +431,6 @@
       t.appendChild(el('div',{class:'value',text: displayVal }));
       return t;
     }
-
     gGrid.appendChild(goalTile('Voice','📞', gg.voice));
     gGrid.appendChild(goalTile('BTS','⌚', gg.bts));
     gGrid.appendChild(goalTile('TFB','💼', gg.tfb));
@@ -414,7 +439,7 @@
     goalsCard.appendChild(gGrid);
     grid.appendChild(goalsCard);
 
-    // color numeric gap labels where present
+    // color gap labels where present
     document.querySelectorAll('.gap').forEach(g => {
       const num = parseFloat(String(g.textContent).replace(/[^0-9.-]/g,''));
       if (isNaN(num)) return;
@@ -422,15 +447,13 @@
     });
   }
 
-  // initial render
+  // initial render and re-render on storage events
   try { render(); } catch(e){ console.error('Summary render failed', e); document.getElementById('cards').textContent = 'An error occurred while rendering the summary. See console.'; }
+  window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
-  // controls
+  // interaction controls
   document.getElementById('printBtn').addEventListener('click', () => window.print());
   document.getElementById('backBtn').addEventListener('click', () => location.href = 'goals.html');
-
-  // re-render on storage events from other tabs
-  window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
 })();
 </script>
