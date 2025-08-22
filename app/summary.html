@@ -114,50 +114,23 @@
     .state-neutral{background:var(--muted)}
 
     /* ---------------- PRINT RULES - aim to fit single page ---------------- */
-    @page {
-      size: A4 landscape;
-      margin: 8mm;
-    }
+    @page { size: A4 landscape; margin: 8mm; }
 
     @media print {
-      html, body {
-        background: white;
-        color: black;
-      }
-
+      html, body { background: white; color: black; }
       header { position:fixed; top:0; left:0; right:0; box-shadow:none; border:none; padding-bottom:6px; background:#fff; }
-      main { margin-top:120px; } /* leave space for header when printing */
-
-      /* Hide UI controls */
+      main { margin-top:120px; } /* space for header */
       .top-actions, .btn { display:none !important; }
-
-      /* Reduce spacing and sizes */
-      .grid { gap:6px; grid-auto-rows: minmax(120px, auto); }
+      .grid { gap:6px; grid-auto-rows: minmax(110px, auto); }
       .card { padding:8px; border-width:1px; box-shadow:none; }
       .metric-grid { gap:6px; }
-      .stat { padding:8px; min-height:72px; }
+      .stat { padding:8px; min-height:64px; }
       .stat .label { font-size:11px; }
       .stat .value { font-size:15px; }
       .small { font-size:11px; }
-
-      /* Make CSAT + T-Life stacked and shorter so combined height matches other columns */
-      /* On print, maintain the desktop 3-column layout but compress heights */
-      .span-2 { grid-row: span 2; }
-
-      /* Reduce margins around meta */
-      .meta { padding:0 12px 8px; font-size:12px; }
-
-      /* ensure tiles and cards don't break across pages */
-      .card, .stat { page-break-inside: avoid; -webkit-column-break-inside: avoid; break-inside: avoid; }
-
-      /* Reduce font-weight and compact everything slightly more for print */
-      .card-title { font-size:15px; }
       .stat.goal .value { font-size:34px; }
-
-      /* Force colors in print */
       * {-webkit-print-color-adjust: exact; color-adjust: exact; }
     }
-
   </style>
 </head>
 <body>
@@ -170,7 +143,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="mainContent">
     <div class="top-actions">
       <button class="btn" id="printBtn">🖨 Print</button>
       <button class="btn secondary" id="backBtn">← Back</button>
@@ -480,46 +453,105 @@
     });
   }
 
-  // Render initially and on storage changes
+  // initial render and re-render on storage events
   try { render(); } catch(e){ console.error('Summary render failed', e); document.getElementById('cards').textContent = 'An error occurred while rendering the summary. See console.'; }
   window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
-  // Print scaling: try to scale content slightly to better fit a single printed page in landscape.
-  // We do this only for print-preview and printing using onbeforeprint/onafterprint.
-  function applyPrintScale() {
-    // measure content height and available printable height (approx)
-    const main = document.querySelector('main');
-    if (!main) return;
-    // use viewport height as a baseline for printable area; browsers vary; using 1000px baseline
-    const contentHeight = main.scrollHeight;
-    // Estimate available height in px for A4 landscape at 96dpi: 842px (11.69in * 72dpi ≈ 842) — this varies by browser/printer.
-    // We'll use window.innerHeight as practical viewport for preview, and cap scale to 1.
-    const avail = window.innerHeight - 140; // header + margins estimate
-    let scale = 1;
-    if (contentHeight > avail && avail > 0) scale = Math.max(0.6, avail / contentHeight);
-    document.body.style.transformOrigin = 'top left';
-    document.body.style.transform = 'scale(' + scale + ')';
-    // To prevent clipping during print layout, add a small bottom padding
-    document.body.style.paddingBottom = '20px';
-  }
-  function resetPrintScale(){
-    document.body.style.transform = '';
-    document.body.style.paddingBottom = '';
+  // ---------------- PRINT FIT LOGIC ----------------
+  // We'll compute a scale to make the #mainContent fit a single landscape A4 page,
+  // apply it just before printing, then reset after print completes.
+  const mainEl = document.getElementById('mainContent');
+
+  // conversion constants for mm -> px at 96dpi (approx)
+  const mmToPx = 3.7795275591;
+
+  function computePrintScaleForA4Landscape() {
+    // Paper size A4 landscape in mm: 297 x 210
+    const paperWmm = 297, paperHmm = 210;
+    const marginMm = 8; // matches @page margin
+    const availW = (paperWmm - 2*marginMm) * mmToPx;
+    const availH = (paperHmm - 2*marginMm) * mmToPx;
+
+    // measure content size (cards + header)
+    // we include header height (logo + meta) as printed header space is reserved by CSS (main margin-top)
+    const headerRect = document.querySelector('header').getBoundingClientRect();
+    const mainRect = mainEl.getBoundingClientRect();
+    const contentW = Math.max(mainRect.width, mainEl.scrollWidth);
+    const contentH = headerRect.height + Math.max(mainRect.height, mainEl.scrollHeight);
+
+    // Compute scale to fit both width and height
+    const scaleW = availW / contentW;
+    const scaleH = availH / contentH;
+    let scale = Math.min(scaleW, scaleH, 1);
+
+    // don't scale below 0.5 to keep readability
+    if (scale < 0.5) scale = 0.5;
+    return scale;
   }
 
-  // Modern browsers support matchMedia('print'), and the print dialog triggers onbeforeprint/onafterprint.
+  // apply scale: we scale the #mainContent container and also increase its width so scaled layout keeps proportions
+  function applyPrintScale() {
+    const scale = computePrintScaleForA4Landscape();
+    // store previous styles to restore later
+    mainEl.dataset._prevTransform = mainEl.style.transform || '';
+    mainEl.dataset._prevTransformOrigin = mainEl.style.transformOrigin || '';
+    mainEl.dataset._prevWidth = mainEl.style.width || '';
+    document.documentElement.dataset._prevOverflow = document.documentElement.style.overflow || '';
+    // apply
+    mainEl.style.transformOrigin = 'top left';
+    mainEl.style.transform = 'scale(' + scale + ')';
+    // set width to compensate so content doesn't wrap unexpectedly
+    mainEl.style.width = (100 / scale) + '%';
+    // hide scrollbars when printing
+    document.documentElement.style.overflow = 'visible';
+  }
+
+  function resetPrintScale() {
+    // restore
+    if (mainEl.dataset._prevTransform !== undefined) mainEl.style.transform = mainEl.dataset._prevTransform;
+    if (mainEl.dataset._prevTransformOrigin !== undefined) mainEl.style.transformOrigin = mainEl.dataset._prevTransformOrigin;
+    if (mainEl.dataset._prevWidth !== undefined) mainEl.style.width = mainEl.dataset._prevWidth;
+    if (document.documentElement.dataset._prevOverflow !== undefined) document.documentElement.style.overflow = document.documentElement.dataset._prevOverflow;
+    // cleanup data attrs
+    delete mainEl.dataset._prevTransform;
+    delete mainEl.dataset._prevTransformOrigin;
+    delete mainEl.dataset._prevWidth;
+    delete document.documentElement.dataset._prevOverflow;
+  }
+
+  // Bind to print events so print button or browser print both get scaling
+  window.addEventListener('beforeprint', applyPrintScale);
+  window.addEventListener('afterprint', resetPrintScale);
   if (window.matchMedia) {
     const m = window.matchMedia('print');
-    m.addListener((evt) => {
-      if (evt.matches) applyPrintScale();
+    m.addListener((e) => {
+      if (e.matches) applyPrintScale();
       else resetPrintScale();
     });
   }
-  window.addEventListener('beforeprint', applyPrintScale);
-  window.addEventListener('afterprint', resetPrintScale);
 
-  // UI controls
-  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  // Print button: ensure we apply scale, then call print(), then reset if afterprint doesn't fire
+  document.getElementById('printBtn').addEventListener('click', () => {
+    try {
+      // Apply scale synchronously first so browsers pick it up in print preview
+      applyPrintScale();
+      // Delay slightly to allow paint before print dialog opens
+      setTimeout(() => {
+        try {
+          window.print();
+        } finally {
+          // Some browsers don't reliably fire afterprint in all contexts; schedule a fallback reset
+          setTimeout(resetPrintScale, 1200);
+        }
+      }, 250);
+    } catch (err) {
+      console.error('Print failed', err);
+      // still attempt to print
+      window.print();
+    }
+  });
+
+  // Back button
   document.getElementById('backBtn').addEventListener('click', () => location.href = 'goals.html');
 
 })();
