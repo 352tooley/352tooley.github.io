@@ -1,189 +1,387 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Summary</title>
   <style>
-    :root {
-      --brand: #b8006b;
-      --card: #ffffff;
-      --bg: #f8f9fa;
-      --border:#e5e7eb;
+    :root{
+      --brand: #e6007e;
+      --card-bg: #ffffff;
+      --page-bg: #f5f6f8;
+      --muted: #6b7280;
+      --good: #16a34a;   /* green */
+      --bad: #dc2626;    /* red */
+      --neutral: #64748b;/* slate */
+      --accent: #111827;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: #111;
-      text-align: center;
-    }
-    header {
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 0;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    .logo {
-      display: block;
-      max-height: 120px;
-      width: auto;
-      margin: 0 auto;
-    }
-    h1 { margin: 12px 0 8px; font-size: 22px; color: var(--brand); }
-
-    .metric { 
-      width: min(92vw, 540px);
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;padding:0;background:var(--page-bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,sans-serif;color:var(--accent);}
+    header{
       background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
-      margin: 12px auto;
-      padding: 14px;
-      text-align: left;
+      border-bottom:1px solid #e8e8ed;
+      padding:12px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:sticky;
+      top:0;
+      z-index:20;
     }
-    .metric h2 { 
-      margin: 0 0 10px; 
-      font-size: 18px; 
-      border-bottom: 2px solid #f0f0f0; 
-      padding-bottom: 6px; 
+    .logo{max-height:84px;width:auto;display:block;object-fit:contain;}
+    main{max-width:980px;margin:18px auto;padding:0 16px 48px;}
+    h1{font-size:20px;margin:12px 0 6px;color:var(--brand);text-align:center}
+    .top-actions{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+    .btn{background:var(--brand);color:#fff;border:none;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}
+    .btn.secondary{background:#111;color:#fff}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+      margin-top:6px;
     }
-    .row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 12px;
+    @media (max-width:940px){ .grid{grid-template-columns:repeat(2,1fr);} }
+    @media (max-width:640px){ .grid{grid-template-columns:1fr;} .logo{max-height:64px} }
+    .card{
+      background:var(--card-bg);
+      border-radius:14px;
+      padding:12px;
+      box-shadow:0 8px 20px rgba(17,24,39,0.06);
+      border:1px solid rgba(16,24,40,0.04);
+      min-height:120px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
     }
-    @media (max-width: 360px) {
-      .row { grid-template-columns: 1fr; }
+    .card-head{display:flex;align-items:center;gap:10px}
+    .card-emoji{font-size:26px}
+    .card-title{font-weight:800;font-size:16px}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+    .stat{
+      background:linear-gradient(180deg,#fff,#fbfdff);
+      border-radius:10px;padding:12px;border:1px solid #f0f3f7;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+      min-height:86px;
     }
-    .field label { display:block; font-size: 13px; color:#555; margin-bottom:4px; }
-    .field input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #dcdcdc;
-      border-radius: 10px;
-      font-size: 16px;
-      text-align: center;
-      background: #fff;
+    .stat .label{font-size:13px;color:var(--muted);margin-bottom:6px}
+    .stat .value{font-weight:900;margin-top:0;font-size:18px;color:var(--accent)}
+    .gap{font-weight:800;margin-top:6px}
+    .gap.good{color:var(--good)}
+    .gap.bad{color:var(--bad)}
+    .progress{
+      height:10px;border-radius:999px;background:#eef2f7;overflow:hidden;margin-top:8px;width:100%;
     }
-    .nav {
-      display:flex; gap:12px; justify-content:center; margin: 18px 0 28px;
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#ff6ba8);width:0%;border-radius:999px}
+    .small{font-size:12px;color:var(--muted)}
+    .section-full{grid-column:1/-1}
+    /* print colors */
+    @media print{
+      *{-webkit-print-color-adjust:exact;color-adjust:exact;}
+      body{background:#fff}
+      .card{box-shadow:none;border:1px solid #eee}
+      header{display:block}
+      .top-actions{display:none}
     }
-    .btn {
-      background: var(--brand);
-      color: #fff;
-      border: none;
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .btn.secondary { background: #222; }
-    @media print {
-      .nav { display:none; }
-    }
+    .state-pill{margin-left:auto;padding:6px 10px;border-radius:999px;color:#fff;font-weight:800;font-size:13px}
+    .state-good{background:var(--good)}
+    .state-bad{background:var(--bad)}
+    .state-neutral{background:var(--neutral)}
+    .footer-note{color:var(--muted);font-size:13px;text-align:center;margin-top:12px}
   </style>
 </head>
 <body>
   <header>
-    <img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATkAAABkCAYAAAD9hkdsAAChQElEQVR4nOz92ZMlSXbmif1U1Xa7+72+h3usuVUlqgoNoArVjQLQ6JkWdlNIEc6Qwn4YPvV/wDf+CfNISr+MSMuIUDgNDhokBw0[...]">
+    <img id="siteLogo" class="logo" src="/logo-256.png" alt="Company logo">
   </header>
-  <h1>Summary</h1>
-  
-  <section class="metric" style="text-align:center">
-    <h2>Summary</h2>
-    <div id="summaryContent" style="line-height:1.6"></div>
-    <div class="nav" style="justify-content:center; margin-top:16px">
-      <button class="btn" onclick="window.print()">🖨 Print</button>
+
+  <main>
+    <h1>Summary</h1>
+    <div class="top-actions">
+      <button class="btn" id="printBtn">🖨 Print</button>
+      <button class="btn secondary" id="backBtn">← Back</button>
+      <button class="btn secondary" id="sampleBtn">⚙️ Use Sample Data</button>
     </div>
-  </section>
 
-  <script>
-    // Small helpers
-    function n(v){ const x = parseFloat(v); return isNaN(x)?0:x; }
-    function i(v){ const x = parseInt(v);   return isNaN(x)?0:x; }
-    function money(v){ return '$' + (n(v).toFixed(2)); }
-    function pct(v){ return Math.round(n(v)); }
-    function fetchLS(k){ const v = localStorage.getItem(k); return v===null?0:v; }
+    <div id="cards" class="grid" aria-live="polite">
+      <!-- Cards will be injected here -->
+    </div>
 
-    // Combines district + store values; returns an object
-    function comb(ad, gd, as, gs){
-      const att = i(fetchLS(ad)) + i(fetchLS(as));
-      const goal= i(fetchLS(gd)) + i(fetchLS(gs));
-      const pctv = goal>0 ? Math.round((att/goal)*100) : 0;
-      const gap = goal - att; // positive = behind
-      return { att: att, goal: goal, pct: pctv, gap: gap };
+    <div class="footer-note">Values are calculated from the data saved in this browser. Missing values are treated as 0.</div>
+  </main>
+
+<script>
+(async function(){
+  // extract embedded logo from /app/dort.html if present
+  const logoImg = document.getElementById('siteLogo');
+  try {
+    const r = await fetch('/app/dort.html', {cache:'no-store'});
+    if (r.ok) {
+      const t = await r.text();
+      const m = t.match(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/);
+      if (m && m[0]) logoImg.src = m[0];
+    }
+  } catch(e){ /* ignore */ }
+
+  // helpers
+  function n(v){ const x = parseFloat(v); return isNaN(x)?0:x; }
+  function i(v){ const x = parseInt(v); return isNaN(x)?0:x; }
+  function money(v){ return '$' + Number(n(v)).toFixed(2); }
+  function pct(v){ return Math.round(n(v)); }
+  function ls(k){ return localStorage.getItem(k); }
+  function getOr(k, def){ const v = ls(k); return v===null ? def : v; }
+
+  function comb(ad, gd, as, gs){
+    const att = i(getOr(ad,0)) + i(getOr(as,0));
+    const goal= i(getOr(gd,0)) + i(getOr(gs,0));
+    const pctv = goal>0 ? Math.round((att/goal)*100) : 0;
+    const gap = goal - att;
+    return { att: att, goal: goal, pct: pctv, gap: gap };
+  }
+
+  function computeAll(){
+    const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
+    const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
+    const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
+    const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
+
+    const pOpp = i(getOr('p_opp',0));
+    const pPctIn = Math.max(0, Math.min(100, n(getOr('p_pct',0))));
+    const pAtt = Math.round(pOpp*(pPctIn/100));
+    const pTargetPct = 60;
+    const tP = pTargetPct/100;
+    const pNeed = Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
+
+    const vOpp = i(getOr('v_opp',0));
+    const vTot = n(getOr('v_total',0));
+    const vTarget = 19;
+    const needTotal = vTarget * vOpp;
+    const vGap = Math.max(0, needTotal - vTot);
+    const mrc = vOpp>0 ? (vTot/vOpp) : 0;
+
+    const cAvg = n(getOr('c_score',0));
+    const cN = i(getOr('c_surveys',0));
+    const cNeed = cAvg>=9.5 ? 0 : Math.max(0, Math.ceil(2 * cN * (9.5 - cAvg)));
+
+    const tlPct = Math.max(0, Math.min(100, n(getOr('t2_att',0))));
+    const tlOpp = i(getOr('t2_opp',0));
+    const tlSuc = Math.round(tlOpp*(tlPct/100));
+    const tlTarget = 70;
+    const tT = tlTarget/100;
+    const tlNeed = Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
+
+    const gVoice = getOr('g_voice','—');
+    const gBts   = getOr('g_bts','—');
+    const gAcc   = getOr('g_acc','—');
+    const gTfb   = getOr('g_tfb','—');
+
+    return {
+      dortsort: { voice, bts, tfb, acc },
+      p360: { pOpp, pPctIn, pAtt, pNeed, pTargetPct },
+      vaf: { vOpp, vTot, vTarget, needTotal, vGap, mrc },
+      csat: { cAvg, cN, cNeed },
+      tlife: { tlPct, tlOpp, tlSuc, tlTarget, tlNeed },
+      goals: { voice: gVoice, bts: gBts, acc: gAcc, tfb: gTfb }
+    };
+  }
+
+  function el(tag, attrs={}, children=[]){
+    const e = document.createElement(tag);
+    for (const k in attrs){
+      if (k === 'class') e.className = attrs[k];
+      else if (k === 'text') e.textContent = attrs[k];
+      else e.setAttribute(k, attrs[k]);
+    }
+    if (!Array.isArray(children)) children = [children];
+    children.forEach(c => { if (typeof c === 'string') e.insertAdjacentHTML('beforeend', c); else if (c) e.appendChild(c); });
+    return e;
+  }
+
+  function render(){
+    const out = computeAll();
+    const grid = document.getElementById('cards');
+    grid.innerHTML = '';
+
+    // DORT + SORT card
+    const ds = el('section',{class:'card'});
+    const head = el('div',{class:'card-head'});
+    head.appendChild(el('div',{class:'card-emoji',text:'📊'}));
+    head.appendChild(el('div',{class:'card-title',text:'DORT + SORT'}));
+    const anyGap = out.dortsort.voice.gap + out.dortsort.bts.gap + out.dortsort.tfb.gap + out.dortsort.acc.gap;
+    head.appendChild(el('div',{class:'state-pill '+(anyGap<=0 ? 'state-good' : 'state-bad'), text: anyGap <= 0 ? 'On Track' : 'Gaps'}));
+    ds.appendChild(head);
+
+    const mg = el('div',{class:'metric-grid'});
+    function statBlock(label, att, goal, pct, gap){
+      const s = el('div',{class:'stat'});
+      s.appendChild(el('div',{class:'label',text:label}));
+      s.appendChild(el('div',{class:'value',text: att + ' / ' + goal + ' (' + pct + '%)'}));
+      const g = el('div',{class:'gap '+(gap<=0 ? 'good' : 'bad'), text:(gap<=0?('+'+Math.abs(gap)):('-'+gap))});
+      s.appendChild(g);
+      const p = el('div',{class:'progress'}); const i = el('i'); p.appendChild(i);
+      s.appendChild(p);
+      return { node: s, bar: i };
     }
 
+    const v = out.dortsort.voice, b = out.dortsort.bts, t = out.dortsort.tfb, a = out.dortsort.acc;
+    const sv = statBlock('Voice', v.att, v.goal, v.pct, v.gap);
+    const sb = statBlock('BTS', b.att, b.goal, b.pct, b.gap);
+    const st = statBlock('TFB', t.att, t.goal, t.pct, t.gap);
+    const sa = statBlock('Accessories', a.att, a.goal, a.pct, a.gap);
+
+    mg.appendChild(sv.node); mg.appendChild(sb.node);
+    mg.appendChild(st.node); mg.appendChild(sa.node);
+    ds.appendChild(mg);
+    sv.bar.style.width = Math.min(100, Math.max(0, v.pct)) + '%';
+    sb.bar.style.width = Math.min(100, Math.max(0, b.pct)) + '%';
+    st.bar.style.width = Math.min(100, Math.max(0, t.pct)) + '%';
+    sa.bar.style.width = Math.min(100, Math.max(0, a.pct)) + '%';
+    grid.appendChild(ds);
+
+    // Revenue card: four sub cards matching .stat styling (same size as dort+sort sub cards)
+    const rev = el('section',{class:'card'});
+    const rhead = el('div',{class:'card-head'});
+    rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
+    rhead.appendChild(el('div',{class:'card-title',text:'Revenue'}));
+    rev.appendChild(rhead);
+
+    const revGrid = el('div',{class:'metric-grid'});
+
+    // VAF value tile
+    const vafTile = el('div',{class:'stat'});
+    vafTile.appendChild(el('div',{class:'label',text:'VAF'}));
+    vafTile.appendChild(el('div',{class:'value',text: money(out.vaf.mrc)}));
+    vafTile.appendChild(el('div',{class:'small',text: 'Target: ' + money(out.vaf.vTarget) + ' /op • Opp: ' + out.vaf.vOpp}));
+    revGrid.appendChild(vafTile);
+
+    // VAF gap tile
+    const vafGap = el('div',{class:'stat'});
+    vafGap.appendChild(el('div',{class:'label',text:'VAF Gap'}));
+    vafGap.appendChild(el('div',{class:'value',text: money(out.vaf.vGap)}));
+    vafGap.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On or above target' : 'Behind target'}));
+    if (out.vaf.vGap <= 0) vafGap.querySelector('.value').classList.add('good'); else vafGap.querySelector('.value').classList.add('bad');
+    revGrid.appendChild(vafGap);
+
+    // P360 percent tile
+    const pPct = el('div',{class:'stat'});
+    pPct.appendChild(el('div',{class:'label',text:'P360 — Current %'}));
+    pPct.appendChild(el('div',{class:'value',text: (out.p360.pPctIn || 0) + '%'}));
+    pPct.appendChild(el('div',{class:'small',text: 'Attained: ' + out.p360.pAtt + ' / ' + out.p360.pOpp}));
+    revGrid.appendChild(pPct);
+
+    // P360 adds needed tile
+    const pNeed = el('div',{class:'stat'});
+    pNeed.appendChild(el('div',{class:'label',text:'P360 — Adds Needed to ' + out.p360.pTargetPct + '%'}));
+    pNeed.appendChild(el('div',{class:'value',text: out.p360.pNeed}));
+    pNeed.appendChild(el('div',{class:'small',text: out.p360.pNeed > 0 ? 'Work to do' : 'On target'}));
+    revGrid.appendChild(pNeed);
+
+    rev.appendChild(revGrid);
+    grid.appendChild(rev);
+
+    // CSAT card
+    const cs = el('section',{class:'card'});
+    const csHead = el('div',{class:'card-head'});
+    csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
+    csHead.appendChild(el('div',{class:'card-title',text:'CSAT'}));
+    cs.appendChild(csHead);
+
+    const csInner = el('div',{class:'metric-grid'});
+    const csStat = el('div',{class:'stat'});
+    csStat.appendChild(el('div',{class:'label',text:'Average Score'}));
+    csStat.appendChild(el('div',{class:'value',text: (out.csat.cAvg || 0).toFixed(1) + ' / 10'}));
+    csStat.appendChild(el('div',{class:'small',text:'Surveys: '+ (out.csat.cN || 0)}));
+    csInner.appendChild(csStat);
+
+    const csNeed = el('div',{class:'stat'});
+    csNeed.appendChild(el('div',{class:'label',text:'Needed Perfect 10s'}));
+    csNeed.appendChild(el('div',{class:'value',text: out.csat.cNeed}));
+    csNeed.appendChild(el('div',{class:'small',text:'Target: 9.5'}));
+    csInner.appendChild(csNeed);
+
+    cs.appendChild(csInner);
+    grid.appendChild(cs);
+
+    // T-Life card
+    const tl = el('section',{class:'card'});
+    const tlH = el('div',{class:'card-head'});
+    tlH.appendChild(el('div',{class:'card-emoji',text:'📱'}));
+    tlH.appendChild(el('div',{class:'card-title',text:'T‑Life'}));
+    tl.appendChild(tlH);
+
+    const tlInner = el('div',{class:'metric-grid'});
+    const t1 = el('div',{class:'stat'});
+    t1.appendChild(el('div',{class:'label',text:'Attainment'}));
+    t1.appendChild(el('div',{class:'value',text: out.tlife.tlPct + '%'}));
+    t1.appendChild(el('div',{class:'small',text:'Target: ' + out.tlife.tlTarget + '%'}));
+    tlInner.appendChild(t1);
+
+    const t2 = el('div',{class:'stat'});
+    t2.appendChild(el('div',{class:'label',text:'Needed Opportunities'}));
+    t2.appendChild(el('div',{class:'value',text: out.tlife.tlNeed}));
+    t2.appendChild(el('div',{class:'small',text: 'Opportunities: ' + out.tlife.tlOpp}));
+    tlInner.appendChild(t2);
+
+    tl.appendChild(tlInner);
+    grid.appendChild(tl);
+
+    // Daily goals card (now split into sub-cards matching .stat)
+    const goalsCard = el('section',{class:'card'});
+    goalsCard.classList.add('section-full');
+    const ghead = el('div',{class:'card-head'});
+    ghead.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
+    ghead.appendChild(el('div',{class:'card-title',text:'Daily Goals'}));
+    goalsCard.appendChild(ghead);
+
+    const gGrid = el('div',{class:'metric-grid'});
+    const gg = out.goals;
+
+    function goalTile(name, value){
+      const t = el('div',{class:'stat'});
+      t.appendChild(el('div',{class:'label',text:name}));
+      t.appendChild(el('div',{class:'value',text: value }));
+      return t;
+    }
+
+    gGrid.appendChild(goalTile('Voice', gg.voice));
+    gGrid.appendChild(goalTile('BTS', gg.bts));
+    gGrid.appendChild(goalTile('TFB', gg.tfb));
+    gGrid.appendChild(goalTile('Accessories', gg.acc));
+
+    goalsCard.appendChild(gGrid);
+    grid.appendChild(goalsCard);
+
+    // color numeric gap labels where present
+    document.querySelectorAll('.gap').forEach(g => {
+      const num = parseFloat(g.textContent.replace(/[+,]/g,''));
+      if (isNaN(num)) return;
+      if (g.textContent.trim().startsWith('+')) g.classList.add('good'); else g.classList.add('bad');
+    });
+  }
+
+  // initial render
+  try { render(); } catch(e){ console.error('Summary render failed', e); document.getElementById('cards').textContent = 'An error occurred while rendering the summary. See console.'; }
+
+  // controls
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  document.getElementById('backBtn').addEventListener('click', () => location.href = 'goals.html');
+  document.getElementById('sampleBtn').addEventListener('click', () => {
     try {
-      const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
-      const bts   = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
-      const tfb   = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
-      const acc   = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
+      localStorage.setItem('d_v_att','10'); localStorage.setItem('d_v_goal','15'); localStorage.setItem('s_v_att','3'); localStorage.setItem('s_v_goal','5');
+      localStorage.setItem('d_b_att','4'); localStorage.setItem('d_b_goal','6'); localStorage.setItem('s_b_att','1'); localStorage.setItem('s_b_goal','2');
+      localStorage.setItem('d_t_att','8'); localStorage.setItem('d_t_goal','10'); localStorage.setItem('s_t_att','2'); localStorage.setItem('s_t_goal','3');
+      localStorage.setItem('d_a_att','5'); localStorage.setItem('d_a_goal','6'); localStorage.setItem('s_a_att','1'); localStorage.setItem('s_a_goal','1');
+      localStorage.setItem('p_opp','20'); localStorage.setItem('p_pct','45');
+      localStorage.setItem('v_opp','30'); localStorage.setItem('v_total','350');
+      localStorage.setItem('c_score','9.2'); localStorage.setItem('c_surveys','8');
+      localStorage.setItem('t2_att','55'); localStorage.setItem('t2_opp','50');
+      localStorage.setItem('g_voice','5'); localStorage.setItem('g_bts','3'); localStorage.setItem('g_acc','4'); localStorage.setItem('g_tfb','2');
+      render();
+      alert('Sample data applied — the summary has been updated.');
+    } catch(e){ console.warn('sample data set failed', e); }
+  });
 
-      const pOpp = i(fetchLS('p_opp'));
-      const pPctIn = Math.max(0, Math.min(100, n(fetchLS('p_pct'))));
-      const pAtt = Math.round(pOpp*(pPctIn/100));
-      const pTargetPct = 60;
-      const tP = pTargetPct/100;
-      const pNeed = Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
+  window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
-      const vOpp = i(fetchLS('v_opp'));
-      const vTot = n(fetchLS('v_total'));
-      const vTarget = 19;
-      const needTotal = vTarget * vOpp;
-      const vGap = Math.max(0, needTotal - vTot);
-      const mrc = vOpp>0 ? (vTot/vOpp) : 0;
-
-      const cAvg = n(fetchLS('c_score'));
-      const cN = i(fetchLS('c_surveys'));
-      const cNeed = cAvg>=9.5 ? 0 : Math.max(0, Math.ceil(2 * cN * (9.5 - cAvg)));
-
-      const tlPct = Math.max(0, Math.min(100, n(fetchLS('t2_att'))));
-      const tlOpp = i(fetchLS('t2_opp'));
-      const tlSuc = Math.round(tlOpp*(tlPct/100));
-      const tlTarget = 70;
-      const tT = tlTarget/100;
-      const tlNeed = Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
-
-      const gVoice = localStorage.getItem('g_voice') || '—';
-      const gBts   = localStorage.getItem('g_bts')   || '—';
-      const gAcc   = localStorage.getItem('g_acc')   || '—';
-      const gTfb   = localStorage.getItem('g_tfb')   || '—';
-
-      const lines = [
-        '<b>DORT + SORT</b>',
-        'Voice — Gap: ' + (voice.gap>0?'-'+voice.gap:'+'+Math.abs(voice.gap)) + ' | ' + voice.pct + '%',
-        'BTS — Gap: ' + (bts.gap>0?'-'+bts.gap:'+'+Math.abs(bts.gap)) + ' | ' + bts.pct + '%',
-        'TFB — Gap: ' + (tfb.gap>0?'-'+tfb.gap:'+'+Math.abs(tfb.gap)) + ' | ' + tfb.pct + '%',
-        'Accessories — Gap: ' + (acc.gap>0?'-'+acc.gap:'+'+Math.abs(acc.gap)) + ' | ' + acc.pct + '%',
-        '',
-        '<b>P360</b>',
-        '% to Goal: ' + pct(pPctIn) + '%, Needed adds: ' + pNeed,
-        '',
-        '<b>VAF</b>',
-        'MRC: ' + money(mrc) + ' | Target: ' + money(vTarget) + '/op | Gap: ' + money(vGap),
-        '',
-        '<b>CSAT</b>',
-        'Score: ' + (isNaN(cAvg)?'—':cAvg) + ' | Target: 9.5 | Needed: ' + cNeed + ' perfect 10s',
-        '',
-        '<b>T-Life</b>',
-        'Attainment: ' + pct(tlPct) + '% | Target: ' + tlTarget + '% | Needed: ' + tlNeed + ' opportunities',
-        '',
-        '<b>Daily Goals</b>',
-        'Voice: ' + gVoice + ', BTS: ' + gBts + ', TFB: ' + gTfb + ', Accessories: ' + gAcc
-      ];
-
-      document.getElementById('summaryContent').innerHTML = lines.map(l => '<div>'+l+'</div>').join('');
-    } catch (err) {
-      console.error('Summary page error:', err);
-      document.getElementById('summaryContent').innerHTML = '<div style="color:crimson;">An error occurred while calculating the summary. Check the console for details.</div>';
-    }
-  </script>
-
-  <div class="nav"><button class="btn secondary" onclick="location.href='goals.html'">← Back</button></div>
+})();
+</script>
 </body>
 </html>
