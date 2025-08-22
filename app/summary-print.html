@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Summary — Print (Portrait)</title>
+  <title>Summary — Print (Letter / Portrait)</title>
   <style>
     :root{
       --brand:#e6007e; --muted:#6b7280; --accent:#111827;
@@ -11,11 +11,11 @@
       --card-bg:#fff;
     }
 
-    /* Important: set page to portrait A4 and zero margins so content uses the full sheet.
-       Most browsers will still add their own headers/footers unless the user disables them
-       in the print dialog. */
+    /* Request US Letter portrait and zero margins so printed content can use the full sheet.
+       Note: browsers/print drivers can still override user-facing options (paper/orientation).
+       This sets the page size to Letter portrait as the default for supported user agents. */
     @page {
-      size: A4 portrait;
+      size: 8.5in 11in portrait;
       margin: 0;
     }
 
@@ -28,18 +28,17 @@
       font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;
     }
 
-    /* Page container sized for portrait paper; we set padding to simulate a safe margin */
+    /* Page container sized for Letter portrait; internal padding acts as safe margin */
     .page {
-      width: 210mm;      /* A4 portrait */
-      height: 297mm;
-      /* use a small internal padding — this is printed area padding, not browser header */
-      padding: 8mm;
+      width: 215.9mm;    /* 8.5in in mm */
+      height: 279.4mm;   /* 11in in mm */
+      padding: 8mm;      /* printable safe padding */
       box-sizing: border-box;
       margin: 0 auto;
       background: #fff;
     }
 
-    /* on-screen reminder to disable headers/footers; hide in print */
+    /* On-screen reminder (not printed) so users can turn off browser headers/footers if needed */
     .print-reminder {
       background: #fff8e1;
       border: 1px solid #f0d58c;
@@ -58,7 +57,7 @@
     .meta { display:flex; justify-content:center; gap:18px; color:var(--muted); font-size:11px; margin-bottom:6px; flex-wrap:wrap; }
     .meta div { min-width:100px; text-align:center; }
 
-    /* portrait-friendly compact grid */
+    /* portrait-friendly compact grid (two columns) */
     .grid {
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -107,7 +106,6 @@
       * { -webkit-print-color-adjust: exact; color-adjust: exact; }
       body, .page { background: #fff; color: #000; }
       .card { box-shadow: none; }
-      /* make sure the page uses the full paper width in print */
       html,body { width: 100%; height: 100%; }
     }
   </style>
@@ -115,8 +113,11 @@
 <body>
   <!-- On-screen instruction (NOT printed) -->
   <div class="print-reminder" id="printReminder" role="status" aria-live="polite">
-    Heads-up: Some browsers add page headers/footers (URL, date, page numbers). To remove them, open the print dialog and turn off "Headers and footers" (often under "More settings").
-    <div style="margin-top:6px;font-size:12px;color:#333;">Quick steps: Chrome/Edge — Print → More settings → uncheck "Headers and footers". Firefox — Print → Page Setup → Margins & Header/Footer → set all header/footer fields to "—".</div>
+    This print view requests US Letter (8.5"×11") portrait by default. If your browser still prints URL / date / page numbers, open the print dialog and disable "Headers and footers" (More settings). 
+    <div style="margin-top:6px;font-size:12px;color:#333;">
+      Chrome/Edge: Print → More settings → Paper size: "Letter" and Orientation: "Portrait" (if not automatic) → uncheck "Headers and footers". 
+      Firefox: Print → Page Setup → Margins & Header/Footer → set all header/footer fields to "—".
+    </div>
   </div>
 
   <div class="page" id="printPage">
@@ -138,8 +139,11 @@
 
 <script>
 (function(){
-  // small helpers
-  const mmToPx = 3.7795275591;
+  // Letter size in mm and conversion constant
+  const letterWmm = 215.9;   // 8.5in * 25.4
+  const letterHmm = 279.4;   // 11in * 25.4
+  const mmToPx = 3.7795275591; // approx px per mm at 96dpi
+
   function n(v){ const x=parseFloat(v); return isNaN(x)?0:x; }
   function i(v){ const x=parseInt(v); return isNaN(x)?0:x; }
   function money(v){ return '$' + Number(n(v)).toFixed(2); }
@@ -154,7 +158,7 @@
     return localStorage.getItem('store') || localStorage.getItem('store_name') || 'Unknown store';
   }
 
-  // attempt to reuse embedded logo if present
+  // Attempt to reuse embedded logo if present
   (async function tryLogo(){
     const logo = document.getElementById('siteLogo');
     try {
@@ -167,7 +171,7 @@
     } catch(e){}
   })();
 
-  // compute metrics (same logic)
+  // compute metrics (same logic used by summary)
   function comb(ad, gd, as, gs){
     const att = i(getOr(ad,0)) + i(getOr(as,0));
     const goal= i(getOr(gd,0)) + i(getOr(gs,0));
@@ -304,7 +308,7 @@
     rev.appendChild(revGrid);
     grid.appendChild(rev);
 
-    // CSAT (full-width row below)
+    // CSAT full-width below
     const cs = el('section',{class:'card span-2'});
     const csHead = el('div',{class:'card-head'});
     csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
@@ -324,7 +328,7 @@
     cs.appendChild(csGrid);
     grid.appendChild(cs);
 
-    // T-Life (two-column below CSAT)
+    // T-Life full-width below
     const tl = el('section',{class:'card span-2'});
     const tlHead = el('div',{class:'card-head'});
     tlHead.appendChild(el('div',{class:'card-emoji',text:'📱'}));
@@ -351,7 +355,7 @@
     tl.appendChild(tlGrid);
     grid.appendChild(tl);
 
-    // Daily Goals (bottom full width)
+    // Daily Goals bottom full-width
     const goals = el('section',{class:'card span-2'});
     const gh = el('div',{class:'card-head'});
     gh.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
@@ -381,11 +385,11 @@
     document.getElementById('metaStore').textContent = getStoreName();
   }
 
-  // compute scale for portrait A4 printable area and apply
+  // compute scale to fit the printable area of US Letter portrait and apply it
   function computeScaleToFit(){
-    const paperWmm = 210, paperHmm = 297, marginMm = 8; // internal padding used above
-    const availW = (paperWmm - 2*marginMm) * mmToPx;
-    const availH = (paperHmm - 2*marginMm) * mmToPx;
+    const marginMm = 8; // internal safe padding used above
+    const availW = (letterWmm - 2*marginMm) * mmToPx;
+    const availH = (letterHmm - 2*marginMm) * mmToPx;
 
     const pageEl = document.querySelector('.page');
     const contentW = pageEl.scrollWidth;
@@ -406,20 +410,18 @@
     document.body.style.height = (100 / scale) + '%';
   }
 
-  // main flow
+  // main flow: render, scale, print, close if possible
   updateMeta();
   render();
 
-  // Wait briefly for fonts/images, then scale and call print dialog
   setTimeout(() => {
     updateMeta();
     const scale = computeScaleToFit();
     applyScale(scale);
-
-    // show only if running in interactive window (when user opened summary and clicked print)
+    // allow paint and then open print dialog
     setTimeout(() => {
       try { window.print(); } catch(e){ console.error(e); }
-      // try to close the print window if it was opened by the summary page
+      // attempt to close automatically if the window was opened by the summary page
       setTimeout(()=> { try { window.close(); } catch(e){} }, 900);
     }, 300);
   }, 240);
