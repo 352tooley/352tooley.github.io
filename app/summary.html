@@ -49,7 +49,6 @@
     .btn{background:var(--brand);color:#fff;border:none;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer}
     .btn.secondary{background:#111;color:#fff}
 
-    /* Main grid: 3 columns desktop, DORT and Revenue span 2 rows so the right column stacks */
     .grid{
       display:grid;
       grid-template-columns:repeat(3,1fr);
@@ -77,7 +76,6 @@
     .card-emoji{font-size:26px}
     .card-title{font-weight:800;font-size:16px}
 
-    /* Uniform tile grid and tiles */
     .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;align-items:stretch}
     @media (max-width:640px){ .metric-grid{grid-template-columns:1fr} }
 
@@ -102,35 +100,22 @@
     .pbar-lightgreen{ background: linear-gradient(90deg, rgba(134,239,172,1), rgba(134,239,172,0.9)); }
     .pbar-brightgreen{ background: linear-gradient(90deg, rgba(22,163,74,1), rgba(22,163,74,0.9)); }
 
-    /* goal tile specific: center content and enlarge number */
     .stat.goal{ display:flex; align-items:center; justify-content:center; text-align:center; padding:10px; }
     .stat.goal .value{ font-size:40px; line-height:1; margin:0; }
 
     .small{font-size:12px;color:var(--muted);margin-top:6px}
     .section-full{grid-column:1/-1}
+    @media print{
+      *{-webkit-print-color-adjust:exact;color-adjust:exact;}
+      body{background:#fff}
+      .card{box-shadow:none;border:1px solid #eee}
+      header{display:block}
+      .top-actions{display:none}
+    }
     .state-pill{margin-left:auto;padding:6px 10px;border-radius:999px;color:#fff;font-weight:800;font-size:13px}
     .state-good{background:var(--good)}
     .state-bad{background:var(--red)}
     .state-neutral{background:var(--muted)}
-
-    /* ---------------- PRINT RULES - aim to fit single page ---------------- */
-    @page { size: A4 landscape; margin: 8mm; }
-
-    @media print {
-      html, body { background: white; color: black; }
-      header { position:fixed; top:0; left:0; right:0; box-shadow:none; border:none; padding-bottom:6px; background:#fff; }
-      main { margin-top:120px; } /* space for header */
-      .top-actions, .btn { display:none !important; }
-      .grid { gap:6px; grid-auto-rows: minmax(110px, auto); }
-      .card { padding:8px; border-width:1px; box-shadow:none; }
-      .metric-grid { gap:6px; }
-      .stat { padding:8px; min-height:64px; }
-      .stat .label { font-size:11px; }
-      .stat .value { font-size:15px; }
-      .small { font-size:11px; }
-      .stat.goal .value { font-size:34px; }
-      * {-webkit-print-color-adjust: exact; color-adjust: exact; }
-    }
   </style>
 </head>
 <body>
@@ -143,20 +128,21 @@
     </div>
   </header>
 
-  <main id="mainContent">
+  <main>
     <div class="top-actions">
+      <!-- Print now opens the dedicated print page which auto-scales and prints -->
       <button class="btn" id="printBtn">🖨 Print</button>
       <button class="btn secondary" id="backBtn">← Back</button>
     </div>
 
     <div id="cards" class="grid" aria-live="polite">
-      <!-- Cards injected by JS -->
+      <!-- Cards will be injected here -->
     </div>
   </main>
 
 <script>
 (async function(){
-  // Try to reuse embedded logo if available
+  // extract embedded logo from /app/dort.html if present (same approach used on index)
   const logoImg = document.getElementById('siteLogo');
   try {
     const r = await fetch('/app/dort.html', {cache:'no-store'});
@@ -167,7 +153,7 @@
     }
   } catch(e){ /* ignore */ }
 
-  // Meta elements
+  // meta: date/time/store
   const metaDate = document.getElementById('metaDate');
   const metaTime = document.getElementById('metaTime');
   const metaStore = document.getElementById('metaStore');
@@ -273,6 +259,7 @@
     return e;
   }
 
+  // build DORT-like subtiles (used in multiple cards)
   function statBlock(label, att, goal, pct, gap, opts){
     opts = opts || {};
     const s = el('div',{class:'stat'});
@@ -301,7 +288,7 @@
     const grid = document.getElementById('cards');
     grid.innerHTML = '';
 
-    // DORT + SORT (left column) - span 2 rows to match stacked right column
+    // DORT + SORT tile (left)
     const ds = el('section',{class:'card span-2'});
     const head = el('div',{class:'card-head'});
     head.appendChild(el('div',{class:'card-emoji',text:'📊'}));
@@ -320,7 +307,7 @@
     ds.appendChild(mg);
     grid.appendChild(ds);
 
-    // Revenue (center column) - span 2 rows to match left column
+    // Revenue tile (center)
     const rev = el('section',{class:'card span-2'});
     const rhead = el('div',{class:'card-head'});
     rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
@@ -328,38 +315,38 @@
     rev.appendChild(rhead);
 
     const revGrid = el('div',{class:'metric-grid'});
-
-    // VAF tile
     const vPercent = out.vaf.vTarget > 0 ? Math.round((out.vaf.mrc / out.vaf.vTarget) * 100) : 0;
     const vafTile = el('div',{class:'stat'});
     vafTile.appendChild(el('div',{class:'label',text:'VAF'}));
     vafTile.appendChild(el('div',{class:'value',text: money(out.vaf.mrc)}));
     vafTile.appendChild(el('div',{class:'small',text: 'Target: ' + money(out.vaf.vTarget) + ' /op • Opp: ' + out.vaf.vOpp}));
     const vafProgress = el('div',{class:'progress'});
-    const vafBar = el('i'); vafBar.style.width = Math.min(200, Math.max(0, vPercent)) + '%'; vafBar.classList.add(progressClassFor(vPercent));
+    const vafBar = el('i');
+    vafBar.style.width = Math.min(200, Math.max(0, vPercent)) + '%';
+    vafBar.classList.add(progressClassFor(vPercent));
     vafProgress.appendChild(vafBar);
     vafTile.appendChild(vafProgress);
     revGrid.appendChild(vafTile);
 
-    // VAF Gap (no progress)
     const vafGap = el('div',{class:'stat'});
     vafGap.appendChild(el('div',{class:'label',text:'VAF Gap'}));
     vafGap.appendChild(el('div',{class:'value',text: money(out.vaf.vGap)}));
     vafGap.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On or above target' : 'Behind target'}));
     revGrid.appendChild(vafGap);
 
-    // P360 percent
     const pPct = el('div',{class:'stat'});
     pPct.appendChild(el('div',{class:'label',text:'P360 — Current %'}));
     pPct.appendChild(el('div',{class:'value',text: (out.p360.pPctIn || 0) + '%'}));
     pPct.appendChild(el('div',{class:'small',text: 'Attained: ' + out.p360.pAtt + ' / ' + out.p360.pOpp}));
     const pPctProgress = el('div',{class:'progress'});
-    const pPctBar = el('i'); const pPctVal = Math.min(200, Math.max(0, out.p360.pPctIn || 0));
-    pPctBar.style.width = pPctVal + '%'; pPctBar.classList.add(progressClassFor(pPctVal));
-    pPctProgress.appendChild(pPctBar); pPct.appendChild(pPctProgress);
+    const pPctBar = el('i');
+    const pPctVal = Math.min(200, Math.max(0, out.p360.pPctIn || 0));
+    pPctBar.style.width = pPctVal + '%';
+    pPctBar.classList.add(progressClassFor(pPctVal));
+    pPctProgress.appendChild(pPctBar);
+    pPct.appendChild(pPctProgress);
     revGrid.appendChild(pPct);
 
-    // P360 adds needed (no progress)
     const pNeed = el('div',{class:'stat'});
     pNeed.appendChild(el('div',{class:'label',text:'P360 — Adds Needed to ' + out.p360.pTargetPct + '%'}));
     pNeed.appendChild(el('div',{class:'value',text: out.p360.pNeed}));
@@ -369,7 +356,7 @@
     rev.appendChild(revGrid);
     grid.appendChild(rev);
 
-    // Right column: CSAT (top) and T-Life (bottom) stacked; together they match left/center height
+    // CSAT (top-right)
     const cs = el('section',{class:'card'});
     const csHead = el('div',{class:'card-head'});
     csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
@@ -392,7 +379,7 @@
     cs.appendChild(csInner);
     grid.appendChild(cs);
 
-    // T-Life
+    // T-Life (bottom-right)
     const tl = el('section',{class:'card'});
     const tlH = el('div',{class:'card-head'});
     tlH.appendChild(el('div',{class:'card-emoji',text:'📱'}));
@@ -405,7 +392,8 @@
     t1.appendChild(el('div',{class:'value',text: out.tlife.tlPct + '%'}));
     t1.appendChild(el('div',{class:'small',text:'Target: ' + out.tlife.tlTarget + '%'}));
     const t1p = el('div',{class:'progress'});
-    const t1bar = el('i'); const tPctVal = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
+    const t1bar = el('i');
+    const tPctVal = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
     t1bar.style.width = tPctVal + '%';
     if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) { t1bar.classList.add('pbar-brightgreen'); } else { t1bar.classList.add('pbar-red'); }
     t1p.appendChild(t1bar); t1.appendChild(t1p);
@@ -420,7 +408,7 @@
     tl.appendChild(tlInner);
     grid.appendChild(tl);
 
-    // Daily goals (full width below)
+    // Daily goals (full width)
     const goalsCard = el('section',{class:'card section-full'});
     const ghead = el('div',{class:'card-head'});
     ghead.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
@@ -438,14 +426,16 @@
       t.appendChild(el('div',{class:'value',text: displayVal }));
       return t;
     }
+
     gGrid.appendChild(goalTile('Voice','📞', gg.voice));
     gGrid.appendChild(goalTile('BTS','⌚', gg.bts));
     gGrid.appendChild(goalTile('TFB','💼', gg.tfb));
     gGrid.appendChild(goalTile('Accessories','🎧', gg.acc));
+
     goalsCard.appendChild(gGrid);
     grid.appendChild(goalsCard);
 
-    // color numeric gap labels
+    // color numeric gap labels where present
     document.querySelectorAll('.gap').forEach(g => {
       const num = parseFloat(String(g.textContent).replace(/[^0-9.-]/g,''));
       if (isNaN(num)) return;
@@ -453,106 +443,19 @@
     });
   }
 
-  // initial render and re-render on storage events
+  // initial render
   try { render(); } catch(e){ console.error('Summary render failed', e); document.getElementById('cards').textContent = 'An error occurred while rendering the summary. See console.'; }
-  window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
-  // ---------------- PRINT FIT LOGIC ----------------
-  // We'll compute a scale to make the #mainContent fit a single landscape A4 page,
-  // apply it just before printing, then reset after print completes.
-  const mainEl = document.getElementById('mainContent');
-
-  // conversion constants for mm -> px at 96dpi (approx)
-  const mmToPx = 3.7795275591;
-
-  function computePrintScaleForA4Landscape() {
-    // Paper size A4 landscape in mm: 297 x 210
-    const paperWmm = 297, paperHmm = 210;
-    const marginMm = 8; // matches @page margin
-    const availW = (paperWmm - 2*marginMm) * mmToPx;
-    const availH = (paperHmm - 2*marginMm) * mmToPx;
-
-    // measure content size (cards + header)
-    // we include header height (logo + meta) as printed header space is reserved by CSS (main margin-top)
-    const headerRect = document.querySelector('header').getBoundingClientRect();
-    const mainRect = mainEl.getBoundingClientRect();
-    const contentW = Math.max(mainRect.width, mainEl.scrollWidth);
-    const contentH = headerRect.height + Math.max(mainRect.height, mainEl.scrollHeight);
-
-    // Compute scale to fit both width and height
-    const scaleW = availW / contentW;
-    const scaleH = availH / contentH;
-    let scale = Math.min(scaleW, scaleH, 1);
-
-    // don't scale below 0.5 to keep readability
-    if (scale < 0.5) scale = 0.5;
-    return scale;
-  }
-
-  // apply scale: we scale the #mainContent container and also increase its width so scaled layout keeps proportions
-  function applyPrintScale() {
-    const scale = computePrintScaleForA4Landscape();
-    // store previous styles to restore later
-    mainEl.dataset._prevTransform = mainEl.style.transform || '';
-    mainEl.dataset._prevTransformOrigin = mainEl.style.transformOrigin || '';
-    mainEl.dataset._prevWidth = mainEl.style.width || '';
-    document.documentElement.dataset._prevOverflow = document.documentElement.style.overflow || '';
-    // apply
-    mainEl.style.transformOrigin = 'top left';
-    mainEl.style.transform = 'scale(' + scale + ')';
-    // set width to compensate so content doesn't wrap unexpectedly
-    mainEl.style.width = (100 / scale) + '%';
-    // hide scrollbars when printing
-    document.documentElement.style.overflow = 'visible';
-  }
-
-  function resetPrintScale() {
-    // restore
-    if (mainEl.dataset._prevTransform !== undefined) mainEl.style.transform = mainEl.dataset._prevTransform;
-    if (mainEl.dataset._prevTransformOrigin !== undefined) mainEl.style.transformOrigin = mainEl.dataset._prevTransformOrigin;
-    if (mainEl.dataset._prevWidth !== undefined) mainEl.style.width = mainEl.dataset._prevWidth;
-    if (document.documentElement.dataset._prevOverflow !== undefined) document.documentElement.style.overflow = document.documentElement.dataset._prevOverflow;
-    // cleanup data attrs
-    delete mainEl.dataset._prevTransform;
-    delete mainEl.dataset._prevTransformOrigin;
-    delete mainEl.dataset._prevWidth;
-    delete document.documentElement.dataset._prevOverflow;
-  }
-
-  // Bind to print events so print button or browser print both get scaling
-  window.addEventListener('beforeprint', applyPrintScale);
-  window.addEventListener('afterprint', resetPrintScale);
-  if (window.matchMedia) {
-    const m = window.matchMedia('print');
-    m.addListener((e) => {
-      if (e.matches) applyPrintScale();
-      else resetPrintScale();
-    });
-  }
-
-  // Print button: ensure we apply scale, then call print(), then reset if afterprint doesn't fire
+  // controls
+  // Open the dedicated print page in a new tab/window; that page will auto-scale and print itself
   document.getElementById('printBtn').addEventListener('click', () => {
-    try {
-      // Apply scale synchronously first so browsers pick it up in print preview
-      applyPrintScale();
-      // Delay slightly to allow paint before print dialog opens
-      setTimeout(() => {
-        try {
-          window.print();
-        } finally {
-          // Some browsers don't reliably fire afterprint in all contexts; schedule a fallback reset
-          setTimeout(resetPrintScale, 1200);
-        }
-      }, 250);
-    } catch (err) {
-      console.error('Print failed', err);
-      // still attempt to print
-      window.print();
-    }
+    // open in a new tab/window; the print page auto-closes itself after printing where possible
+    window.open('/app/summary-print.html', '_blank');
   });
-
-  // Back button
   document.getElementById('backBtn').addEventListener('click', () => location.href = 'goals.html');
+
+  // re-render when storage changes in other tabs
+  window.addEventListener('storage', () => { try { render(); } catch(e){} });
 
 })();
 </script>
