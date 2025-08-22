@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Summary — Print</title>
+  <style>
+    :root{
+      --brand:#e6007e; --muted:#6b7280; --accent:#111827;
+      --good:#16a34a; --bad:#ef4444; --yellow:#eab308;
+      --card-bg:#fff;
+    }
+    html,body{height:100%;margin:0;padding:0;background:#fff;color:var(--accent);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;}
+    /* page container sized for a landscape page (will be scaled to match printer) */
+    .page {
+      width: 297mm;      /* A4 width in mm - landscape */
+      height: 210mm;     /* A4 height in mm */
+      padding: 12mm;
+      box-sizing: border-box;
+      margin: 0 auto;
+      background: #fff;
+    }
+
+    header { text-align:center; margin-bottom:8px; }
+    .logo { max-height:78px; display:block; margin: 0 auto 8px; object-fit:contain; }
+    .meta { display:flex; justify-content:center; gap:18px; color:var(--muted); font-size:12px; margin-bottom:6px; }
+    .meta div { min-width:120px; text-align:center; }
+
+    /* compact grid for print */
+    .grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:8px;
+    }
+    /* Make DORT and Revenue span two rows so (right column) stacked items match height */
+    .span-2 { grid-row: span 2; }
+
+    .card {
+      background:var(--card-bg);
+      border-radius:8px;
+      padding:8px;
+      border:1px solid #eceff2;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+      gap:8px;
+    }
+    .card-head{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px}
+    .card-emoji{font-size:18px}
+    .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+    /* compact stat tile */
+    .stat {
+      background:linear-gradient(#fff,#fbfdff);
+      border-radius:8px;
+      padding:8px;
+      border:1px solid #f1f5f9;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      min-height:64px;
+    }
+    .label{font-size:11px;color:var(--muted); margin-bottom:6px}
+    .value{font-weight:800;font-size:13px}
+    .small{font-size:11px;color:var(--muted); margin-top:6px}
+
+    .progress{height:8px;border-radius:999px;background:#eef2f7;overflow:hidden;margin-top:8px}
+    .progress>i{display:block;height:100%;width:0%;border-radius:999px}
+    .pbar-red{background:linear-gradient(90deg,#ef4444,#ef6a6a)}
+    .pbar-yellow{background:linear-gradient(90deg,#eab308,#f3c75a)}
+    .pbar-lightgreen{background:linear-gradient(90deg,#86efac,#baf4cb)}
+    .pbar-brightgreen{background:linear-gradient(90deg,#16a34a,#4cd46f)}
+
+    /* Daily goals row spans full width at bottom */
+    .full-row { grid-column: 1 / -1; }
+
+    /* print-only small tweaks */
+    @media print {
+      body, .page { background: #fff; color: #000; }
+      /* force colors to print */
+      * { -webkit-print-color-adjust: exact; color-adjust: exact; }
+      /* remove any shadows */
+      .card { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="printPage">
+    <header>
+      <img id="siteLogo" class="logo" src="/logo-256.png" alt="Company logo">
+      <div class="meta" id="metaBar">
+        <div id="metaDate">—</div>
+        <div id="metaTime">—</div>
+        <div id="metaStore">—</div>
+      </div>
+    </header>
+
+    <main>
+      <div id="cardsGrid" class="grid" aria-hidden="false">
+        <!-- injected -->
+      </div>
+    </main>
+  </div>
+
+<script>
+(function(){
+  // helpers
+  const mmToPx = 3.7795275591; // approx px per mm at 96dpi
+  function n(v){ const x=parseFloat(v); return isNaN(x)?0:x; }
+  function i(v){ const x=parseInt(v); return isNaN(x)?0:x; }
+  function money(v){ return '$' + Number(n(v)).toFixed(2); }
+  function getOr(k, def){ const v = localStorage.getItem(k); return v===null ? def : v; }
+
+  // try to get store name similar to app
+  function getStoreName(){
+    const s1 = localStorage.getItem('ggt.store'); if (s1) return s1;
+    const raw = localStorage.getItem('ggt_selection');
+    if (raw) {
+      try { const obj = JSON.parse(raw); return obj.store || obj.store_name || obj.storeName || null; } catch(e){}
+    }
+    return localStorage.getItem('store') || localStorage.getItem('store_name') || 'Unknown store';
+  }
+
+  // try to reuse logo from dort.html if it contains embedded base64
+  (async function tryLogo(){
+    const logo = document.getElementById('siteLogo');
+    try {
+      const r = await fetch('/app/dort.html', {cache:'no-store'});
+      if (r.ok) {
+        const t = await r.text();
+        const m = t.match(/data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+/);
+        if (m && m[0]) logo.src = m[0];
+      }
+    } catch(e){}
+  })();
+
+  // compute metrics (same logic as summary)
+  function comb(ad, gd, as, gs){
+    const att = i(getOr(ad,0)) + i(getOr(as,0));
+    const goal= i(getOr(gd,0)) + i(getOr(gs,0));
+    const pct = goal>0 ? Math.round((att/goal)*100) : 0;
+    const gap = goal - att;
+    return {att, goal, pct, gap};
+  }
+  function computeAll(){
+    const voice = comb('d_v_att','d_v_goal','s_v_att','s_v_goal');
+    const bts = comb('d_b_att','d_b_goal','s_b_att','s_b_goal');
+    const tfb = comb('d_t_att','d_t_goal','s_t_att','s_t_goal');
+    const acc = comb('d_a_att','d_a_goal','s_a_att','s_a_goal');
+
+    const pOpp = i(getOr('p_opp',0));
+    const pPctIn = Math.max(0, Math.min(100, n(getOr('p_pct',0))));
+    const pAtt = Math.round(pOpp*(pPctIn/100));
+    const pTargetPct = 60; const tP = pTargetPct/100;
+    const pNeed = Math.max(0, Math.ceil((tP*pOpp - pAtt) / (1 - tP)));
+
+    const vOpp = i(getOr('v_opp',0));
+    const vTot = n(getOr('v_total',0));
+    const vTarget = 19;
+    const needTotal = vTarget * vOpp;
+    const vGap = Math.max(0, needTotal - vTot);
+    const mrc = vOpp>0 ? (vTot/vOpp) : 0;
+
+    const cAvg = n(getOr('c_score',0));
+    const cN = i(getOr('c_surveys',0));
+    const cNeed = cAvg>=9.5 ? 0 : Math.max(0, Math.ceil(2 * cN * (9.5 - cAvg)));
+
+    const tlPct = Math.max(0, Math.min(100, n(getOr('t2_att',0))));
+    const tlOpp = i(getOr('t2_opp',0));
+    const tlSuc = Math.round(tlOpp*(tlPct/100));
+    const tlTarget = 70;
+    const tT = tlTarget/100;
+    const tlNeed = Math.max(0, Math.ceil((tT*tlOpp - tlSuc) / (1 - tT)));
+
+    const gVoice = getOr('g_voice','—'), gBts = getOr('g_bts','—'), gAcc = getOr('g_acc','—'), gTfb = getOr('g_tfb','—');
+
+    return {
+      dortsort:{voice,bts,tfb,acc},
+      p360:{pOpp,pPctIn,pAtt,pNeed,pTargetPct},
+      vaf:{vOpp,vTot,vTarget,needTotal,vGap,mrc},
+      csat:{cAvg,cN,cNeed},
+      tlife:{tlPct,tlOpp,tlSuc,tlTarget,tlNeed},
+      goals:{voice:gVoice,bts:gBts,acc:gAcc,tfb:gTfb}
+    };
+  }
+
+  // small DOM helpers
+  function el(tag, props, children){
+    const e = document.createElement(tag);
+    props = props||{};
+    for(const k in props){
+      if(k==='class') e.className = props[k];
+      else if(k==='text') e.textContent = props[k];
+      else e.setAttribute(k, props[k]);
+    }
+    (children||[]).forEach(c => { if (typeof c === 'string') e.insertAdjacentHTML('beforeend', c); else e.appendChild(c); });
+    return e;
+  }
+
+  // progress color
+  function progressClassFor(pct){
+    if (pct < 80) return 'pbar-red';
+    if (pct >= 80 && pct <= 99) return 'pbar-yellow';
+    if (pct >= 100 && pct <= 124) return 'pbar-lightgreen';
+    return 'pbar-brightgreen';
+  }
+
+  // render the compact print layout
+  function render(){
+    const out = computeAll();
+    const grid = document.getElementById('cardsGrid');
+
+    // DORT + SORT (span 2 rows)
+    const ds = el('section',{class:'card span-2'});
+    const head = el('div',{class:'card-head'});
+    head.appendChild(el('div',{class:'card-emoji',text:'📊'}));
+    head.appendChild(el('div',{class:'card-title',text:'DORT + SORT'}));
+    ds.appendChild(head);
+    const mg = el('div',{class:'metric-grid'});
+    function tile(label, value, small, pct, gap, opts){
+      opts = opts || {};
+      const s = el('div',{class:'stat'});
+      s.appendChild(el('div',{class:'label',text:label}));
+      s.appendChild(el('div',{class:'value',text:value}));
+      if (small) s.appendChild(el('div',{class:'small',text:small}));
+      if (typeof pct === 'number'){
+        const pr = el('div',{class:'progress'});
+        const bar = el('i'); bar.style.width = Math.min(200, Math.max(0, pct)) + '%';
+        bar.classList.add(progressClassFor(pct));
+        pr.appendChild(bar); s.appendChild(pr);
+      }
+      if (opts.currencyGap && typeof gap !== 'undefined'){
+        s.appendChild(el('div',{class:'small',text: gap <= 0 ? 'On/above target' : 'Behind: ' + money(gap)}));
+      } else if (typeof gap !== 'undefined'){
+        s.appendChild(el('div',{class:'small',text: gap <= 0 ? ('+'+Math.abs(gap)) : ('-'+gap)}));
+      }
+      return s;
+    }
+
+    const v = out.dortsort.voice, b = out.dortsort.bts, t = out.dortsort.tfb, a = out.dortsort.acc;
+    mg.appendChild(tile('Voice', `${v.att} / ${v.goal} (${v.pct}%)`, '', v.pct, v.gap));
+    mg.appendChild(tile('BTS', `${b.att} / ${b.goal} (${b.pct}%)`, '', b.pct, b.gap));
+    mg.appendChild(tile('TFB', `${t.att} / ${t.goal} (${t.pct}%)`, '', t.pct, t.gap));
+    // accessories show currency
+    mg.appendChild(tile('Accessories', `${money(a.att)} / ${money(a.goal)} (${a.pct}%)`, '', a.pct, a.gap, {currencyGap:true}));
+    ds.appendChild(mg);
+    grid.appendChild(ds);
+
+    // Revenue (span 2 rows)
+    const rev = el('section',{class:'card span-2'});
+    const rhead = el('div',{class:'card-head'});
+    rhead.appendChild(el('div',{class:'card-emoji',text:'💵'}));
+    rhead.appendChild(el('div',{class:'card-title',text:'Revenue'}));
+    rev.appendChild(rhead);
+
+    const revGrid = el('div',{class:'metric-grid'});
+    const vPercent = out.vaf.vTarget > 0 ? Math.round((out.vaf.mrc / out.vaf.vTarget) * 100) : 0;
+    revGrid.appendChild(tile('VAF', money(out.vaf.mrc), `Target: ${money(out.vaf.vTarget)} • Opp: ${out.vaf.vOpp}`, vPercent, out.vaf.vGap, {currencyGap:true}));
+
+    // VAF Gap (no progress)
+    const vGapTile = el('div',{class:'stat'});
+    vGapTile.appendChild(el('div',{class:'label',text:'VAF Gap'}));
+    vGapTile.appendChild(el('div',{class:'value',text:money(out.vaf.vGap)}));
+    vGapTile.appendChild(el('div',{class:'small',text: out.vaf.vGap <= 0 ? 'On or above target' : 'Behind target'}));
+    revGrid.appendChild(vGapTile);
+
+    // P360 percent
+    revGrid.appendChild(tile('P360 — Current %', `${out.p360.pPctIn}%`, `Attained: ${out.p360.pAtt} / ${out.p360.pOpp}`, out.p360.pPctIn));
+
+    // P360 Adds (no progress)
+    const pAddTile = el('div',{class:'stat'});
+    pAddTile.appendChild(el('div',{class:'label',text:`P360 — Adds Needed to ${out.p360.pTargetPct}%`}));
+    pAddTile.appendChild(el('div',{class:'value',text: out.p360.pNeed}));
+    pAddTile.appendChild(el('div',{class:'small',text: out.p360.pNeed > 0 ? 'Work to do' : 'On target'}));
+    revGrid.appendChild(pAddTile);
+
+    rev.appendChild(revGrid);
+    grid.appendChild(rev);
+
+    // CSAT (top right)
+    const cs = el('section',{class:'card'});
+    const csHead = el('div',{class:'card-head'});
+    csHead.appendChild(el('div',{class:'card-emoji',text:'😊'}));
+    csHead.appendChild(el('div',{class:'card-title',text:'CSAT'}));
+    cs.appendChild(csHead);
+    const csGrid = el('div',{class:'metric-grid'});
+    csGrid.appendChild(el('div',{class:'stat'}, [
+      el('div',{class:'label',text:'Average Score'}),
+      el('div',{class:'value',text: (out.csat.cAvg || 0).toFixed(1) + ' / 10'}),
+      el('div',{class:'small',text:'Surveys: ' + (out.csat.cN || 0)})
+    ]));
+    csGrid.appendChild(el('div',{class:'stat'}, [
+      el('div',{class:'label',text:'Needed Perfect 10s'}),
+      el('div',{class:'value',text: out.csat.cNeed}),
+      el('div',{class:'small',text:'Target: 9.5'})
+    ]));
+    cs.appendChild(csGrid);
+    grid.appendChild(cs);
+
+    // T-Life (bottom right)
+    const tl = el('section',{class:'card'});
+    const tlHead = el('div',{class:'card-head'});
+    tlHead.appendChild(el('div',{class:'card-emoji',text:'📱'}));
+    tlHead.appendChild(el('div',{class:'card-title',text:'T‑Life'}));
+    tl.appendChild(tlHead);
+    const tlGrid = el('div',{class:'metric-grid'});
+    tlGrid.appendChild(el('div',{class:'stat'}, [
+      el('div',{class:'label',text:'Attainment'}),
+      el('div',{class:'value',text: out.tlife.tlPct + '%'}),
+      el('div',{class:'small',text:'Target: ' + out.tlife.tlTarget + '%'}),
+      (function(){
+        const pr = el('div',{class:'progress'}), bar = el('i');
+        const val = Math.min(200, Math.max(0, out.tlife.tlPct || 0));
+        bar.style.width = val + '%';
+        // rule: green if at/above target, else red
+        if ((out.tlife.tlPct || 0) >= (out.tlife.tlTarget || 70)) bar.classList.add('pbar-brightgreen'); else bar.classList.add('pbar-red');
+        pr.appendChild(bar);
+        return pr;
+      })()
+    ]));
+    tlGrid.appendChild(el('div',{class:'stat'}, [
+      el('div',{class:'label',text:'Needed Opportunities'}),
+      el('div',{class:'value',text: out.tlife.tlNeed}),
+      el('div',{class:'small',text:'Opportunities: ' + out.tlife.tlOpp})
+    ]));
+    tl.appendChild(tlGrid);
+    grid.appendChild(tl);
+
+    // Daily Goals (full width)
+    const goals = el('section',{class:'card full-row'});
+    const gh = el('div',{class:'card-head'});
+    gh.appendChild(el('div',{class:'card-emoji',text:'🎯'}));
+    gh.appendChild(el('div',{class:'card-title',text:'Daily Goals'}));
+    goals.appendChild(gh);
+    const ggrid = el('div',{class:'metric-grid'});
+    const gg = out.goals;
+    function goalTile(name, emoji, value){
+      const t = el('div',{class:'stat'});
+      t.appendChild(el('div',{class:'label',text: `${emoji} ${name}`}));
+      t.appendChild(el('div',{class:'value', text: name === 'Accessories' ? money(value) : String(value) }));
+      return t;
+    }
+    ggrid.appendChild(goalTile('Voice','📞', gg.voice));
+    ggrid.appendChild(goalTile('BTS','⌚', gg.bts));
+    ggrid.appendChild(goalTile('TFB','💼', gg.tfb));
+    ggrid.appendChild(goalTile('Accessories','🎧', gg.acc));
+    goals.appendChild(ggrid);
+    grid.appendChild(goals);
+  }
+
+  // meta updates (date/time/store)
+  function updateMeta(){
+    const now = new Date();
+    document.getElementById('metaDate').textContent = now.toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'});
+    document.getElementById('metaTime').textContent = now.toLocaleTimeString(undefined, {hour:'numeric',minute:'2-digit',second:'2-digit'});
+    document.getElementById('metaStore').textContent = getStoreName();
+  }
+
+  // scale-to-fit logic for A4 landscape printable area and then print
+  function computeScaleToFit(){
+    // A4 landscape printable area in mm, subtract margins (we match CSS page padding)
+    const paperWmm = 297, paperHmm = 210, marginMm = 12; // matches .page padding
+    const availW = (paperWmm - 2*marginMm) * mmToPx;
+    const availH = (paperHmm - 2*marginMm) * mmToPx;
+
+    const pageEl = document.querySelector('.page');
+    // content size
+    const contentW = pageEl.scrollWidth;
+    const contentH = pageEl.scrollHeight;
+
+    const scaleW = availW / contentW;
+    const scaleH = availH / contentH;
+    let scale = Math.min(scaleW, scaleH, 1);
+    if (scale < 0.45) scale = 0.45; // don't go too small
+    return scale;
+  }
+
+  function applyScale(scale){
+    const pageEl = document.querySelector('.page');
+    pageEl.style.transformOrigin = 'top left';
+    pageEl.style.transform = 'scale(' + scale + ')';
+    // keep body width enough so scaled content doesn't wrap
+    document.body.style.width = (100 / scale) + '%';
+    document.body.style.height = (100 / scale) + '%';
+  }
+
+  // main flow
+  updateMeta();
+  render();
+
+  // compute small delay so fonts/images render before measuring
+  setTimeout(() => {
+    updateMeta();
+    const scale = computeScaleToFit();
+    applyScale(scale);
+    // allow paint, then call print. If window was opened by summary page, it can close itself afterward.
+    setTimeout(() => {
+      try {
+        window.print();
+      } catch(e){
+        console.error(e);
+      }
+      // try to close after printing (may be blocked if user didn't open pop-up)
+      setTimeout(()=> {
+        try { window.close(); } catch(e) {}
+      }, 800);
+    }, 300);
+  }, 220);
+
+})();
+</script>
+</body>
+</html>
