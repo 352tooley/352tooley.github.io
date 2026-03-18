@@ -1,0 +1,13 @@
+build/
+gp4/
+*.o
+*.elf
+*.oelf
+
+# Payload and kernel binaries (user-supplied)
+assets/payloads/*.bin
+assets/kernels/bzImage-*
+
+# Sensitive
+*.key
+*.pem
