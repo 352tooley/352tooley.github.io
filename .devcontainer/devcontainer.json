@@ -1,0 +1,32 @@
+{
+  "name": "PS4 Linux Installer",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "8.0"
+    }
+  },
+  "onCreateCommand": "bash .devcontainer/install-toolchain.sh",
+  "remoteEnv": {
+    "OO_PS4_TOOLCHAIN": "/opt/OpenOrbis/PS4Toolchain",
+    "DOTNET_SYSTEM_GLOBALIZATION_INVARIANT": "1"
+  },
+  "postCreateCommand": "echo 'export OO_PS4_TOOLCHAIN=/opt/OpenOrbis/PS4Toolchain' >> ~/.bashrc && echo 'export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1' >> ~/.bashrc",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.makefile-tools"
+      ],
+      "settings": {
+        "C_Cpp.default.compilerPath": "/usr/bin/clang",
+        "C_Cpp.default.includePath": [
+          "/opt/OpenOrbis/PS4Toolchain/include",
+          "${workspaceFolder}/ps4-linux-installer/src"
+        ],
+        "C_Cpp.default.defines": ["__PS4__"],
+        "C_Cpp.default.cStandard": "c11"
+      }
+    }
+  }
+}
