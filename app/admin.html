@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin — Upload Daily & Monthly Goals</title>
 
+  <!-- Auth guard: admin-only page -->
+  <script src="/app/auth.js"></script>
+  <script>GGTAuth.requireAdmin();</script>
+
   <!-- PWA manifest + meta (baked in) -->
   <link rel="manifest" href="/app/manifest.json">
   <meta name="theme-color" content="#e6007e">
@@ -34,12 +38,15 @@
     .controls{display:flex;gap:8px;flex-wrap:wrap}
     .meta-note{font-size:13px;color:var(--muted);margin-top:6px}
     code {background:#f3f4f6;padding:2px 4px;border-radius:4px;font-size:13px}
+    .signout-btn{margin-left:auto;background:none;border:1px solid #e5e7eb;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--muted)}
+    .signout-btn:hover{background:#f3f4f6}
   </style>
 </head>
 <body>
   <header>
     <img src="/logo-256.png" alt="logo" style="height:44px;object-fit:contain">
     <h1>Admin — Upload Daily & Monthly Goals</h1>
+    <button class="signout-btn" onclick="GGTAuth.logout()">Sign out</button>
   </header>
 
   <main>
