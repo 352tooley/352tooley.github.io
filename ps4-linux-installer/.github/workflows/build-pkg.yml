@@ -1,0 +1,130 @@
+name: Build PS4 Linux Installer PKG
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          clang lld cmake make ninja-build \
+          python3 python3-pip \
+          wget curl git zip
+
+    - name: Download OpenOrbis PS4 Toolchain
+      run: |
+        git clone --depth 1 \
+          https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain \
+          /opt/OpenOrbis/toolchain
+        echo "OO_PS4_TOOLCHAIN=/opt/OpenOrbis/toolchain" >> $GITHUB_ENV
+
+    - name: Build create-fself and create-oelf tools
+      run: |
+        cd /opt/OpenOrbis/toolchain
+        # Build tools if not present as binaries
+        if [ ! -f bin/create-fself ]; then
+          for tool in create-fself create-oelf; do
+            if [ -d "src/tools/$tool" ]; then
+              cd "src/tools/$tool"
+              cmake . -B build -DCMAKE_BUILD_TYPE=Release
+              cmake --build build
+              cp build/$tool /opt/OpenOrbis/toolchain/bin/ 2>/dev/null || true
+              cd /opt/OpenOrbis/toolchain
+            fi
+          done
+        fi
+
+    - name: Generate param.sfo
+      run: |
+        python3 tools/create_param_sfo.py sce_sys/param.sfo
+
+    - name: Build eboot.bin
+      run: |
+        export OO_PS4_TOOLCHAIN=/opt/OpenOrbis/toolchain
+        make -j$(nproc)
+
+    - name: Package PKG structure
+      run: |
+        mkdir -p pkg_out/sce_sys
+        mkdir -p pkg_out/assets/payloads
+        mkdir -p pkg_out/assets/kernels
+        cp build/eboot.bin         pkg_out/
+        cp sce_sys/param.sfo       pkg_out/sce_sys/
+        cp sce_sys/icon0.png       pkg_out/sce_sys/ 2>/dev/null || \
+          convert -size 512x512 xc:#1a1a2e pkg_out/sce_sys/icon0.png 2>/dev/null || \
+          echo "Warning: icon0.png not found, PKG may lack icon"
+        cp assets/payloads/README.md pkg_out/assets/payloads/
+        cp assets/kernels/README.md  pkg_out/assets/kernels/
+
+    - name: Build PKG (if create-pkg available)
+      run: |
+        export OO_PS4_TOOLCHAIN=/opt/OpenOrbis/toolchain
+        if [ -f "$OO_PS4_TOOLCHAIN/bin/create-pkg" ]; then
+          bash scripts/build_pkg.sh
+        else
+          echo "create-pkg not available — uploading PKG structure as artifact"
+          cd pkg_out && zip -r ../build/ps4-linux-installer-pkg.zip .
+        fi
+      continue-on-error: true
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ps4-linux-installer-pkg
+        path: |
+          build/eboot.bin
+          build/ps4-linux-installer.pkg
+          build/ps4-linux-installer-pkg.zip
+          sce_sys/param.sfo
+        if-no-files-found: warn
+        retention-days: 30
+
+    - name: Create GitHub Release
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "build-${{ github.run_number }}"
+        name: "PS4 Linux Installer Build #${{ github.run_number }}"
+        body: |
+          Automated build from commit ${{ github.sha }}
+
+          ## Installation
+          1. Download `ps4-linux-installer.pkg` (or the zip if PKG not available)
+          2. Transfer to PS4 via FTP (GoldHEN FTP, port 2121)
+          3. Install via GoldHEN Package Installer
+
+          ## Notes
+          - Requires jailbroken PS4 with GoldHEN
+          - Compatible with FW 5.05 – 12.52
+          - Place kernel images and payloads in `/data/ps4linux/` before first run
+        files: |
+          build/ps4-linux-installer.pkg
+          build/ps4-linux-installer-pkg.zip
+          build/eboot.bin
+        fail_on_unmatched_files: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build summary
+      run: |
+        echo "## Build Complete" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+        for f in build/eboot.bin build/ps4-linux-installer.pkg; do
+          if [ -f "$f" ]; then
+            size=$(du -sh "$f" | cut -f1)
+            echo "| $f | $size |" >> $GITHUB_STEP_SUMMARY
+          fi
+        done
