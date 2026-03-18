@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <string.h>
+#include <orbis/libkernel.h>
 
 static void remove_dir_recursive(const char *path) {
     DIR *d = opendir(path);

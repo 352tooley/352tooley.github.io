@@ -1,46 +1,63 @@
 # PS4 Linux Installer - Makefile
-# Requires OpenOrbis PS4 Toolchain (run setup.sh first)
+# Requires OpenOrbis PS4 Toolchain v0.5.4+
+# Set OO_PS4_TOOLCHAIN to the toolchain root, or export it before running make.
 
-OO_PS4_TOOLCHAIN ?= /opt/OpenOrbis/toolchain
+OO_PS4_TOOLCHAIN ?= /opt/OpenOrbis/PS4Toolchain
 
-CC      = $(OO_PS4_TOOLCHAIN)/bin/clang
-CXX     = $(OO_PS4_TOOLCHAIN)/bin/clang++
-LINKER  = $(OO_PS4_TOOLCHAIN)/bin/ld.lld
-OELF    = $(OO_PS4_TOOLCHAIN)/bin/create-oelf
-FSELF   = $(OO_PS4_TOOLCHAIN)/bin/create-fself
-PKG     = $(OO_PS4_TOOLCHAIN)/bin/create-pkg
-SFOXML  = $(OO_PS4_TOOLCHAIN)/bin/PkgTool.Core
+# --- Toolchain tools (v0.5.4: create-fself does OELF+eboot in one step) ---
+TOOLBIN = $(OO_PS4_TOOLCHAIN)/bin/linux
+CC      = clang
+LD      = ld.lld
+FSELF   = $(TOOLBIN)/create-fself
+MKGP4   = $(TOOLBIN)/create-gp4
+PKGTOOL = DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 $(TOOLBIN)/PkgTool.Core
 
-TARGET  = ps4-linux-installer
-ODIR    = build/obj
-BDIR    = build
+# --- Project metadata ---
+TITLE      = PS4 Linux Installer
+VERSION    = 1.00
+TITLE_ID   = BREW00352
+CONTENT_ID = UP0001-BREW00352_00-LINUXINSTALLER01
+TARGET     = ps4-linux-installer
 
-CFLAGS  = \
-    -target x86_64-scei-ps4 \
+# --- Paths ---
+ODIR = build/obj
+BDIR = build
+
+# --- Compile flags (v0.5.4 target triple) ---
+CFLAGS = \
+    --target=x86_64-pc-freebsd12-elf \
+    -fPIC \
+    -funwind-tables \
     -O2 \
     -Wall \
     -Wno-unused-function \
-    -fPIC \
+    -isysroot $(OO_PS4_TOOLCHAIN) \
     -isystem $(OO_PS4_TOOLCHAIN)/include \
-    -I$(OO_PS4_TOOLCHAIN)/include \
     -I src
 
-LIBS    = \
-    -L $(OO_PS4_TOOLCHAIN)/lib \
-    -lSceVideoOut_stub_weak \
-    -lSceUserService_stub_weak \
-    -lScePad_stub_weak \
-    -lSceNet_stub_weak \
-    -lSceNetCtl_stub_weak \
-    -lSceSsl_stub_weak \
-    -lSceSystemService_stub_weak \
-    -lSceAppInstUtil_stub_weak \
-    -lSceKernelModuleService_stub_weak \
-    -lkernel_stub_weak \
+# --- Linker flags ---
+LDFLAGS = \
+    -m elf_x86_64 \
+    -pie \
+    --script $(OO_PS4_TOOLCHAIN)/link.x \
+    --eh-frame-hdr \
+    -L$(OO_PS4_TOOLCHAIN)/lib \
+    -lSceVideoOut \
+    -lSceUserService \
+    -lScePad \
+    -lSceNet \
+    -lSceNetCtl \
+    -lSceSsl \
+    -lSceSystemService \
+    -lSceAppInstUtil \
+    -lkernel \
     -lc \
-    -lc++
+    -lc++ \
+    $(OO_PS4_TOOLCHAIN)/lib/crt1.o
 
+# --- Sources ---
 SRCS = \
+    src/miniz.c \
     src/main.c \
     src/config/settings.c \
     src/ui/graphics.c \
@@ -60,39 +77,54 @@ SRCS = \
 
 OBJS = $(patsubst src/%.c,$(ODIR)/%.o,$(SRCS))
 
-.PHONY: all pkg clean dirs
+.PHONY: all pkg clean dirs sfo
 
 all: dirs $(BDIR)/eboot.bin
 
 dirs:
 	@mkdir -p $(ODIR)/config $(ODIR)/ui $(ODIR)/network $(ODIR)/storage $(ODIR)/distros
 
+# Compile each .c → .o
 $(ODIR)/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Link objects → ELF
 $(BDIR)/$(TARGET).elf: $(OBJS)
-	$(LINKER) -m elf_x86_64 \
-	    -pie \
-	    --script $(OO_PS4_TOOLCHAIN)/link.x \
-	    -o $@ $(OBJS) $(LIBS)
+	$(LD) $(OBJS) -o $@ $(LDFLAGS)
 
-$(BDIR)/$(TARGET).oelf: $(BDIR)/$(TARGET).elf
-	$(OELF) --in $(BDIR)/$(TARGET).elf --out $@
+# create-fself v0.5.4: one step produces both OELF and eboot.bin
+$(BDIR)/eboot.bin: $(BDIR)/$(TARGET).elf
+	$(FSELF) \
+	    -in=$(BDIR)/$(TARGET).elf \
+	    -out=$(BDIR)/$(TARGET).oelf \
+	    --eboot $@ \
+	    --paid 0x3800000000000011
 
-$(BDIR)/eboot.bin: $(BDIR)/$(TARGET).oelf
-	$(FSELF) $(BDIR)/$(TARGET).oelf $@
+# Generate param.sfo via PkgTool.Core
+$(BDIR)/param.sfo:
+	$(PKGTOOL) sfo_new $@
+	$(PKGTOOL) sfo_setentry $@ APP_TYPE      --type Integer --maxsize 4   --value 1
+	$(PKGTOOL) sfo_setentry $@ APP_VER       --type Utf8    --maxsize 8   --value '$(VERSION)'
+	$(PKGTOOL) sfo_setentry $@ ATTRIBUTE     --type Integer --maxsize 4   --value 0
+	$(PKGTOOL) sfo_setentry $@ CATEGORY      --type Utf8    --maxsize 4   --value 'gd'
+	$(PKGTOOL) sfo_setentry $@ CONTENT_ID    --type Utf8    --maxsize 48  --value '$(CONTENT_ID)'
+	$(PKGTOOL) sfo_setentry $@ DOWNLOAD_DATA_SIZE --type Integer --maxsize 4 --value 0
+	$(PKGTOOL) sfo_setentry $@ SYSTEM_VER    --type Integer --maxsize 4   --value 0
+	$(PKGTOOL) sfo_setentry $@ TITLE         --type Utf8    --maxsize 128 --value '$(TITLE)'
+	$(PKGTOOL) sfo_setentry $@ TITLE_ID      --type Utf8    --maxsize 12  --value '$(TITLE_ID)'
+	$(PKGTOOL) sfo_setentry $@ VERSION       --type Utf8    --maxsize 8   --value '$(VERSION)'
 
-pkg: all
+# Auto-generate GP4 and build PKG
+pkg: all $(BDIR)/param.sfo
+	@echo "Generating GP4..."
+	$(MKGP4) \
+	    -out $(BDIR)/$(TARGET).gp4 \
+	    --content-id=$(CONTENT_ID) \
+	    --files "$(BDIR)/eboot.bin sce_sys/icon0.png $(BDIR)/param.sfo"
 	@echo "Building PKG..."
-	@cp sce_sys/param.sfo $(BDIR)/param.sfo
-	$(PKG) pkg_build \
-	    --contentid UP0001-$(TARGET)_00-LINUX0INSTALLER01 \
-	    --type app \
-	    --passcode 00000000000000000000000000000000 \
-	    gp4/$(TARGET).gp4 \
-	    $(BDIR)/$(TARGET).pkg
-	@echo "PKG built: $(BDIR)/$(TARGET).pkg"
+	$(PKGTOOL) pkg_build $(BDIR)/$(TARGET).gp4 $(BDIR)
+	@echo ""
+	@echo "PKG built: $(BDIR)/$(CONTENT_ID).pkg"
 
 clean:
 	rm -rf build/
-

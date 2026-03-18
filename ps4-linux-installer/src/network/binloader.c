@@ -37,15 +37,15 @@ int binloader_inject(const char *payload_path) {
 
 int binloader_detect_firmware(char *fw_out, int fw_len) {
     /* Read firmware version via sceKernelGetSystemSwVersion */
-    SceKernelSwVersion sw;
+    OrbisKernelSwVersion sw;
     memset(&sw, 0, sizeof(sw));
-    sw.size = sizeof(sw);
+    sw.Size = sizeof(sw);
     if (sceKernelGetSystemSwVersion(&sw) < 0) {
         strncpy(fw_out, "unknown", fw_len - 1);
         return -1;
     }
-    /* version_string is like "12.50.00.01-..." */
-    strncpy(fw_out, sw.version_string, fw_len - 1);
+    /* VersionString is like "12.50.00.01-..." */
+    strncpy(fw_out, sw.VersionString, fw_len - 1);
     fw_out[fw_len - 1] = '\0';
     /* Trim to major.minor (e.g. "12.50") */
     char *dot = strchr(fw_out, '.');

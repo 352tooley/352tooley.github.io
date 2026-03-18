@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <orbis/SystemService.h>
+#include <orbis/libkernel.h>
 
 #define NOTIF_X     60
 #define NOTIF_Y     (SCREEN_HEIGHT - 160)
@@ -19,13 +20,12 @@ void notify_show(const char *message, int duration_ms) {
     s_msg[sizeof(s_msg) - 1] = '\0';
     s_frames_left = (duration_ms * UI_FPS) / 1000;
 
-    /* Also send to system notification tray if available */
-    SceNotificationRequest req;
+    /* Also send to system notification tray */
+    OrbisNotificationRequest req;
     memset(&req, 0, sizeof(req));
-    req.targetCategory = SCE_NOTIFICATION_REQUEST_TARGET_CATEGORY_GAME;
-    req.type           = SCE_NOTIFICATION_REQUEST_TYPE_TOASTER;
+    req.type = NotificationRequest;
     strncpy(req.message, message, sizeof(req.message) - 1);
-    sceSystemServiceSendNotificationRequest(0, &req, sizeof(req), 0);
+    sceKernelSendNotificationRequest(0, &req, sizeof(req), 0);
 }
 
 void notify_tick(void) {

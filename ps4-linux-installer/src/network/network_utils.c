@@ -1,20 +1,18 @@
 #include "network_utils.h"
 #include <string.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 #include <orbis/Net.h>
 #include <orbis/NetCtl.h>
-#include <orbis/libkernel.h>
 
 static int s_net_initialized = 0;
 
 int net_init(void) {
     if (s_net_initialized) return 0;
-    SceNetInitParam param;
-    static char s_net_mem[4 * 1024 * 1024];
-    param.memory       = s_net_mem;
-    param.size         = sizeof(s_net_mem);
-    param.flags        = 0;
-    if (sceNetInit(&param) < 0)   return -1;
-    if (sceNetCtlInit() < 0)      return -1;
+    /* v0.5.4: sceNetInit takes no arguments */
+    if (sceNetInit() < 0)    return -1;
+    if (sceNetCtlInit() < 0) return -1;
     s_net_initialized = 1;
     return 0;
 }
@@ -27,9 +25,9 @@ void net_fini(void) {
 }
 
 int net_resolve(const char *host, uint32_t *ip_out) {
-    SceNetId rid = sceNetResolverCreate("resolver", NULL, 0);
+    OrbisNetId rid = sceNetResolverCreate("resolver", 0, 0);
     if (rid < 0) return -1;
-    SceNetInAddr addr;
+    OrbisNetInAddr addr;
     int ret = sceNetResolverStartNtoa(rid, host, &addr, 0, 0, 0);
     sceNetResolverDestroy(rid);
     if (ret < 0) return -1;
@@ -40,26 +38,26 @@ int net_resolve(const char *host, uint32_t *ip_out) {
 int net_connect_tcp(const char *host, uint16_t port, int timeout_sec) {
     uint32_t ip = 0;
 
-    /* Try parsing as IP first */
-    if (sceNetInetPton(SCE_NET_AF_INET, host, &ip) <= 0) {
+    /* Try parsing as dotted IP first */
+    if (sceNetInetPton(ORBIS_NET_AF_INET, host, &ip) <= 0) {
         if (net_resolve(host, &ip) != 0) return -1;
     }
 
-    int sock = sceNetSocket("tcp_sock", SCE_NET_AF_INET, SCE_NET_SOCK_STREAM, 0);
+    int sock = sceNetSocket("tcp_sock", ORBIS_NET_AF_INET, ORBIS_NET_SOCK_STREAM, 0);
     if (sock < 0) return -1;
 
-    /* Set send/recv timeout */
-    SceNetTimeval tv = { .tv_sec = timeout_sec, .tv_usec = 0 };
-    sceNetSetsockopt(sock, SCE_NET_SOL_SOCKET, SCE_NET_SO_SNDTIMEO, &tv, sizeof(tv));
-    sceNetSetsockopt(sock, SCE_NET_SOL_SOCKET, SCE_NET_SO_RCVTIMEO, &tv, sizeof(tv));
+    /* Set send/recv timeout via BSD socket option constants */
+    struct timeval tv = { .tv_sec = timeout_sec, .tv_usec = 0 };
+    sceNetSetsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+    sceNetSetsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
-    SceNetSockaddrIn addr;
+    struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
-    addr.sin_family = SCE_NET_AF_INET;
-    addr.sin_port   = sceNetHtons(port);
+    addr.sin_family      = ORBIS_NET_AF_INET;
+    addr.sin_port        = sceNetHtons(port);
     addr.sin_addr.s_addr = ip;
 
-    if (sceNetConnect(sock, (SceNetSockaddr *)&addr, sizeof(addr)) < 0) {
+    if (sceNetConnect(sock, (OrbisNetSockaddr *)&addr, sizeof(addr)) < 0) {
         sceNetSocketClose(sock);
         return -1;
     }

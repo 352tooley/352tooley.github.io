@@ -27,7 +27,7 @@ static int    s_cursor     = 0;
 int menu_init(void) {
     sceUserServiceInitialize(NULL);
     sceUserServiceGetInitialUser(&s_user_id);
-    s_pad_handle = scePadOpen(s_user_id, SCE_PAD_PORT_TYPE_STANDARD, 0, NULL);
+    s_pad_handle = scePadOpen(s_user_id, ORBIS_PAD_PORT_TYPE_STANDARD, 0, NULL);
     return (s_pad_handle >= 0) ? 0 : -1;
 }
 
@@ -64,7 +64,7 @@ menu_result_t menu_run(int *selected_distro_out) {
 
     while (1) {
         /* Read pad */
-        ScePadData pad;
+        OrbisPadData pad;
         memset(&pad, 0, sizeof(pad));
         scePadReadState(s_pad_handle, &pad);
         uint32_t pressed = pad.buttons & ~prev_buttons;

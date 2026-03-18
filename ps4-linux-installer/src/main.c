@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <orbis/SystemService.h>
 
 #include "config/defaults.h"
 #include "config/settings.h"
