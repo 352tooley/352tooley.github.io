@@ -55,8 +55,10 @@ int fs_remove(const char *path) {
     return remove(path);
 }
 
-/* Minimal tar.gz extractor using zlib (available on PS4 via libSceZlib) */
-#include <orbis/Zlib.h>
+/* Minimal tar.gz extractor using miniz (single-header zlib, MIT license) */
+#define MINIZ_NO_ARCHIVE_APIS
+#define MINIZ_NO_STDIO
+#include "../miniz.h"
 
 #define GZIP_CHUNK  (256 * 1024)
 #define TAR_BLOCK   512
@@ -96,9 +98,9 @@ int fs_extract_tgz(const char *archive_path, const char *dest_dir,
 
     long arc_size = fs_size(archive_path);
 
-    SceZlibStream zs;
+    mz_stream zs;
     memset(&zs, 0, sizeof(zs));
-    sceZlibInflateInit2(&zs, 47); /* 47 = gzip mode */
+    mz_inflateInit2(&zs, 47); /* 47 = gzip mode */
 
     static uint8_t in_buf[GZIP_CHUNK];
     static uint8_t out_buf[GZIP_CHUNK];
@@ -117,21 +119,21 @@ int fs_extract_tgz(const char *archive_path, const char *dest_dir,
         size_t nr = fread(in_buf, 1, sizeof(in_buf), f);
         if (nr == 0) break;
         bytes_read += nr;
-        zs.avail_in = (uInt)nr;
+        zs.avail_in = (mz_uint32)nr;
         zs.next_in  = in_buf;
         do {
             zs.avail_out = sizeof(out_buf);
             zs.next_out  = out_buf;
-            zret = sceZlibInflate(&zs, Z_NO_FLUSH);
+            zret = mz_inflate(&zs, MZ_NO_FLUSH);
             if (zret < 0) { fclose(tmp); fclose(f); return -1; }
             size_t have = sizeof(out_buf) - zs.avail_out;
             fwrite(out_buf, 1, have, tmp);
         } while (zs.avail_out == 0);
         if (progress_cb && arc_size > 0)
             progress_cb((int)(bytes_read * 50 / arc_size), userdata);
-    } while (zret != Z_STREAM_END);
+    } while (zret != MZ_STREAM_END);
 
-    sceZlibInflateEnd(&zs);
+    mz_inflateEnd(&zs);
     fclose(tmp);
     fclose(f);
 

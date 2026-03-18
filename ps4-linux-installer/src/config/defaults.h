@@ -19,10 +19,17 @@
 #define ASSET_PATH_PAYLOADS     "/app0/assets/payloads/"
 #define ASSET_PATH_KERNELS      "/app0/assets/kernels/"
 
-/* Payload filenames by firmware */
-#define PAYLOAD_FW_1250         "payload-12.50.bin"
-#define PAYLOAD_FW_1252         "payload-12.52.bin"
-#define PAYLOAD_FW_DEFAULT      "payload-12.50.bin"
+/* Payload filenames by firmware.
+ * GoldHEN v2.4b18.5+ prefers .elf (100% success); .bin is kept as fallback.
+ * Run scripts/fetch_payloads.sh to download the correct variant for your hardware. */
+#define PAYLOAD_FW_1250_ELF     "payload-12.50.elf"
+#define PAYLOAD_FW_1250_BIN     "payload-12.50.bin"
+#define PAYLOAD_FW_1252_ELF     "payload-12.52.elf"
+#define PAYLOAD_FW_1252_BIN     "payload-12.52.bin"
+/* Kept for backward compat */
+#define PAYLOAD_FW_1250         PAYLOAD_FW_1250_BIN
+#define PAYLOAD_FW_1252         PAYLOAD_FW_1252_BIN
+#define PAYLOAD_FW_DEFAULT      PAYLOAD_FW_1250_BIN
 
 /* Arch Linux distro */
 #define ARCH_ROOTFS_URL         "http://ps4linux.com/files/archlinux-ps4-rootfs-latest.tar.gz"

@@ -26,29 +26,29 @@ static void set_pixel(int x, int y, color_t c) {
 }
 
 int gfx_init(void) {
-    s_video_handle = sceVideoOutOpen(0, SCE_VIDEO_OUT_BUS_TYPE_MAIN, 0, NULL);
+    s_video_handle = sceVideoOutOpen(ORBIS_VIDEO_USER_MAIN, ORBIS_VIDEO_OUT_BUS_MAIN, 0, NULL);
     if (s_video_handle < 0) return -1;
 
-    SceVideoOutBufferAttribute attr;
+    OrbisVideoOutBufferAttribute attr;
     sceVideoOutSetBufferAttribute(&attr,
-        SCE_VIDEO_OUT_PIXEL_FORMAT_B8_G8_R8_A8_SRGB,
-        SCE_VIDEO_OUT_TILING_MODE_LINEAR,
-        SCE_VIDEO_OUT_ASPECT_RATIO_16_9,
+        ORBIS_VIDEO_OUT_PIXEL_FORMAT_A8B8G8R8_SRGB,
+        ORBIS_VIDEO_OUT_TILING_MODE_LINEAR,
+        ORBIS_VIDEO_OUT_ASPECT_RATIO_16_9,
         SCREEN_WIDTH, SCREEN_HEIGHT, FB_PITCH);
 
     for (int i = 0; i < FB_COUNT; i++) {
-        s_framebuffers[i] = NULL; /* allocated via sceKernelAllocateDirectMemory */
+        s_framebuffers[i] = NULL;
     }
 
-    /* Allocate direct memory for framebuffers */
+    /* Allocate GPU-accessible (WC/GARLIC) direct memory for framebuffers */
     off_t base = 0;
-    if (sceKernelAllocateDirectMemory(0, SCE_KERNEL_MAIN_DMEM_SIZE,
-            FB_SIZE * FB_COUNT, 0x200000, SCE_KERNEL_MTYPE_C_SHARED, &base) != 0) {
+    if (sceKernelAllocateDirectMemory(0, ORBIS_KERNEL_MAIN_DMEM_SIZE,
+            FB_SIZE * FB_COUNT, 0x200000, ORBIS_KERNEL_WC_GARLIC, &base) != 0) {
         return -1;
     }
     for (int i = 0; i < FB_COUNT; i++) {
         sceKernelMapDirectMemory(&s_framebuffers[i], FB_SIZE,
-            PROT_READ | PROT_WRITE, 0, base + i * FB_SIZE, 0x200000);
+            VM_PROT_READ | VM_PROT_WRITE, 0, base + i * FB_SIZE, 0x200000);
         memset(s_framebuffers[i], 0, FB_SIZE);
     }
 
@@ -71,7 +71,7 @@ void gfx_clear(color_t c) {
 }
 
 void gfx_flip(void) {
-    sceVideoOutSubmitFlip(s_video_handle, s_current_fb, SCE_VIDEO_OUT_FLIP_MODE_VSYNC, 0);
+    sceVideoOutSubmitFlip(s_video_handle, s_current_fb, ORBIS_VIDEO_OUT_FLIP_VSYNC, 0);
     s_current_fb = (s_current_fb + 1) % FB_COUNT;
     s_pixels     = (uint8_t *)s_framebuffers[s_current_fb];
 }
