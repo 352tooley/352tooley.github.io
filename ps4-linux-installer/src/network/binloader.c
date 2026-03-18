@@ -56,12 +56,28 @@ int binloader_detect_firmware(char *fw_out, int fw_len) {
     return 0;
 }
 
+/* Return the best available payload path for the given firmware string.
+ * Prefers the .elf variant (GoldHEN v2.4b18.5+ — 100% success rate) and
+ * falls back to .bin when the .elf is not present in the PKG assets. */
 const char *binloader_payload_for_firmware(const char *fw_str) {
-    if (!fw_str) return ASSET_PATH_PAYLOADS PAYLOAD_FW_DEFAULT;
+    static char path[256];
+    const char *elf_name;
+    const char *bin_name;
 
-    if (strncmp(fw_str, "12.52", 5) == 0)
-        return ASSET_PATH_PAYLOADS PAYLOAD_FW_1252;
+    if (fw_str && strncmp(fw_str, "12.52", 5) == 0) {
+        elf_name = PAYLOAD_FW_1252_ELF;
+        bin_name = PAYLOAD_FW_1252_BIN;
+    } else {
+        elf_name = PAYLOAD_FW_1250_ELF;
+        bin_name = PAYLOAD_FW_1250_BIN;
+    }
 
-    /* Default to 12.50 payload for 12.50 and earlier */
-    return ASSET_PATH_PAYLOADS PAYLOAD_FW_DEFAULT;
+    /* Prefer .elf (GoldHEN v2.4b18.5+) */
+    snprintf(path, sizeof(path), "%s%s", ASSET_PATH_PAYLOADS, elf_name);
+    FILE *probe = fopen(path, "rb");
+    if (probe) { fclose(probe); return path; }
+
+    /* Fall back to .bin */
+    snprintf(path, sizeof(path), "%s%s", ASSET_PATH_PAYLOADS, bin_name);
+    return path;
 }
