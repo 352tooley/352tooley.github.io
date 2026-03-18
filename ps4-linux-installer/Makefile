@@ -100,8 +100,8 @@ $(BDIR)/eboot.bin: $(BDIR)/$(TARGET).elf
 	    --eboot $@ \
 	    --paid 0x3800000000000011
 
-# Generate param.sfo via PkgTool.Core
-$(BDIR)/param.sfo:
+# Generate param.sfo via PkgTool.Core (written to sce_sys/ so GP4 picks it up)
+sce_sys/param.sfo:
 	$(PKGTOOL) sfo_new $@
 	$(PKGTOOL) sfo_setentry $@ APP_TYPE      --type Integer --maxsize 4   --value 1
 	$(PKGTOOL) sfo_setentry $@ APP_VER       --type Utf8    --maxsize 8   --value '$(VERSION)'
@@ -115,14 +115,25 @@ $(BDIR)/param.sfo:
 	$(PKGTOOL) sfo_setentry $@ VERSION       --type Utf8    --maxsize 8   --value '$(VERSION)'
 
 # Auto-generate GP4 and build PKG
-pkg: all $(BDIR)/param.sfo
+# Stage all files into build/pkg/ with the correct in-package layout first,
+# so create-gp4 generates paths relative to that directory and PkgTool.Core
+# can find eboot.bin at the package root (not inside a build/ subdir).
+PKGDIR = $(BDIR)/pkg
+
+pkg: all sce_sys/param.sfo
+	@echo "Staging package files..."
+	@mkdir -p $(PKGDIR)/sce_sys/about
+	@cp $(BDIR)/eboot.bin      $(PKGDIR)/eboot.bin
+	@cp sce_sys/param.sfo      $(PKGDIR)/sce_sys/param.sfo
+	@cp sce_sys/icon0.png      $(PKGDIR)/sce_sys/icon0.png
+	@cp sce_sys/about/right.sprx $(PKGDIR)/sce_sys/about/right.sprx
 	@echo "Generating GP4..."
-	$(MKGP4) \
-	    -out $(BDIR)/$(TARGET).gp4 \
-	    --content-id=$(CONTENT_ID) \
-	    --files "$(BDIR)/eboot.bin sce_sys/icon0.png $(BDIR)/param.sfo"
+	cd $(PKGDIR) && $(MKGP4) \
+	    -out $(TARGET).gp4 \
+	    -content-id $(CONTENT_ID) \
+	    -files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png sce_sys/about/right.sprx"
 	@echo "Building PKG..."
-	$(PKGTOOL) pkg_build $(BDIR)/$(TARGET).gp4 $(BDIR)
+	$(PKGTOOL) pkg_build $(PKGDIR)/$(TARGET).gp4 $(BDIR)
 	@echo ""
 	@echo "PKG built: $(BDIR)/$(CONTENT_ID).pkg"
 

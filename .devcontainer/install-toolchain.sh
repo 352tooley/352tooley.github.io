@@ -12,6 +12,11 @@ echo "=== PS4 Linux Installer — Codespace Setup ==="
 echo "[1/4] Installing system dependencies..."
 sudo apt-get update -qq
 sudo apt-get install -y -qq clang lld make curl
+    # PkgTool.Core requires libssl1.1 (not in Ubuntu 22.04 — install from focal)
+    curl -fsSL \
+        "http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb" \
+        -o /tmp/libssl1.1.deb
+    sudo dpkg -i /tmp/libssl1.1.deb
 
 # Download toolchain
 if [ ! -d "$TOOLCHAIN_DIR/bin/linux" ]; then
