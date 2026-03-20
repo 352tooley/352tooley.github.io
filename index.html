@@ -8,7 +8,6 @@
 <link rel="icon" type="image/x-icon" href="/app/icons/favicon.ico">
 <link rel="apple-touch-icon" href="/app/icons/apple-touch-icon.png">
 <meta name="theme-color" content="#e6007e">
-<script src="/app/auth.js"></script>
 <style>
   :root {
     --brand:#e6007e;
@@ -41,21 +40,6 @@
   .btn.enabled { cursor:pointer; opacity:1; box-shadow:0 12px 18px rgba(255,43,134,.25); pointer-events:auto; }
   .note { text-align:center; color:var(--muted); margin-top:2px; }
 
-  /* ── Login overlay ── */
-  #loginOverlay { position:fixed; inset:0; z-index:999; background:#f5f5f7; display:flex; align-items:center; justify-content:center; padding:16px; }
-  #loginOverlay.hidden { display:none; }
-  .login-card { background:#fff; border-radius:18px; box-shadow:0 10px 24px rgba(0,0,0,.1); padding:32px 24px; width:100%; max-width:360px; text-align:center; }
-  .login-card .login-logo { max-height:80px; width:auto; margin:0 auto 16px; display:block; }
-  .login-card h2 { margin:0 0 4px; color:var(--brand); font-size:22px; font-weight:800; }
-  .login-card p  { color:var(--muted); margin:0 0 22px; font-size:14px; }
-  .login-field { width:100%; padding:14px; border:1.5px solid #e5e7eb; border-radius:12px; font-size:16px; box-sizing:border-box; margin-bottom:12px; font-family:inherit; }
-  .login-field:focus { outline:none; border-color:var(--brand); }
-  .login-btn { width:100%; padding:14px; background:#ff2b86; color:#fff; border:none; border-radius:12px; font-size:18px; font-weight:800; cursor:pointer; font-family:inherit; }
-  .login-btn:disabled { opacity:.55; cursor:not-allowed; }
-  .login-err { color:#dc2626; font-size:14px; margin-top:10px; min-height:20px; }
-
-  /* ── Logout link in header ── */
-  .logout-btn { position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--muted); background:none; border:none; cursor:pointer; text-decoration:underline; font-family:inherit; }
 </style>
 
 <!-- ✅ Google Analytics tracking code (added 08/23/25) -->
@@ -72,24 +56,10 @@
 </head>
 <body>
 
-  <!-- ══ Login overlay (shown until authenticated) ══ -->
-  <div id="loginOverlay">
-    <div class="login-card">
-      <img class="login-logo" src="/logo-256.png" alt="Connectivity Source">
-      <h2>Goals &amp; Gaps Tracker</h2>
-      <p>Sign in to continue</p>
-      <input id="loginUser" class="login-field" type="text"     autocomplete="username"        placeholder="Username"  spellcheck="false" autocapitalize="none" />
-      <input id="loginPass" class="login-field" type="password" autocomplete="current-password" placeholder="Password" />
-      <button id="loginBtn" class="login-btn">Sign In</button>
-      <div id="loginErr" class="login-err" role="alert" aria-live="polite"></div>
-    </div>
-  </div>
-
   <header class="header" style="position:relative">
     <div class="logo-wrap">
       <img id="siteLogo" class="logo" alt="Connectivity Source" src="/logo-256.png">
     </div>
-    <button class="logout-btn" id="logoutBtn" onclick="GGTAuth.logout()" title="Sign out">Sign out</button>
   </header>
 
   <main class="card">
@@ -116,55 +86,6 @@
 (async function() {
   console.log('[ggt] initializing index');
 
-  // ── Auth gate ──
-  var overlay  = document.getElementById('loginOverlay');
-  var loginBtn = document.getElementById('loginBtn');
-  var loginErr = document.getElementById('loginErr');
-  var logoutBtn = document.getElementById('logoutBtn');
-
-  function showApp() {
-    overlay.classList.add('hidden');
-    if (logoutBtn) {
-      var name = GGTAuth.getUsername();
-      logoutBtn.title = 'Signed in as ' + name + ' — click to sign out';
-    }
-  }
-
-  function handleLoginAttempt() {
-    var user = document.getElementById('loginUser').value;
-    var pass = document.getElementById('loginPass').value;
-    if (!user || !pass) { loginErr.textContent = 'Please enter your username and password.'; return; }
-    loginBtn.disabled = true;
-    loginErr.textContent = '';
-    GGTAuth.login(user, pass).then(function(ok) {
-      if (ok) {
-        showApp();
-        // If redirected here with ?next=, go there now
-        var params = new URLSearchParams(location.search);
-        var next = params.get('next');
-        if (next && next.startsWith(location.origin)) location.assign(next);
-      } else {
-        loginErr.textContent = 'Invalid username or password.';
-        loginBtn.disabled = false;
-        document.getElementById('loginPass').value = '';
-        document.getElementById('loginPass').focus();
-      }
-    });
-  }
-
-  loginBtn.addEventListener('click', handleLoginAttempt);
-  document.getElementById('loginPass').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') handleLoginAttempt();
-  });
-  document.getElementById('loginUser').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') document.getElementById('loginPass').focus();
-  });
-
-  // Show overlay or app depending on current auth state
-  if (GGTAuth.isAuthenticated()) {
-    showApp();
-  }
-  // (overlay is shown by default in HTML)
   const logoImg = document.getElementById('siteLogo');
 
   // Try to extract inline logo from /app/dort.html (use as header), otherwise keep fallback
